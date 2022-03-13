@@ -1,0 +1,10 @@
+*
+*.*
+**
+
+!.gitignore
+!src
+!/src/**
+
+/src/__pycache__/
+/src/__pycache__/**

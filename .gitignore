@@ -1,8 +1,9 @@
-*
+**
+!*/
 
 !.gitignore
 !/src/**
 !/programs/**
 
-/programs/logs/
-/programs/install/
+programs/capturer/install/**
+programs/capturer/logs/**
