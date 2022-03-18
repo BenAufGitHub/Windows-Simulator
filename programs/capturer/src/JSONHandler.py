@@ -1,7 +1,7 @@
 from pynput.mouse import Controller, Button
 from pynput.keyboard import Key
 from pynput import mouse, keyboard
-import threading, time
+import threading, time, sys
 import json
 
 class MetaData:
@@ -26,7 +26,7 @@ class JSONStorage:
         self.data = [mouse_clicks, mouse_scrolls, mouse_moves, key_presses]
         self.controller = Controller()
 
-    def add_mouse_click(self, button: str, time: float, pressed: bool, point: (int, int)):
+    def add_mouse_click(self, button: str, time: float, pressed: bool, point):
         click_instance = {"action": "click", "name": button, "time": time, "args": [pressed, point[0], point[1]]}
         self.data[0].append(click_instance)
 
