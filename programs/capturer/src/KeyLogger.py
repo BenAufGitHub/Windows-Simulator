@@ -2,22 +2,41 @@ from pynput.keyboard import Key
 from pynput.mouse import Button
 from pynput import mouse
 from pynput import keyboard
-import os, time, logging
+import os, time, logging, sys
 import Logger
 import UnicodeReverse
 import JSONHandler
 
+import functools
+print = functools.partial(print, flush=True)
 
 
+
+# Metadata 
 _data = None
+
+# toggle currently not enabled TODO
 in_realtime = True
+
+# when no real time, toggle this is the base time
 auto_time = 0.1
-tkinter = None
+
+# keeps track of key and mouse listener
 listener = []
 
+# bool: whether recording is paused: listeners recording, but not storing
 _on_pause = False
+
+# the time at last pause
 _pause_time = None
+
+# whether the recording is closinf out
+_ending = False
+
+# the overall time that the recording was on pause (subtracted from overall times)
 _pause_differential = 0
+
+
 
 # ------------------------- individual recording ---------------------------------
 
@@ -55,7 +74,18 @@ def on_press_and_release(key, pressed: bool):
 		_data.storage.add_key_stroke(name, get_preferred_time(), special_key, pressed)
 
 
-# -------------------------- handling tkinter ---------------------------------------
+# -------------------------- handling ipc input ---------------------------------------
+
+def request(arg: str):
+	if _ending: return
+	if arg == 'pause' and not _on_pause:
+		pause()
+	if arg == 'resume' and _on_pause:
+		resume()
+	if arg == 'stop' and not _ending:
+		request("pause")
+		end()
+
 
 def pause():
 	global _on_pause, _pause_time
@@ -72,18 +102,18 @@ def resume():
 # -------------------------- program settings ---------------------------------------
 
 
+# print statements used for ipc with electron app
 def iterate_special_cases(name: str, pressed: bool) -> bool:
-	if(name == 'f1'):
-		end()
-		return True
+	# TODO condition for real-time toggling
 	if(name == 'f2'):
-		if(_on_pause): return True
-		if(True): # TODO
-			pause()
-			tkinter.on_call()
+		# only do stuff on release (preventing multiple activations)
+		if pressed: return True
+		if(_on_pause):
+			resume()
+			print("resume")
 			return True
-		if(pressed):
-			toggle_realtime()
+		pause()
+		print("pause")
 		return True
 	return False
 
@@ -108,13 +138,14 @@ def get_preferred_time():
 # ------------------------------- ending ------------------------------------------------
 
 def end():
-	global _data
+	global _data, _ending
+	_ending = True
 	for l in listener:
 		l.stop()
 	JSONHandler.compress(_data.storage)
 	JSONHandler.release_all(_data.storage)
 	JSONHandler.write_storage_file(_data.storage, _data.filename)
-
+	print("writing ended")
 
 # ------------------------- direct main calls ----------------------------------------------
 
@@ -134,15 +165,18 @@ def config_monitor():
 	ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
 
-def main(frame):
-	global _data, tkinter
-	tkinter = frame
+def main():
+	global _data
 	_data = JSONHandler.MetaData(True)
-	Logger.config_logging()
-	logging.info("Type: Recording")
-	#config_monitor()
+	# Logger.config_logging()
+	# logging.info("Type: Recording") TODO
+	config_monitor()
 	listen()
 
 
 if __name__=='__main__':
 	main()
+
+
+
+#
