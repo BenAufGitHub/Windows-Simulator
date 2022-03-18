@@ -148,7 +148,7 @@ ipcMain.handle("get-settings", (event, args) => {
 
 
 function startPythonBridge () {
-  settings.process = fork(path.join(__dirname, 'pyBridge.js'), ['args'], {
+  settings.process = fork('./programs/pyBridge.js', ['args'], {
     stdio: ['pipe', 'pipe', 'pipe', 'ipc']
   });
   settings.process.stdout.pipe(process.stdout)

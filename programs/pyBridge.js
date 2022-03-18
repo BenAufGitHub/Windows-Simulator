@@ -4,8 +4,8 @@ const path = require("path")
 
 let child = null;
 let state = null;
-const commands = ["record", "pause", "resume", "stop"]
-let pyPath = './programs/jsBridge.py'
+const commands = ["record", "simulate", "pause", "resume", "stop"]
+const pyPath = './programs/capturer/src/jsBridge.py'
 
 
 function logMsg(msg, writer) {
@@ -35,8 +35,8 @@ function spreadMsg (msg, writer) {
 function execSpecialEvent (msg, writer) {
     if(msg === state)
         return true
-    if(msg === 'record')
-        return recordPy() == null
+    if(msg === 'record' || msg === 'simulate')
+        return initPyApplication(msg) == null
     if(msg === 'stop')
         return removeChild(writer) == null
     return false
@@ -50,10 +50,11 @@ function removeChild(writer) {
 }
 
 
-function recordPy () {
-    startPyApplication(pyPath)
+function initPyApplication (application) {
+    startPyApplication(pyPath, application)
     process.send("start")
 }
+
 
 function sendPy (msg) {
     child.stdin.setEncoding("utf-8")
@@ -61,9 +62,9 @@ function sendPy (msg) {
 }
 
 
-function startPyApplication(path) {
-    if(child != null) throw "Cannot spawn multiple processes simultaneously"
-    child = spawn("python", [path])
+function startPyApplication(path, args) {
+    if(child != null && child.connected) throw "Cannot spawn multiple processes simultaneously"
+    child = spawn("python", [path, args])
     initIpcPython();
 }
 
