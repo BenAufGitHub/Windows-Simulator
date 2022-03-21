@@ -8,6 +8,7 @@ import Logger
 import logging
 import JSONHandler
 import Unpress
+import timing
 
 import functools
 print = functools.partial(print, flush=True)
@@ -66,11 +67,13 @@ def request(cmd: str):
 def pause():
 	global _on_pause
 	_on_pause = True
+	_timer.register_pause()
 	print("pause")
 
 def resume():
 	global _on_pause
 	_on_pause = False
+	_timer.register_resume()
 	print("resume")
 
 
@@ -120,6 +123,8 @@ class Timer:
 # ---------------------- simulation -----------------------------
 
 def simulate_behaviour():
+	global _timer
+	_timer = timing.TimeKeeper(lambda x: x*x)
 	delay = 0
 	index = 0
 	while index < len(_data.storage):
@@ -132,12 +137,8 @@ def simulate_behaviour():
 # returns the delay of this operation relativ to start of programm
 def time_exec_instruction(instruction, delay):
 	out_time = instruction["time"]-delay
-	if out_time < 0:
-		time.sleep(0)
-	else:
-		print(out_time)
-		time.sleep(out_time)
-		delay = instruction["time"]
+	delay = instruction["time"]
+	_timer.sleep_until_ready(delay)
 	simulate_instruction(instruction)
 	return delay
 
