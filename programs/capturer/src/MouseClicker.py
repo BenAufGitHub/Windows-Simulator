@@ -33,7 +33,7 @@ def run_key_thread():
 	threading.Thread(target=check_stop_event, daemon=True).start()
 
 
-def on_press(key):
+def on_release(key):
 	if type(key) == keyboard.Key and key == keyboard.Key["f1"]:
 		request("stop")
 	if type(key) == keyboard.Key and key == keyboard.Key["f2"]:
@@ -42,7 +42,7 @@ def on_press(key):
 
 def check_stop_event():
 	# activating thread
-	with keyboard.Listener(on_press=on_press) as listener:
+	with keyboard.Listener(on_release=on_release) as listener:
 		global listeners
 		listeners = listener
 		listener.join()
@@ -138,7 +138,7 @@ def simulate_behaviour():
 def time_exec_instruction(instruction, delay):
 	out_time = instruction["time"]-delay
 	delay = instruction["time"]
-	_timer.sleep_until_ready(delay)
+	_timer.sleep_until_ready(out_time)
 	simulate_instruction(instruction)
 	return delay
 
@@ -176,7 +176,6 @@ def set_configs():
 
 
 def main():
-	print("c")
 	global _data
 	_data = JSONHandler.MetaData(False)
 	# set_configs()
