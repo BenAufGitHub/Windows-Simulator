@@ -136,9 +136,9 @@ def simulate_behaviour():
 
 # returns the delay of this operation relativ to start of programm
 def time_exec_instruction(instruction, delay):
-	out_time = instruction["time"]-delay
+	out_time = instruction["time"]-_timer.get_exec_time()
 	delay = instruction["time"]
-	_timer.sleep_until_ready(out_time)
+	_timer.sleep_until_ready(max(out_time, 0))
 	simulate_instruction(instruction)
 	return delay
 
