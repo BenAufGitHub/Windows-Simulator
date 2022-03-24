@@ -34,8 +34,16 @@ function createWindow (filename) {
     }
   });
   mainWindow.webContents.openDevTools();
+  prepareEventListeners(mainWindow)
   return mainWindow
 };
+
+
+const prepareEventListeners = (window) => {
+  window.on("restore", (event, args) => {
+    sendToChild(null, "pause")
+  })
+}
 
 
 const open = (filename) => {
@@ -109,12 +117,15 @@ function _initProcess (event, args) {
 
 
 function startProcess () {
+  window.minimize();
+  console.log("Huhu")
   settings.state = 'record'
   settings.processState = "going"
   open("recording.html");
 }
 
 function resumeProcess () {
+  window.minimize()
   if(settings.selectedWindow === 'recording') return;
   settings.selectedWindow = 'recording'
   settings.processState = "going"
@@ -136,7 +147,9 @@ function pauseProcess() {
   settings.selectedWindow = 'pause'
   settings.processState = "idle"
   open("pause.html")
+  window.restore()
 }
+
 
 
 ipcMain.handle("get-settings", (event, args) => {
