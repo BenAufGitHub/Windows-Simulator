@@ -57,7 +57,7 @@ function initPyApplication (application) {
 
 
 function sendPy (msg) {
-    child.stdin.setEncoding("utf-8")
+    child?.stdin?.setEncoding("utf-8")
     child?.stdin?.write(`${msg}` + "\n")
 }
 
