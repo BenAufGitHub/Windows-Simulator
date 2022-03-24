@@ -77,49 +77,6 @@ def resume():
 	print("resume")
 
 
-# ----------------------- Timer ---------------------------------
-
-def setTimer(timer):
-	_timer = timer
-	if _on_pause:
-		_timer.pause()
-
-
-class Timer:
-	def __init__(self):
-		self._sleep_time = None
-		self._rdy = True
-		self._start = None
-		self._pause_time = None
-		self._pause_amount = 0
-
-	def is_ready(self):
-		return self._rdy
-
-	def pause(self):
-		if self._sleep_time == None: return
-		if not self._pause_time == None: return
-		self._pause_time = time.time()
-
-	def resume(self):
-		if self._sleep_time == None: return
-		self._pause_amount += time.time() - self._pause_time()
-		self._pause_time = None
-
-	def start(self, seconds: int):
-		if not self._rdy: return
-		self._rdy = False
-		self._sleep_time = seconds
-		threading.Thread(target=self._run, daemon=True)
-	
-	def _run(self):
-		while True:
-			if not self._pause_time == None: continue
-			if time.time() - (self._start + self._pause_amount) >= self._sleep_time:
-				break
-		self._rdy = True
-		self._sleep_time = None
-
 # ---------------------- simulation -----------------------------
 
 def simulate_behaviour():
