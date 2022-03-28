@@ -76,7 +76,10 @@ function initIpcPython () {
     if(child==null) throw "No child to ipc with"
     child.stdout.on("data", (data) => {
         let msg = data.toString().trim();
-        processMsg(msg, 'py')
+        commands = msg.split(/\r\n|\n|\r/)
+        commands.forEach(element => {
+            processMsg(element, 'py')
+        });
     })
 
     child.stderr.on("data", (data) => {
