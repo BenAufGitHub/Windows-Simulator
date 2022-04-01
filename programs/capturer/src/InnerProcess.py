@@ -24,13 +24,13 @@ class InnerProcess:
         for t in self.threads:
             t.stop()
 
-    def request(self, arg: str):
+    def request(self, arg: str, flush: bool):
         if self.state == "stop" or not self.ready: return
         paused = self.state == 'paused'
         if arg == 'pause' and not paused:
-            self.pause()
+            self.pause(flush)
         if arg == 'resume' and paused:
-            self.resume()
+            self.resume(flush)
         if arg == 'stop':
             self.request("pause")
             self.end()
@@ -42,9 +42,17 @@ class InnerProcess:
             return True
         return False
 
+    def pause(self, flush):
+        self.state = 'pause'
+        self.timer.register_pause()
+        if flush: self.print_cmd(self.state)
+
+    def resume(self, flush):
+        self.state = 'running'
+        self.timer.register_resume()
+        if flush: self.print_cmd(self.state)
+
     # overwrite for functionality
-    def pause(self): pass
-    def resume(self): pass
     def end(self): pass
 
     # overwrite to match 
@@ -73,13 +81,25 @@ class Recorder(InnerProcess):
         ih = self.in_handler
         with keyboard.Listener(on_press=ih.on_press, on_release=ih.on_release) as listener1:
             with mouse.Listener(on_click=ih.on_click, on_scroll=ih.on_scroll, on_move=ih.on_move) as listener2:
-                self.threads.append(listener1)
-                self.threads.append(listener2)
+                self.add_thread(listener1)
+                self.add_thread(listener2)
+
+    def save_data(self):
+        JSONHandler.compress(self.data.storage)
+        JSONHandler.release_all(self.data.storage)
+        JSONHandler.write_storage_file(self.data.storage, self.data.filename)
 
     # override
     def run(self):
         self.listen_to_keys()
         self.ready = True
+
+    # overwrite
+    def stop(self):
+        self.state = 'stop'
+        self.stop_threads()
+        self.save_data()
+
 
 
 
