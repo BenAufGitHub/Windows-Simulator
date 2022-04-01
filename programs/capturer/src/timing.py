@@ -5,7 +5,7 @@ _print_pause_stats = False
 
 class TimeKeeper:
 
-    def __init__(self, onpause_callback):
+    def __init__(self):
         self.start = time.time()
         self.callback = lambda: self.pause_start != None
         self.exec_start = None
@@ -85,4 +85,28 @@ class TimeKeeper:
             time.sleep(remaining)
             remaining = self.calc_remaining_sleep()
         self.unregisterExecution()
-    
+
+
+class SimpleTimeKeeper:
+    def __init__(self):
+        self.start = time.time()
+        self.pause_start = None
+        # resets on new execution
+        self.pause_length = 0
+        # never gets reset
+        self.total_pause = 0
+
+    def register_pause(self):
+        if self.pause_start: return
+        self.pause_start = time.time()
+
+    def register_resume(self):
+        if not self.pause_start: return
+        curr_pause = time.time() - self.pause_start
+        self.total_pause += curr_pause
+        self.pause_start = None
+
+    # does not work while 
+    def get_exec_time(self):
+        last_exec_time = time.time() if not self.pause_start else self.pause_start
+        return last_exec_time - (self.total_pause + self.start)
