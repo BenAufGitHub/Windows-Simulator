@@ -1,24 +1,40 @@
-from math import remainder
 import time
 
 _print_pause_stats = False
 
-class TimeKeeper:
 
+class SimpleTimeKeeper:
     def __init__(self):
         self.start = time.time()
-        self.callback = lambda: self.pause_start != None
-        self.exec_start = None
-        self.exec_length = None
-
         self.pause_start = None
         # resets on new execution
         self.pause_length = 0
         # never gets reset
         self.total_pause = 0
 
+    def register_pause(self):
+        if self.pause_start: return
+        self.pause_start = time.time()
+
+    def register_resume(self):
+        if not self.pause_start: return
+        curr_pause = time.time() - self.pause_start
+        self.total_pause += curr_pause
+        self.pause_start = None
+
+    # does not work while 
     def get_exec_time(self):
-        return time.time() - (self.total_pause + self.start)
+        last_exec_time = time.time() if not self.pause_start else self.pause_start
+        return last_exec_time - (self.total_pause + self.start)
+
+
+class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
+
+    def __init__(self):
+        super().__init__()
+        self.callback = lambda: self.pause_start != None
+        self.exec_start = None
+        self.exec_length = None
 
     def register(self, time_amount):
         self.exec_start = time.time()
@@ -29,11 +45,7 @@ class TimeKeeper:
         self.exec_length = 0
         self.pause_length = 0
 
-
-    def register_pause(self):
-        if self.pause_start != None: return
-        self.pause_start = time.time()
-
+    # overridden
     def register_resume(self):
         if self.pause_start == None or self.exec_start == None: return
         beginning = max(self.pause_start, self.exec_start)
@@ -68,7 +80,6 @@ class TimeKeeper:
         return self.calc_edge_remaining_sleep()
         
 
-
     def wait_until_unpause(self):
         while True:
             if not self.callback():
@@ -85,28 +96,3 @@ class TimeKeeper:
             time.sleep(remaining)
             remaining = self.calc_remaining_sleep()
         self.unregisterExecution()
-
-
-class SimpleTimeKeeper:
-    def __init__(self):
-        self.start = time.time()
-        self.pause_start = None
-        # resets on new execution
-        self.pause_length = 0
-        # never gets reset
-        self.total_pause = 0
-
-    def register_pause(self):
-        if self.pause_start: return
-        self.pause_start = time.time()
-
-    def register_resume(self):
-        if not self.pause_start: return
-        curr_pause = time.time() - self.pause_start
-        self.total_pause += curr_pause
-        self.pause_start = None
-
-    # does not work while 
-    def get_exec_time(self):
-        last_exec_time = time.time() if not self.pause_start else self.pause_start
-        return last_exec_time - (self.total_pause + self.start)
