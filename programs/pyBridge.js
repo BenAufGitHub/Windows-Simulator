@@ -64,7 +64,7 @@ function sendPy (msg) {
 
 function startPyApplication(path, args) {
     if(child != null && child.connected) throw "Cannot spawn multiple processes simultaneously"
-    child = spawn("python", [path, args])
+    child = spawn("py", [path, args])
     initIpcPython();
 }
 
@@ -76,8 +76,8 @@ function initIpcPython () {
     if(child==null) throw "No child to ipc with"
     child.stdout.on("data", (data) => {
         let msg = data.toString().trim();
-        commands = msg.split(/\r\n|\n|\r/)
-        commands.forEach(element => {
+        let cmds = msg.split(/\r\n|\n|\r/)
+        cmds.forEach(element => {
             processMsg(element, 'py')
         });
     })
