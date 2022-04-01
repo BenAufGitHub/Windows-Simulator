@@ -7,9 +7,9 @@ import Logger
 import UnicodeReverse
 import JSONHandler
 
-import functools
-print = functools.partial(print, flush=True)
 
+print_info = print
+print_cmd = print
 
 
 # Metadata 

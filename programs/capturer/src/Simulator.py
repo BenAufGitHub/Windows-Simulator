@@ -81,7 +81,7 @@ def resume():
 
 def simulate_behaviour():
 	global _timer
-	_timer = timing.TimeKeeper(lambda x: x*x)
+	_timer = timing.TimeKeeper()
 	delay = 0
 	index = 0
 	while index < len(_data.storage):
