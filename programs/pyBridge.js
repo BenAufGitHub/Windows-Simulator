@@ -8,6 +8,11 @@ const commands = ["record", "simulate", "pause", "resume", "stop"]
 const pyPath = './programs/capturer/src/jsBridge.py'
 
 
+
+function isEventEcho (msg, writer) {
+    return writer === 'main' && msg === 'pause' && state === 'stop' || child == null && msg == 'pause'
+}
+
 function logMsg(msg, writer) {
     let type = commands.includes(msg) ? "command" : "info"
     console.log(`${writer}: ${msg} \{${type}\}`)
@@ -34,6 +39,8 @@ function spreadMsg (msg, writer) {
 /** returns true if a special case was executed */
 function execSpecialEvent (msg, writer) {
     if(msg === state)
+        return true
+    if(isEventEcho(msg, writer))
         return true
     if(msg === 'record' || msg === 'simulate')
         return initPyApplication(msg) == null
