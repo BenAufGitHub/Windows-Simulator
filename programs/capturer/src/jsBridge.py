@@ -1,9 +1,9 @@
 import sys, threading
 import functools
-import KeyLogger, MouseClicker
+import Recorder, Simulator
 
 print = functools.partial(print, flush=True)
-request = KeyLogger.request if sys.argv[1] == "record" else MouseClicker.request
+request = Recorder.request if sys.argv[1] == "record" else Simulator.request
 
 
 class InputStop (RuntimeError):
@@ -28,9 +28,9 @@ def execute(line: str):
 
 def run():
     if(sys.argv[1] == 'simulate'):
-        threading.Thread(target=MouseClicker.main, daemon=False).start()
+        threading.Thread(target=Simulator.main, daemon=False).start()
     else:
-        threading.Thread(target=KeyLogger.main, daemon=False).start()
+        threading.Thread(target=Recorder.main, daemon=False).start()
 
 
 def main():
