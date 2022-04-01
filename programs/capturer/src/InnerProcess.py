@@ -24,7 +24,7 @@ class InnerProcess:
         for t in self.threads:
             t.stop()
 
-    def request(self, arg: str, flush: bool):
+    def request(self, arg: str, flush=False):
         if self.state == "stop" or not self.ready: return
         paused = self.state == 'paused'
         if arg == 'pause' and not paused:
@@ -37,17 +37,18 @@ class InnerProcess:
 
     def iterate_special_cases(self, key_name, pressed):
         # toggling if f2 is released
-        if key_name == 'f2' and not pressed:
-            self.request("resume") if self.state == 'pause' else self.request("pause")
+        if key_name == 'f2':
+            if pressed: return True
+            self.request("resume", True) if self.state == 'pause' else self.request("pause", True)
             return True
         return False
 
-    def pause(self, flush):
+    def pause(self, flush=False):
         self.state = 'pause'
         self.timer.register_pause()
         if flush: self.print_cmd(self.state)
 
-    def resume(self, flush):
+    def resume(self, flush=False):
         self.state = 'running'
         self.timer.register_resume()
         if flush: self.print_cmd(self.state)
@@ -75,6 +76,7 @@ class Recorder(InnerProcess):
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
         self.in_handler = InputHandler(self)
+        self.round_to = 3
 
 
     def listen_to_keys(self):
@@ -83,6 +85,8 @@ class Recorder(InnerProcess):
             with mouse.Listener(on_click=ih.on_click, on_scroll=ih.on_scroll, on_move=ih.on_move) as listener2:
                 self.add_thread(listener1)
                 self.add_thread(listener2)
+                listener1.join()
+                listener2.join()
 
     def save_data(self):
         JSONHandler.compress(self.data.storage)
@@ -92,10 +96,11 @@ class Recorder(InnerProcess):
     # override
     def run(self):
         self.listen_to_keys()
+        self.state = "running"
         self.ready = True
 
     # overwrite
-    def stop(self):
+    def end(self):
         self.state = 'stop'
         self.stop_threads()
         self.save_data()
@@ -110,7 +115,7 @@ class InputHandler:
         self.storage = process.data.storage
         self.lock = process.data.lock
         self.is_paused = lambda: process.state == 'pause'
-        self.get_time = process.timer.get_exec_time
+        self.get_time = lambda: round(process.timer.get_exec_time(), process.round_to)
 
 
     # ------------------------- individual recording ---------------------------------
