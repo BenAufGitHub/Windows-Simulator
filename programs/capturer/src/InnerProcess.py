@@ -1,4 +1,4 @@
-import ctypes
+import ctypes, threading
 from pynput import mouse, keyboard
 import JSONHandler, timing, UnicodeReverse
 
@@ -26,7 +26,7 @@ class InnerProcess:
 
     def request(self, arg: str, flush=False):
         if self.state == "stop" or not self.ready: return
-        paused = self.state == 'paused'
+        paused = self.state == 'pause'
         if arg == 'pause' and not paused:
             self.pause(flush)
         if arg == 'resume' and paused:
@@ -95,7 +95,7 @@ class Recorder(InnerProcess):
 
     # override
     def run(self):
-        self.listen_to_keys()
+        threading.Thread(target=self.listen_to_keys, daemon=True).start()
         self.state = "running"
         self.ready = True
 
