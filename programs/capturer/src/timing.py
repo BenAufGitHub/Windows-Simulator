@@ -22,7 +22,7 @@ class SimpleTimeKeeper:
         self.total_pause += curr_pause
         self.pause_start = None
 
-    # does not work while 
+    # returns total execution time from instantiation
     def get_exec_time(self):
         last_exec_time = time.time() if not self.pause_start else self.pause_start
         return last_exec_time - (self.total_pause + self.start)
@@ -46,8 +46,11 @@ class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
         self.pause_length = 0
 
     # overridden
+    # if resumed while awaiting execution, accumulate pause amounts to wait for again when execution thread wakes up
     def register_resume(self):
-        if self.pause_start == None or self.exec_start == None: return
+        if not self.pause_start: return
+        if not self.exec_start:
+            return super().register_resume() # is None
         beginning = max(self.pause_start, self.exec_start)
         curr_pause = time.time() - beginning
         self.pause_length += curr_pause
