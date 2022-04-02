@@ -25,6 +25,7 @@ class InnerProcess:
             t.stop()
             t.join()
 
+    # flush: whether accepted requests should be spread with print_cmd(cmd) - done so if request comes from Innerprocess itself
     def request(self, arg: str, flush=False):
         if self.state == "stop" or not self.ready: return
         paused = self.state == 'pause'
@@ -34,7 +35,7 @@ class InnerProcess:
             self.resume(flush)
         if arg == 'stop':
             self.request("pause")
-            self.end()
+            self.end(flush)
 
     def iterate_special_cases(self, key_name, pressed):
         # toggling if f2 is released
@@ -54,8 +55,15 @@ class InnerProcess:
         self.timer.register_resume()
         if flush: self.print_cmd(self.state)
 
+    def end(self, flush=False):
+        self.state = 'stop'
+        self.stop_threads()
+        self.complete_before_end()
+        if flush: self.print_cmd('stop')
+
     # overwrite for functionality
-    def end(self): pass
+    def complete_before_end(self):
+        pass
 
     # overwrite to match 
     def run():
@@ -101,9 +109,7 @@ class Recorder(InnerProcess):
         self.ready = True
 
     # overwrite
-    def end(self):
-        self.state = 'stop'
-        self.stop_threads()
+    def complete_before_end(self):
         self.save_data()
 
 
