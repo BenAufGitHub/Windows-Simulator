@@ -1,6 +1,7 @@
-import ctypes, threading
+import ctypes, threading, json
 from pynput import mouse, keyboard
-import JSONHandler, timing, UnicodeReverse
+import JSONHandler, timing, UnicodeReverse, Unpress
+from programs.capturer.src.Recorder import iterate_special_cases
 
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
@@ -58,7 +59,7 @@ class InnerProcess:
     def end(self, flush=False):
         self.state = 'stop'
         self.stop_threads()
-        self.complete_before_end()
+        self.complete_before_end(flush)
         if flush: self.print_cmd('stop')
 
     # overwrite for functionality
@@ -77,6 +78,87 @@ class InnerProcess:
 # very important method, influences how windows scale is perceived
 def config_monitor():
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
+
+class Simulator(InnerProcess):
+    def __init__(self):
+        super().__init__("simulating")
+        self.timer = timing.TaskAwaitingTimeKeeper()
+        # wait until simulation begins
+        self.timer.register_pause()
+
+    def read_file(self):
+        with open(self.data.filename, "r") as file:
+            content = file.read()
+            self.storage = json.loads(content)
+
+    def _check_toggle(self, key):
+        if not self.ready: return
+        special_key = type(key) == keyboard.Key
+        name = key.char if (not special_key) else str(key)[4:]
+        self.iterate_special_cases(name, False)
+
+    def listen_to_pause_toggle(self):
+        listener = keyboard.Listener(on_release=self._check_toggle)
+        self.add_thread(listener)
+        listener.start()
+        
+
+    def simulate_events(self):
+        index = 0
+        while index < len(self.storage):
+            if(self.state=='pause'): continue
+            if(self.state=='stop'): break
+            self.time_exec_instruction(self.storage[index])
+            index += 1
+        self.request('stop', flush=True)
+
+
+    # returns the delay of this operation relativ to start of programm
+    def time_exec_instruction(self, instruction):
+        out_time = instruction["time"]-self.timer.get_exec_time()
+        self.timer.sleep_until_ready(max(out_time, 0))
+        self.simulate_instruction(instruction)
+
+
+    def simulate_instruction(self, instruction: dict):
+        # action (press, release, scroll) belongs to a mouse instruction
+        if "action" in instruction:
+            exec_mouse_instruction(instruction, self.data.mouse_controller)
+        else:
+            exec_keyboard_instruction(instruction, self.data.keyboard_controller)
+
+
+    def run(self):
+        self.read_file()
+        self.listen_to_pause_toggle()
+        # timer is invoked
+        self.timer.register_resume()
+        self.init_simulation()
+        self.ready = True
+
+    def init_simulation(self):
+        t = KillableThread(self.simulate_events)
+        self.event_thread = t
+        t.start()
+
+    def complete_before_end(self, flush):
+        Unpress.key_press_warnings(self.data.keyboard_controller)
+        if flush:
+            self.event_thread.stop()
+            self.event_thread.join()
+
+
+
+def exec_mouse_instruction(instruction: dict, controller):
+	func, args = JSONHandler.get_function_from_mouse_object(instruction, controller)
+	func(*args)
+
+
+def exec_keyboard_instruction(instruction: dict, controller):
+	func, args = JSONHandler.get_function_from_key_object(instruction, controller)
+	func(*args)
+
 
 
 class Recorder(InnerProcess):
@@ -109,7 +191,7 @@ class Recorder(InnerProcess):
         self.ready = True
 
     # overwrite
-    def complete_before_end(self):
+    def complete_before_end(self, flush):
         self.save_data()
 
 
@@ -159,3 +241,34 @@ class InputHandler:
         name = UnicodeReverse.convert_from_unicode(name)
         if not self.process.iterate_special_cases(name, pressed) and not self.is_paused():
             self.storage.add_key_stroke(name, self.get_time(), special_key, pressed)
+
+
+
+# class taken from https://www.geeksforgeeks.org/python-different-ways-to-kill-a-thread/
+class KillableThread(threading.Thread):
+    def __init__(self, callback):
+        threading.Thread.__init__(self)
+        self.callback = callback
+             
+    def run(self):
+        # target function of the thread class
+        try:
+            self.callback()
+        finally:
+            print('ended')
+          
+    def get_id(self):
+        # returns id of the respective thread
+        if hasattr(self, '_thread_id'):
+            return self._thread_id
+        for id, thread in threading._active.items():
+            if thread is self:
+                return id
+  
+    def stop(self):
+        thread_id = self.get_id()
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id,
+              ctypes.py_object(SystemExit))
+        if res > 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+            print('Stop-Exception raise failure')
