@@ -23,6 +23,7 @@ class InnerProcess:
     def stop_threads(self):
         for t in self.threads:
             t.stop()
+            t.join()
 
     def request(self, arg: str, flush=False):
         if self.state == "stop" or not self.ready: return
@@ -79,14 +80,14 @@ class Recorder(InnerProcess):
         self.round_to = 3
 
 
-    def listen_to_keys(self):
+    def listen_to_input(self):
         ih = self.in_handler
-        with keyboard.Listener(on_press=ih.on_press, on_release=ih.on_release) as listener1:
-            with mouse.Listener(on_click=ih.on_click, on_scroll=ih.on_scroll, on_move=ih.on_move) as listener2:
-                self.add_thread(listener1)
-                self.add_thread(listener2)
-                listener1.join()
-                listener2.join()
+        listener1 = keyboard.Listener(on_press=ih.on_press, on_release=ih.on_release)
+        listener2 = mouse.Listener(on_click=ih.on_click, on_scroll=ih.on_scroll, on_move=ih.on_move)
+        self.add_thread(listener1)
+        self.add_thread(listener2)
+        listener1.start()
+        listener2.start()
 
     def save_data(self):
         JSONHandler.compress(self.data.storage)
@@ -95,7 +96,7 @@ class Recorder(InnerProcess):
 
     # override
     def run(self):
-        threading.Thread(target=self.listen_to_keys, daemon=True).start()
+        self.listen_to_input()
         self.state = "running"
         self.ready = True
 
