@@ -28,7 +28,7 @@ class InnerProcess:
     # flush: whether accepted requests should be spread with print_cmd(cmd) - done so if request comes from Innerprocess itself
     def request(self, arg: str, flush=False):
         if self.state == "stop" or not self.ready: return
-        paused = self.state == 'pause'
+        paused = (self.state == 'pause')
         if arg == 'pause' and not paused:
             self.pause(flush)
         if arg == 'resume' and paused:
@@ -53,7 +53,7 @@ class InnerProcess:
     def resume(self, flush=False):
         self.state = 'running'
         self.timer.register_resume()
-        if flush: self.print_cmd(self.state)
+        if flush: self.print_cmd("resume")
 
     def end(self, flush=False):
         self.state = 'stop'
@@ -134,6 +134,7 @@ class Simulator(InnerProcess):
         # timer is invoked
         self.timer.register_resume()
         self.init_simulation()
+        self.state = "running"
         self.ready = True
 
     def init_simulation(self):
