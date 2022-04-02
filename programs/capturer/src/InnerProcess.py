@@ -1,7 +1,6 @@
 import ctypes, threading, json
 from pynput import mouse, keyboard
 import JSONHandler, timing, UnicodeReverse, Unpress
-from programs.capturer.src.Recorder import iterate_special_cases
 
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
@@ -144,7 +143,7 @@ class Simulator(InnerProcess):
 
     def complete_before_end(self, flush):
         Unpress.key_press_warnings(self.data.keyboard_controller)
-        if flush:
+        if not flush:
             self.event_thread.stop()
             self.event_thread.join()
 
@@ -254,8 +253,8 @@ class KillableThread(threading.Thread):
         # target function of the thread class
         try:
             self.callback()
-        finally:
-            print('ended')
+        except:
+            pass
           
     def get_id(self):
         # returns id of the respective thread
