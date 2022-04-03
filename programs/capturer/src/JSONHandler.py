@@ -1,21 +1,12 @@
 from pynput.mouse import Controller, Button
 from pynput.keyboard import Key
-from pynput import mouse, keyboard
-import threading, time, sys
-import json
+import json, time
 
 class MetaData:
-    def __init__(self, recording: bool):
+    def __init__(self):
         self.filename = "./resources/recording.json"
         self.auto_time = 0.1
-        self.lock = _lock = threading.Lock()
         self.start_time = time.time()
-        if recording:
-            self.storage = JSONStorage()
-        else:
-            self.mouse_controller = Controller()
-            self.keyboard_controller = keyboard.Controller()
-            self.storage = []
 
 
 class JSONStorage:

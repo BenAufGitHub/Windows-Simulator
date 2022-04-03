@@ -6,14 +6,14 @@ import JSONHandler, timing, UnicodeReverse, Unpress
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
 class InnerProcess:
 
-    def __init__(self, process):
+    def __init__(self):
         self.print_info = print
         self.print_cmd = print
         self.threads = []
         self.state = "idle"
         self.state_list = ["idle", "stop", "pause", "running"]
         self.ready = False
-        self.data = self.get_data(process)
+        self.data = self.get_data()
         self.timer = None
         config_monitor()
 
@@ -69,8 +69,8 @@ class InnerProcess:
     def run():
         pass
 
-    def get_data(self, process):
-        return JSONHandler.MetaData(process == 'recording')
+    def get_data(self):
+        return JSONHandler.MetaData()
 
 
 
@@ -79,12 +79,20 @@ def config_monitor():
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
 
+
+
+# ------------------------------------- Simulation -------------------------------------------------------
+
+
+
 class Simulator(InnerProcess):
     def __init__(self):
-        super().__init__("simulating")
+        super().__init__()
         self.timer = timing.TaskAwaitingTimeKeeper()
         # wait until simulation begins
         self.timer.register_pause()
+        self.keyboard_controller = keyboard.Controller()
+        self.mouse_controller = mouse.Controller() 
 
     def read_file(self):
         with open(self.data.filename, "r") as file:
@@ -123,9 +131,9 @@ class Simulator(InnerProcess):
     def simulate_instruction(self, instruction: dict):
         # action (press, release, scroll) belongs to a mouse instruction
         if "action" in instruction:
-            exec_mouse_instruction(instruction, self.data.mouse_controller)
+            exec_mouse_instruction(instruction, self.mouse_controller)
         else:
-            exec_keyboard_instruction(instruction, self.data.keyboard_controller)
+            exec_keyboard_instruction(instruction, self.keyboard_controller)
 
 
     def run(self):
@@ -143,7 +151,7 @@ class Simulator(InnerProcess):
         t.start()
 
     def complete_before_end(self, flush):
-        Unpress.key_press_warnings(self.data.keyboard_controller)
+        Unpress.key_press_warnings(self.keyboard_controller)
         if not flush:
             self.event_thread.stop()
             self.event_thread.join()
@@ -161,11 +169,15 @@ def exec_keyboard_instruction(instruction: dict, controller):
 
 
 
+# ---------------------------------------------- Recording -----------------------------------------------------------
+
+
 class Recorder(InnerProcess):
     def __init__(self):
-        super().__init__("recording")
+        super().__init__()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
+        self.storage = JSONHandler.JSONStorage()
         self.in_handler = InputHandler(self)
         self.round_to = 3
 
@@ -180,9 +192,9 @@ class Recorder(InnerProcess):
         listener2.start()
 
     def save_data(self):
-        JSONHandler.compress(self.data.storage)
-        JSONHandler.release_all(self.data.storage)
-        JSONHandler.write_storage_file(self.data.storage, self.data.filename)
+        JSONHandler.compress(self.storage)
+        JSONHandler.release_all(self.storage)
+        JSONHandler.write_storage_file(self.storage, self.data.filename)
 
     # override
     def run(self):
@@ -201,8 +213,8 @@ class InputHandler:
 
     def __init__(self, process):
         self.process = process
-        self.storage = process.data.storage
-        self.lock = process.data.lock
+        self.storage = process.storage
+        self.input_lock = threading.Lock()
         self.is_paused = lambda: process.state == 'pause'
         self.get_time = lambda: round(process.timer.get_exec_time(), process.round_to)
 
@@ -211,26 +223,26 @@ class InputHandler:
 
     def on_click(self, x, y, mouse_button, pressed):
         if self.is_paused(): return
-        with self.lock:
+        with self.input_lock:
             button_name = mouse_button.name
             self.storage.add_mouse_click(button_name, self.get_time(), pressed, (x, y))
 
     def on_scroll(self, x, y, dx, dy):
         if self.is_paused(): return
-        with self.lock:
+        with self.input_lock:
             self.storage.add_mouse_scroll(self.get_time(), dx, dy)
 
     def on_move(self, x, y):
         if self.is_paused(): return
-        with self.lock:
+        with self.input_lock:
             self.storage.add_mouse_move(self.get_time(), x, y)
 
     def on_press(self, key):
-        with self.lock:
+        with self.input_lock:
             self.on_press_and_release(key, True)
 
     def on_release(self, key):
-        with self.lock:
+        with self.input_lock:
             self.on_press_and_release(key, False)
 
     def on_press_and_release(self, key, pressed: bool):
