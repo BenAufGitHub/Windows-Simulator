@@ -6,8 +6,8 @@ print = functools.partial(print, flush=True)
 starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
-process_actions = ["pause", "resume"]
-requests = []
+process_actions = ["pause", "resume", "stop"]
+requests = ["exit"]
 
 process = None
 lock = threading.Lock()
@@ -50,7 +50,7 @@ def mutate_process(cmd):
     if not process: raise CommandFailure("Process not found")
     if not process.request(cmd):
         raise CommandFailure(f"{cmd} request rejected")
-    update_state(cmd)
+    update_state()
     return "DONE"
 
 def update_state():
@@ -65,7 +65,8 @@ def update_state():
             state = "paused" if cmd == "pause" else "running"
 
 def answer_request(cmd):
-    pass
+    if cmd == "exit":
+        return 0
         
 
 
@@ -86,7 +87,7 @@ class CommandFailure(Exception):
 
 # identifier 1: outgoing command
 def print_cmd(cmd: str):
-    update_state(cmd)
+    update_state()
     print(f'1 {cmd}')
 
 
@@ -117,17 +118,17 @@ def read_in():
 def processIn(input):
     if not is_valid_input(input):
         return print_info("Not a valid input") # None
-    id, cmd = split_input()
+    id, cmd = split_input(input)
     try:
         result = execute(cmd) 
         return_answer(id, result)
     except (CommandNotAccepted, CommandFailure) as e:
         return_failure(id, str(e))
     except Exception as e:
-        sys.stderr.write(traceback.extract_stack())
+        sys.stderr.write(traceback.format_exc())
         return_failure(id, "See Traceback")
 
-    if input == 'exit':
+    if cmd == 'exit':
         raise InputStop()
 
 
