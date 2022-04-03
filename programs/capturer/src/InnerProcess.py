@@ -15,7 +15,7 @@ class InnerProcess:
         self.ready = False
         self.data = self.get_data()
         self.timer = None
-        self._req_lock = threading.Lock()
+        self._req_lock = threading.RLock()
         config_monitor()
 
     def add_thread(self, thread):
