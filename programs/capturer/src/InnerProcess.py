@@ -15,6 +15,7 @@ class InnerProcess:
         self.ready = False
         self.data = self.get_data()
         self.timer = None
+        self._req_lock = threading.Lock()
         config_monitor()
 
     def add_thread(self, thread):
@@ -26,16 +27,27 @@ class InnerProcess:
             t.join()
 
     # flush: whether accepted requests should be spread with print_cmd(cmd) - done so if request comes from Innerprocess itself
+    # return: bool whether accepted or not
     def request(self, arg: str, flush=False):
-        if self.state == "stop" or not self.ready: return
+        with self._req_lock:
+            return self._req(arg, flush)
+
+
+    def _req(self, arg, flush):
+        if self.state == "stop" or not self.ready: return False
         paused = (self.state == 'pause')
         if arg == 'pause' and not paused:
             self.pause(flush)
+            return True
         if arg == 'resume' and paused:
             self.resume(flush)
+            return True
         if arg == 'stop':
             self.request("pause")
             self.end(flush)
+            return True
+        return False
+
 
     def iterate_special_cases(self, key_name, pressed):
         # toggling if f2 is released
