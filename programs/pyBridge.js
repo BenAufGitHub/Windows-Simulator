@@ -5,17 +5,12 @@ const path = require("path")
 let child = null;
 let state = null;
 const commands = ["record", "simulate", "pause", "resume", "stop"]
-const pyPath = './programs/capturer/src/jsBridge.py'
+const pyPath = './programs/capturer/src/pyCommunicator.py'
 
-
-
-function isEventEcho (msg, writer) {
-    return writer === 'main' && msg === 'pause' && state === 'stop' || child == null && msg == 'pause'
-}
 
 function logMsg(msg, writer) {
     let type = commands.includes(msg) ? "command" : "info"
-    console.log(`${writer}: ${msg} \{${type}\}`)
+    console.log(`${writer}: ${msg}`)
 }
 
 
@@ -42,24 +37,31 @@ function execSpecialEvent (msg, writer) {
         return true
     if(isEventEcho(msg, writer))
         return true
-    if(msg === 'record' || msg === 'simulate')
-        return initPyApplication(msg) == null
-    if(msg === 'stop')
-        return removeChild(writer) == null
     return false
 }
 
 
-function removeChild(writer) {
-    spreadMsg('stop', writer)
-    child = null;
-    state = null;
+// -------------------------------- python specifics ------------------------------------
+
+function processPyMsg(msg) {
+    let words = msg.split(" ")
+    if(words.length < 2 || !isNan(words[0]))
+        return console.log("Message from py invalid: ", msg)
+    let content = words.slice(1, words.length).join(' ')
+    if(words[0] == 0)
+        console.log(`Pyinfo: ${content}`)
+    if(words[0] == 1)
+        processPyCommand(parseInt(words[0]), content)
+    processPyAnswer(parseInt(words[0]), content)
 }
 
 
-function initPyApplication (application) {
-    startPyApplication(pyPath, application)
-    process.send("start")
+function processPyCommand(id, content) {
+
+}
+
+function processPyAnswer(id, content) {
+
 }
 
 
@@ -69,14 +71,14 @@ function sendPy (msg) {
 }
 
 
-function startPyApplication(path, args) {
+// -------------------------------- Python initialization -------------------------------
+
+
+function startPyApplication() {
     if(child != null && child.connected) throw "Cannot spawn multiple processes simultaneously"
-    child = spawn("py", [path, args])
+    child = spawn("py", [pyPath])
     initIpcPython();
 }
-
-
-process.on("message", (msg) => processMsg(msg.toString().trim(), 'main'))
 
 
 function initIpcPython () {
@@ -85,7 +87,7 @@ function initIpcPython () {
         let msg = data.toString().trim();
         let cmds = msg.split(/\r\n|\n|\r/)
         cmds.forEach(element => {
-            processMsg(element, 'py')
+            processPyMsg(element)
         });
     })
 
@@ -93,4 +95,20 @@ function initIpcPython () {
         console.log("An error occured in Python Child:")
         console.log(data.toString())
     })
+}
+
+
+// -------------------------------------- main handling --------------------------------------------------
+
+process.on("message", (msg) => processMsg(msg.toString().trim(), 'main'))
+
+
+function isEventEcho (msg, writer) {
+    return writer === 'main' && msg === 'pause' && state === 'stop' || child == null && msg == 'pause'
+}
+
+
+main:
+{
+    startPyApplication()
 }
