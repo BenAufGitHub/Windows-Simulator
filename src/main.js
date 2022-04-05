@@ -118,7 +118,6 @@ function _initProcess (event, args) {
 
 function startProcess () {
   window.minimize();
-  console.log("Huhu")
   settings.state = 'record'
   settings.processState = "going"
   open("recording.html");

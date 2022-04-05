@@ -1,11 +1,16 @@
 const {spawn} = require("child_process");
-const path = require("path")
+const path = require("path");
 
 
 let child = null;
-let state = null;
-const commands = ["record", "simulate", "pause", "resume", "stop"]
+let state = "idle"; // STATE APPORVAL STILL RIGHT? CHECK FOR FAULTY REQUESTS!!
+const states = ["idle", "running", "paused", "stopped"] // stopped necessary?
+const process_cmds = ["pause", "resume", "stop"]
+const start_cmds = ["record", "simulate"]
 const pyPath = './programs/capturer/src/pyCommunicator.py'
+
+const promise_map = new Map()
+let id_stack = []
 
 
 function logMsg(msg, writer) {
@@ -14,30 +19,34 @@ function logMsg(msg, writer) {
 }
 
 
-/** Writer can be 'main' or 'py' */
-const processMsg = (msg, writer) => {
-    logMsg(msg, writer)
-    if(!commands.includes(msg)) return
-    if(execSpecialEvent(msg, writer)) return
-    state = msg
-    spreadMsg(msg, writer)
+// ---------------------------------- mapping ids ---------------------------------------
+
+
+function save_request(id, resolveFunc, rejectFunc) {
+    promise_map.set(id, {res: resolveFunc, rej: rejectFunc})
+    id_stack.push(id)
+}
+
+function retrive_request(id) {
+    let obj = promise_map.get(id)
+    promise_map.delete(id)
+    id_stack.shift()
+    return obj
+}
+
+function denyEarliestUnresolved(){
+    if(id_stack.length == 0) return
+    id = id_stack[0]
+    retrive_request(id).res([id, '1', 'error'])
 }
 
 
-function spreadMsg (msg, writer) {
-    if(writer !== 'py')
-        sendPy(msg)
-    process.send(msg)
-}
-
-
-/** returns true if a special case was executed */
-function execSpecialEvent (msg, writer) {
-    if(msg === state)
-        return true
-    if(isEventEcho(msg, writer))
-        return true
-    return false
+function get_rand_id() {
+    for(let i=2; i<32; i++){
+        if(!id_stack.includes(i))
+            return i
+    }
+    throw "Request-Stackoverflow, max is 30"
 }
 
 
@@ -45,30 +54,66 @@ function execSpecialEvent (msg, writer) {
 
 function processPyMsg(msg) {
     let words = msg.split(" ")
-    if(words.length < 2 || !isNan(words[0]))
-        return console.log("Message from py invalid: ", msg)
-    let content = words.slice(1, words.length).join(' ')
-    if(words[0] == 0)
+    if(words.length < 2 || isNaN(words[0]))
+        return console.log("Message from py invalid: ", words)
+    let content = words.slice(1, words.length)
+    if(words[0] === '0')
         console.log(`Pyinfo: ${content}`)
-    if(words[0] == 1)
-        processPyCommand(parseInt(words[0]), content)
-    processPyAnswer(parseInt(words[0]), content)
+    if(words[0] === '1')
+        return processPyCommand(content.join(' '))
+    if(content.length < 2)
+        return console.log("Answer from py missing state or answer: ", content)
+    processPyAnswer(parseInt(words[0]), content[0], content.slice(1, content.length).join(' '))
 }
 
 
-function processPyCommand(id, content) {
-
+// needs to be put with promise so that commands are stacked in the correct order by the event loop if multiple messages are processed in one pass
+// since answers are promises and commands would not be, these would execute the commands first (as described above)
+async function processPyCommand(content) {
+    await new Promise((resolve) => resolve(0))
+    process.send(content)
 }
 
-function processPyAnswer(id, content) {
-
+function processPyAnswer(id, state,  content) {
+// DONT FORGET TO NOTIFY IF REQUESTS ARENT ORDERLY ANSWERED, TRY TO DO SO WITH QUEUE -> MAYBE SHIFT TO A WAIT QUEUE IF UNORERLY EXECUTED
+    const promise = retrive_request(id)
+    promise.res([id, state, content])
 }
 
 
-function sendPy (msg) {
-    child?.stdin?.setEncoding("utf-8")
-    child?.stdin?.write(`${msg}` + "\n")
+
+// -------------------------------- Bubbling upwards ------------------------------------
+
+function send_cmd_upwards (cmd) {
+    update_state(cmd)
+    process.send(cmd)
 }
+
+function update_state(command) {
+    if(command === "start" || command === "resume")
+        state = "running"
+    if(command === "pause")
+        state = "pausing"
+    if(command === "stop")
+        state = "idle"
+}
+
+
+function processSuccessfulRequest(command, answer) {
+    // process state answers are not important, only accepted or rejected
+    if(start_cmds.includes(command))
+        return send_cmd_upwards("start")
+    if(process_cmds.includes(command))
+        return send_cmd_upwards(command)
+    handleRequestsWithAnswers(command, answer)
+}
+
+
+function handleRequestsWithAnswers(command, answer) {
+    // TODO when main-invoking is introced
+}
+
+
 
 
 // -------------------------------- Python initialization -------------------------------
@@ -94,17 +139,57 @@ function initIpcPython () {
     child.stderr.on("data", (data) => {
         console.log("An error occured in Python Child:")
         console.log(data.toString())
+        denyEarliestUnresolved()
     })
 }
 
 
 // -------------------------------------- main handling --------------------------------------------------
 
-process.on("message", (msg) => processMsg(msg.toString().trim(), 'main'))
+process.on("message", (msg) => processMainMsg(msg.toString().trim()))
 
 
-function isEventEcho (msg, writer) {
-    return writer === 'main' && msg === 'pause' && state === 'stop' || child == null && msg == 'pause'
+async function request(msg) {
+    let id = get_rand_id()
+    return new Promise((resolve, reject) => {
+        save_request(id, resolve, reject)
+        sendPy(id, msg)
+    })
+}
+
+function sendPy (id, msg) {
+    child?.stdin?.setEncoding("utf-8")
+    child?.stdin?.write(`${id} ${msg}` + "\n")
+}
+
+async function processMainMsg(msg) {
+    if (isEventEcho(msg)) return
+    if (isInvalidRequest(msg)) throw `${msg} (main) not accepted`
+    if (msg === "stop")
+        state = "stopping"
+    let answer = await request(msg)
+    if(!isAcceptedRequest(answer))
+        return
+    processSuccessfulRequest(msg, answer[2])
+}
+
+
+// request answers: [id, 0/1, answer]
+function isAcceptedRequest(requestAnswer) {
+    return requestAnswer[1] === '0'
+}
+
+
+function isInvalidRequest (req) {
+    if(start_cmds.includes(req) && state != 'idle') return true
+    if(process_cmds.includes(req) && (state == 'idle' || state == 'stopping') ) return true
+    return false
+}
+
+
+// only usuable for methods comming from main
+function isEventEcho (msg) {
+    return msg === 'pause' && state === 'stop' || child == null && msg == 'pause'
 }
 
 
