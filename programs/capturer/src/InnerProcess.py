@@ -295,4 +295,4 @@ class KillableThread(threading.Thread):
               ctypes.py_object(SystemExit))
         if res > 1:
             ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
-            print('Stop-Exception raise failure')
+            print('0 Stop-Exception raise failure')
