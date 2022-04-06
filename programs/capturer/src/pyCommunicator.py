@@ -118,6 +118,8 @@ def return_failure(id, reason):
 
 
 def translate_state_to_command():
+    if process == None:
+        return "stop"
     if process.state in process_actions:
         return process.state
     if process.state == 'running':
