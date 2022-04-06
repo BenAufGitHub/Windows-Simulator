@@ -139,6 +139,7 @@ function stopProcess() {
   settings.processState = null
   settings.state = 'menu'
   open("index.html")
+  window.restore()
 }
 
 
