@@ -14,7 +14,6 @@ let id_stack = []
 
 
 function logMsg(msg, writer) {
-    let type = commands.includes(msg) ? "command" : "info"
     console.log(`${writer}: ${msg}`)
 }
 
@@ -58,7 +57,7 @@ function processPyMsg(msg) {
         return console.log("Message from py invalid: ", words)
     let content = words.slice(1, words.length)
     if(words[0] === '0')
-        console.log(`Pyinfo: ${content}`)
+        console.log(`Pyinfo: ${content.join(' ')}`)
     if(words[0] === '1')
         return processPyCommand(content.join(' '))
     if(content.length < 2)
@@ -71,7 +70,7 @@ function processPyMsg(msg) {
 // since answers are promises and commands would not be, these would execute the commands first (as described above)
 async function processPyCommand(content) {
     await new Promise((resolve) => resolve(0))
-    process.send(content)
+    send_cmd_upwards(content, "py")
 }
 
 function processPyAnswer(id, state,  content) {
@@ -84,8 +83,9 @@ function processPyAnswer(id, state,  content) {
 
 // -------------------------------- Bubbling upwards ------------------------------------
 
-function send_cmd_upwards (cmd) {
+function send_cmd_upwards (cmd, caller) {
     update_state(cmd)
+    logMsg(cmd, caller)
     process.send(cmd)
 }
 
@@ -102,9 +102,9 @@ function update_state(command) {
 function processSuccessfulRequest(command, answer) {
     // process state answers are not important, only accepted or rejected
     if(start_cmds.includes(command))
-        return send_cmd_upwards("start")
+        return send_cmd_upwards("start", "main")
     if(process_cmds.includes(command))
-        return send_cmd_upwards(command)
+        return send_cmd_upwards(command, "main")
     handleRequestsWithAnswers(command, answer)
 }
 
