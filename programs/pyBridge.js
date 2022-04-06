@@ -166,7 +166,7 @@ async function processMainMsg(msg) {
     if (isEventEcho(msg)) return
     if (isInvalidRequest(msg)) throw `${msg} (main) not accepted`
     if (msg === "stop")
-        state = "stopping"
+        state = "stopped"
     let answer = await request(msg)
     if(!isAcceptedRequest(answer))
         return
@@ -182,14 +182,14 @@ function isAcceptedRequest(requestAnswer) {
 
 function isInvalidRequest (req) {
     if(start_cmds.includes(req) && state != 'idle') return true
-    if(process_cmds.includes(req) && (state == 'idle' || state == 'stopping') ) return true
+    if(process_cmds.includes(req) && (state == 'idle' || state == 'stopped') ) return true
     return false
 }
 
 
-// only usuable for methods comming from main
+// only usuable for methods comming from main, preventing the event at restoring window to fire pause or resume
 function isEventEcho (msg) {
-    return msg === 'pause' && state === 'stop' || child == null && msg == 'pause'
+    return msg === 'pause' && (state === 'stopped' || state === 'idle') || child == null && msg == 'pause'
 }
 
 
