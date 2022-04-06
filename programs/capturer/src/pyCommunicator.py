@@ -42,6 +42,8 @@ def throw_if_not_accepted(cmd):
 def start_process(cmd):
     global process, state
     process = InnerProcess.Simulator() if (cmd == 'simulate') else InnerProcess.Recorder()
+    process.print_cmd = print_cmd
+    process.print_info = print_info
     process.run()
     update_state()
     return "DONE"
