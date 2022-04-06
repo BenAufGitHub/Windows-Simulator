@@ -9,8 +9,8 @@ const process_cmds = ["pause", "resume", "stop"]
 const start_cmds = ["record", "simulate"]
 const pyPath = './programs/capturer/src/pyCommunicator.py'
 
-const promise_map = new Map()
-let id_stack = []
+const promiseMap = new Map()
+let idStack = []
 
 
 function logMsg(msg, writer) {
@@ -21,28 +21,28 @@ function logMsg(msg, writer) {
 // ---------------------------------- mapping ids ---------------------------------------
 
 
-function save_request(id, resolveFunc, rejectFunc) {
-    promise_map.set(id, {res: resolveFunc, rej: rejectFunc})
-    id_stack.push(id)
+function saveRequest(id, resolveFunc, rejectFunc) {
+    promiseMap.set(id, {res: resolveFunc, rej: rejectFunc})
+    idStack.push(id)
 }
 
 function retrive_request(id) {
-    let obj = promise_map.get(id)
-    promise_map.delete(id)
-    id_stack.shift()
+    let obj = promiseMap.get(id)
+    promiseMap.delete(id)
+    idStack.shift()
     return obj
 }
 
 function denyEarliestUnresolved(){
-    if(id_stack.length == 0) return
-    id = id_stack[0]
+    if(idStack.length == 0) return
+    id = idStack[0]
     retrive_request(id).res([id, '1', 'error'])
 }
 
 
 function get_rand_id() {
     for(let i=2; i<32; i++){
-        if(!id_stack.includes(i))
+        if(!idStack.includes(i))
             return i
     }
     throw "Request-Stackoverflow, max is 30"
@@ -70,7 +70,7 @@ function processPyMsg(msg) {
 // since answers are promises and commands would not be, these would execute the commands first (as described above)
 async function processPyCommand(content) {
     await new Promise((resolve) => resolve(0))
-    send_cmd_upwards(content, "py")
+    sendCommandUpwards(content, "py")
 }
 
 function processPyAnswer(id, state,  content) {
@@ -83,13 +83,13 @@ function processPyAnswer(id, state,  content) {
 
 // -------------------------------- Bubbling upwards ------------------------------------
 
-function send_cmd_upwards (cmd, caller) {
-    update_state(cmd)
+function sendCommandUpwards (cmd, caller) {
+    updateState(cmd)
     logMsg(cmd, caller)
     process.send(cmd)
 }
 
-function update_state(command) {
+function updateState(command) {
     if(command === "start" || command === "resume")
         state = "running"
     if(command === "pause")
@@ -102,9 +102,9 @@ function update_state(command) {
 function processSuccessfulRequest(command, answer) {
     // process state answers are not important, only accepted or rejected
     if(start_cmds.includes(command))
-        return send_cmd_upwards("start", "main")
+        return sendCommandUpwards("start", "main")
     if(process_cmds.includes(command))
-        return send_cmd_upwards(command, "main")
+        return sendCommandUpwards(command, "main")
     handleRequestsWithAnswers(command, answer)
 }
 
@@ -151,7 +151,7 @@ process.on("message", (msg) => processMainMsg(msg.toString().trim()))
 async function request(msg) {
     let id = get_rand_id()
     return new Promise((resolve, reject) => {
-        save_request(id, resolve, reject)
+        saveRequest(id, resolve, reject)
         sendPy(id, msg)
     })
 }
