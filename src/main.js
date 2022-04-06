@@ -120,6 +120,7 @@ function startProcess () {
   window.minimize();
   settings.state = 'record'
   settings.processState = "going"
+  settings.selectedWindow = "recording"
   open("recording.html");
 }
 
