@@ -7,7 +7,8 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-requests = ["exit"]
+empty_requests = ["exit"]
+body_requests = ["spit"]
 
 process = None
 state_lock = threading.Lock()
@@ -23,9 +24,13 @@ def execute(cmd):
         return start_process(cmd)
     if cmd in process_actions:
         return mutate_process(cmd)
-    if cmd in requests:
-        return answer_request(cmd)
-    raise CommandFailure("Command {cmd} not found")
+    if cmd in empty_requests:
+        return answer_bodyless_request(cmd)
+    cmd_arr = cmd.split()
+    if cmd_arr[0] in body_requests:
+        if len(cmd_arr) < 2:  raise CommandFailure(f"Command parameter required for {cmd}")
+        return answer_body_request(cmd_arr[0], ' '.join(cmd_arr[1:]))
+    raise CommandFailure(f"Command {cmd} not found")
 
 
 def throw_if_not_accepted(cmd):
@@ -71,10 +76,15 @@ def get_state():
     with state_lock:
         return state             
 
-def answer_request(cmd):
+def answer_bodyless_request(cmd):
     if cmd == "exit":
         return 0
         
+def answer_body_request(cmd, body):
+    if cmd == 'spit':
+        print_info(body)
+        return 'DONE'
+
 
 
 # ------------------- Exceptions ---------------------------------------

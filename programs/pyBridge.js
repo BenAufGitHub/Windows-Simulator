@@ -57,7 +57,7 @@ function processPyMsg(msg) {
         return console.log("Message from py invalid: ", words)
     let content = words.slice(1, words.length)
     if(words[0] === '0')
-        console.log(`Pyinfo: ${content.join(' ')}`)
+        return console.log(`Pyinfo: ${content.join(' ')}`)
     if(words[0] === '1')
         return processPyCommand(content.join(' '))
     if(content.length < 2)
@@ -139,7 +139,6 @@ function initIpcPython () {
     child.stderr.on("data", (data) => {
         console.log("An error occured in Python Child:")
         console.log(data.toString())
-        denyEarliestUnresolved()
     })
 }
 
