@@ -1,6 +1,6 @@
 import sys, functools, traceback, threading
 from typing import Tuple
-import InnerProcess
+import InnerProcess, request_lib
 print = functools.partial(print, flush=True)
 
 starter_commands = ["simulate", "record"]
@@ -119,6 +119,7 @@ def return_answer(id, answer, command):
     update_state()
     with flush_orderly_lock:
         if command in process_actions and command != translate_state_to_command(): return
+        answer = request_lib.transform_to_output_protocol(answer)
         print(f'{id} 0 {answer}')
 
 
@@ -153,7 +154,7 @@ def read_in():
 def processIn(input):
     if not is_valid_input(input):
         return print_info("Not a valid input") # None
-    id, cmd = split_input(input)
+    id, cmd, body = split_input(input)
     try:
         result = execute(cmd) 
         return_answer(id, result, cmd)
@@ -180,12 +181,17 @@ def is_valid_input(input):
 # returns id (first word) and cmd (rest)
 def split_input(input: str) -> Tuple[int, str]:
     arr = input.split()
-    cmd = ' '.join(arr[1:])
-    return arr[0], cmd
+    if arr[1] > 0:
+        return split_body_input(input)
+    return arr[0], arr[2]
 
 
-
+def split_body_input(input_arr):
+    body_begin= input_arr[1] - len(input_arr)
+    body = request_lib.get_input_body_object(' '.join(input_arr[body_begin:]))
+    return input_arr[0], input_arr[2], body
  
+
 def main():
     read_in()
 
