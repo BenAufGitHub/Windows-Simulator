@@ -7,8 +7,7 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-empty_requests = ["exit"]
-body_requests = ["spit"]
+requests = ["exit", "spit"]
 
 process = None
 state_lock = threading.Lock()
@@ -18,18 +17,14 @@ flush_orderly_lock = threading.Lock()
 # ----------------------------------- Executing bubbling --------------------------------
 
 
-def execute(cmd):
+def execute(cmd, body):
     throw_if_not_accepted(cmd)
     if cmd in starter_commands:
         return start_process(cmd)
     if cmd in process_actions:
         return mutate_process(cmd)
-    if cmd in empty_requests:
-        return answer_bodyless_request(cmd)
-    cmd_arr = cmd.split()
-    if cmd_arr[0] in body_requests:
-        if len(cmd_arr) < 2:  raise CommandFailure(f"Command parameter required for {cmd}")
-        return answer_body_request(cmd_arr[0], ' '.join(cmd_arr[1:]))
+    if cmd in requests:
+        return answer_request(cmd, body)
     raise CommandFailure(f"Command {cmd} not found")
 
 
@@ -76,11 +71,9 @@ def get_state():
     with state_lock:
         return state             
 
-def answer_bodyless_request(cmd):
+def answer_request(cmd, body):
     if cmd == "exit":
         return 0
-        
-def answer_body_request(cmd, body):
     if cmd == 'spit':
         print_info(body)
         return 'DONE'
@@ -156,7 +149,7 @@ def processIn(input):
         return print_info("Not a valid input") # None
     id, cmd, body = split_input(input)
     try:
-        result = execute(cmd) 
+        result = execute(cmd, body) 
         return_answer(id, result, cmd)
     except (CommandNotAccepted, CommandFailure) as e:
         return_failure(id, str(e))
@@ -183,7 +176,7 @@ def split_input(input: str) -> Tuple[int, str]:
     arr = input.split()
     if arr[1] > 0:
         return split_body_input(input)
-    return arr[0], arr[2]
+    return arr[0], arr[2], None
 
 
 def split_body_input(input_arr):
