@@ -140,16 +140,18 @@ def translate_state_to_command():
 def read_in():
     try:
         while(True):
-            input = sys.stdin.readline().rstrip()
+            input = sys.stdin.readline()
             processIn(input)
     except InputStop:
         pass
 
 
 def processIn(input):
-    if not is_valid_input(input):
-        return print_info("Not a valid input") # None
-    id, cmd, body = split_input(input)
+    try:
+        id, cmd, body = request_lib.split_input(input)
+        if id < 2: raise request_lib.InvalidRequest("ID must be greater than 1")
+    except request_lib.InvalidRequest as exc:
+        return print_info(f"Not a valid input: {input}, reason: {str(exc)}")
     try:
         result = execute(cmd, body) 
         return_answer(id, result, cmd)
@@ -162,29 +164,6 @@ def processIn(input):
     if cmd == 'exit':
         raise InputStop()
 
-
-
-
-# only identifiers from 2 upwards, since 0 and 1 are used for outgoing signals (python -> electron)
-def is_valid_input(input):
-    if not isinstance(input, str): return False
-    words = input.split()
-    if not words[1].isnumeric() or int(words[1]) + 3 > len(words): return False
-    return words[0].isnumeric() and int(words[0]) > 1
-
-
-# returns id (first word) and cmd (rest)
-def split_input(input: str) -> Tuple[int, str]:
-    arr = input.split()
-    if int(arr[1]) > 0:
-        return split_body_input(arr)
-    return arr[0], arr[2], None
-
-
-def split_body_input(input_arr):
-    body_begin= len(input_arr) - int(input_arr[1])
-    body = request_lib.get_input_body_object(' '.join(input_arr[body_begin:]))
-    return input_arr[0], ' '.join(input_arr[2:body_begin]), body
  
 
 def main():
