@@ -1,11 +1,101 @@
 # get windows
 # get pid
 # get closest window in process
+import math
+
+class InvalidRequest(Exception):
+    pass
+
+def split_request(request: str):
+    id, remainder = _seperate_id(request)
+    req, raw_body = _seperate_request(remainder)
+    body = _raw_body_to_object(raw_body)
+    return id, req, body
+
+
+def _seperate_id(request):
+    str_figure = ''
+    text = request.lstrip(' ')
+    if len(text) == 0: raise InvalidRequest('Empty request denied')
+    for letter in text:
+        if letter == ' ': break
+        str_figure += letter
+    if not str_figure.isdigit(): raise InvalidRequest('No valid ID found')
+    if len(str_figure)+2 > len(text): raise InvalidRequest('No request found')
+    return int(str_figure), text[len(str_figure)+1:]
+
+def _seperate_request(text):
+    text = text.lstrip()
+    seperator_index = text.find(" | ")
+    # either not existent or at end (= no body)
+    if seperator_index < 0 or seperator_index == len(text)-3: raise InvalidRequest("No Request-Body Seperator")
+    return text[:seperator_index], text[seperator_index+3:]
+
+def _raw_body_to_object(raw_body):
+    identifier, remainder = _seperate_identifier(raw_body)
+    if identifier == 'n': return None
+    if identifier == 'i': return get_int(remainder)
+    if identifier == 'ai': return get_int_list(remainder)
+    if identifier == 't': return get_text(remainder)
+    if identifier == 'at': return get_text_list(remainder)
+
+def _seperate_identifier(text):
+    text = text.lstrip()
+    if len(text) == 0: raise InvalidRequest("Request body missing")
+    if text[0] == 'n': return 'n', None
+    space = text.find(' ')
+    if space == -1: space = len(text)
+    return text[:space], text[space+1:].lstrip()
+
+def get_int(text):
+    space = text.find(" ")
+    if space != -1:
+        text = text[:space]
+    if not text.isdigit(): raise InvalidRequest("Request with identifier i requires integer")
+    return int(text)
+
+def get_int_list(text):
+    arr = []
+    while len(text) > 0:
+        space = text.find(" ")
+        if space == -1: space = len(text)
+        try:
+            arr.append(get_int(text[:space]))
+        except InvalidRequest:
+            raise InvalidRequest("Request with identifier ai must only contain integers")
+        text = text[space:].lstrip()
+    return arr
+
+def get_text(text):
+    space = text.find(" ")
+    if space == -1: return text
+    try:
+        chars = get_int(text)
+        if chars < 1: return ''
+    except InvalidRequest:
+        raise InvalidRequest("Request with identifier t has no char amount defined")
+    chars_repr_len = int(math.floor(math.log(chars, 10))) + 1
+    if chars + chars_repr_len + 1 > len(text): raise InvalidRequest("Text input shorter than character hint suggests")
+    return text[chars_repr_len + 1:chars + chars_repr_len + 1]
+    
+def get_text_list(text):
+    arr = []
+    while len(text) > 0:
+        try:
+            sub_text = get_text(text)
+            removed_digits = math.floor(math.log(len(sub_text), 10)) + 2
+        except InvalidRequest:
+            raise InvalidRequest("text-list request invalidly formatted")
+        arr.append(sub_text)
+        text = text[len(sub_text) + removed_digits:].lstrip()
+    return arr
 
 
 def transform_to_output_protocol(input):
+    if input == None:
+        return "n"
     if type(input) == str:
-        return f"t {input}"
+        return f"t {len(input)} {input}"
     if type(input) == int:
         return f"i {input}"
     if type(input) == list:
@@ -15,7 +105,7 @@ def transform_to_output_protocol(input):
 
 def array_to_output_protocol(input):
     is_int_arr = True
-    result_str = 'at'
+    result_str = 'at '
     for content in input:
         if type(content) != int:
             is_int_arr = False
@@ -23,47 +113,5 @@ def array_to_output_protocol(input):
         result_str = ' '.join(map(lambda i: str(i), input))
         return f"ai {result_str}"
     for content in input:
-        length = len(str(content).split())
-        result_str += f" {length} {str(content)}"
+        result_str += f"{len(str(content))} {str(content)}"
     return result_str
-
-
-# types t:text i:int at:textarray ai:intarray
-def get_input_body_object(input):
-    arr = input.split()
-    if len(arr) < 2:
-        raise ValueError(f"identifier or args missing: {input}")
-    in_type = arr[0]
-    if in_type == 't':
-        return ' '.join(arr[1:])
-    if in_type == 'i':
-        if len(arr) != 2:
-            raise ValueError(f"identifier or args missing: {input}")
-        return int(arr[1])
-    if in_type == 'ai':
-        return str_to_int_arr(arr[1:])
-    if in_type == 'at':
-        return str_to_txt_arr(arr[1:])
-    raise ValueError(f"Identifier not supported:{arr[0]}")
-
-
-def str_to_txt_arr(array):
-    index = 0
-    result = []
-    while index < len(array):
-        if int(array[index]) + index >= len(array) or int(array[index]) <= 0:
-            raise Exception("Faulty txt array at conversion by protocol.")
-        next_word_sequence = array[index+1:1+index+int(array[index])]
-        result.append(' '.join(next_word_sequence))
-        index += int(array[index])+1
-    return result
-    
-def str_to_int_arr(array):
-    return map(lambda figure: int(figure), array)
-
-
-def split_request(request):
-    words = []
-    word = ''
-    for letter in request:
-        if 
