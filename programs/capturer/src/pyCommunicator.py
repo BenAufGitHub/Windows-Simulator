@@ -167,7 +167,7 @@ def processIn(input):
 def is_valid_input(input):
     if not isinstance(input, str): return False
     words = input.split()
-    if len(words) < 2: return False
+    if not words[1].isnumeric() or int(words[1]) + 3 > len(words): return False
     return words[0].isnumeric() and int(words[0]) > 1
 
 
@@ -180,9 +180,9 @@ def split_input(input: str) -> Tuple[int, str]:
 
 
 def split_body_input(input_arr):
-    body_begin= input_arr[1] - len(input_arr)
+    body_begin= len(input_arr) - int(input_arr[1])
     body = request_lib.get_input_body_object(' '.join(input_arr[body_begin:]))
-    return input_arr[0], input_arr[2], body
+    return input_arr[0], input_arr[2:body_begin], body
  
 
 def main():
