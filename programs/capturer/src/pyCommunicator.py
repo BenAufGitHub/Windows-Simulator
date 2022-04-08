@@ -1,5 +1,7 @@
 import sys, functools, traceback, threading
 from typing import Tuple
+
+from requests import request
 import InnerProcess, request_lib
 print = functools.partial(print, flush=True)
 
@@ -174,15 +176,15 @@ def is_valid_input(input):
 # returns id (first word) and cmd (rest)
 def split_input(input: str) -> Tuple[int, str]:
     arr = input.split()
-    if arr[1] > 0:
-        return split_body_input(input)
+    if int(arr[1]) > 0:
+        return split_body_input(arr)
     return arr[0], arr[2], None
 
 
 def split_body_input(input_arr):
     body_begin= len(input_arr) - int(input_arr[1])
     body = request_lib.get_input_body_object(' '.join(input_arr[body_begin:]))
-    return input_arr[0], input_arr[2:body_begin], body
+    return input_arr[0], ' '.join(input_arr[2:body_begin]), body
  
 
 def main():
