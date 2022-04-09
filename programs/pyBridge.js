@@ -4,10 +4,11 @@ const path = require("path");
 
 
 let child = null;
-let state = "idle"; // STATE APPORVAL STILL RIGHT? CHECK FOR FAULTY REQUESTS!!
-const states = ["idle", "running", "paused", "stopped"] // stopped necessary?
+let state = "idle";
+const states = ["idle", "running", "paused", "stopped"]
 const process_cmds = ["pause", "resume", "stop"]
 const start_cmds = ["record", "simulate"]
+const main_requests = ["wait_until_completion"]
 const pyPath = './programs/capturer/src/pyCommunicator.py'
 
 const promiseMap = new Map()

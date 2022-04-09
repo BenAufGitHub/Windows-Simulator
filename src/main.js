@@ -22,7 +22,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 
-function createWindow (filename) {
+function createWindow () {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -66,8 +66,11 @@ const createFirstWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createFirstWindow);
+app.on('ready', atStart);
 
+function atStart() {
+  createFirstWindow()
+}
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
