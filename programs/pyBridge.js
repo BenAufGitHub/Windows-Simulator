@@ -1,4 +1,5 @@
 const {spawn} = require("child_process");
+let {FormatError, splitPyMessage, getFormattedBody, tryGetID} = require("./protocolConversion.js")
 const path = require("path");
 
 
@@ -52,17 +53,21 @@ function get_rand_id() {
 // -------------------------------- python specifics ------------------------------------
 
 function processPyMsg(msg) {
-    let words = msg.split(" ")
-    if(words.length < 2 || isNaN(words[0]))
-        return console.log("Message from py invalid: ", words)
-    let content = words.slice(1, words.length)
-    if(words[0] === '0')
-        return console.log(`Pyinfo: ${content.join(' ')}`)
-    if(words[0] === '1')
-        return processPyCommand(content.join(' '))
-    if(content.length < 2)
-        return console.log("Answer from py missing state or answer: ", content)
-    processPyAnswer(parseInt(words[0]), content[0], content.slice(1, content.length).join(' '))
+    try {
+        let [id, arg1, arg2] = splitPyMessage(msg)
+        if(id < 2) {
+            if(id === 1)
+                return processPyCommand(arg1)
+            return console.log(`Pyinfo: ${arg1}`)
+        }
+        processPyAnswer(id, arg1, arg2)
+    } catch (e) {
+        if(!(e instanceof FormatError)) throw e
+        let id = tryGetID(msg)
+        if(id==-1) return
+        if(id<2) return console.log(`Faulty py-msg, can't convert: ${msg}`)
+        processPyAnswer(id, 1, "conversion failed")
+    }
 }
 
 
@@ -148,17 +153,17 @@ function initIpcPython () {
 process.on("message", (msg) => processMainMsg(msg.toString().trim()))
 
 
-async function request(msg) {
+async function request(req, args) {
     let id = get_rand_id()
     return new Promise((resolve, reject) => {
         save_request(id, resolve, reject)
-        sendPy(id, msg)
+        sendPy(id, req, getFormattedBody(args))
     })
 }
 
-function sendPy (id, msg) {
+function sendPy (id, req, body) {
     child?.stdin?.setEncoding("utf-8")
-    child?.stdin?.write(`${id} ${msg}` + "\n")
+    child?.stdin?.write(`${id} ${req} | ${body}` + "\n")
 }
 
 async function processMainMsg(msg) {

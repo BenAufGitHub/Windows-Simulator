@@ -119,8 +119,8 @@ def return_answer(id, answer, command):
 
 
 # 1 for failure
-def return_failure(id, reason):
-    print(f'{id} 1 {reason}')
+def return_failure(id, reason: str):
+    print(f'{id} 1 t {len(reason)} {reason}')
 
 
 def translate_state_to_command():
@@ -148,7 +148,7 @@ def read_in():
 
 def processIn(input):
     try:
-        id, cmd, body = request_lib.split_input(input)
+        id, cmd, body = request_lib.split_request(input)
         if id < 2: raise request_lib.InvalidRequest("ID must be greater than 1")
     except request_lib.InvalidRequest as exc:
         return print_info(f"Not a valid input: {input}, reason: {str(exc)}")
@@ -167,6 +167,7 @@ def processIn(input):
  
 
 def main():
+    print_info("starting")
     read_in()
 
 
