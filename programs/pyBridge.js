@@ -1,5 +1,5 @@
 const {spawn} = require("child_process");
-let {FormatError, splitPyMessage, getFormattedBody, tryGetID} = require("./protocolConversion.js")
+let {FormatError, splitRequestMessage, splitAnswerMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
 const path = require("path");
 
 
@@ -55,7 +55,7 @@ function get_rand_id() {
 
 function processPyMsg(msg) {
     try {
-        let [id, arg1, arg2] = splitPyMessage(msg)
+        let [id, arg1, arg2] = splitAnswerMessage(msg)
         if(id < 2) {
             if(id === 1)
                 return processPyCommand(arg1)
@@ -151,7 +151,7 @@ function initIpcPython () {
 
 // -------------------------------------- main handling --------------------------------------------------
 
-process.on("message", (msg) => processMainMsg(msg.toString().trim()))
+process.on("message", (msg) => processMainMsg(msg.toString()))
 
 
 async function request(req, args) {
@@ -168,6 +168,26 @@ function sendPy (id, req, body) {
 }
 
 async function processMainMsg(msg) {
+    let [id, arg1, arg2] = splitRequestMessage(msg)
+    if(id===1)
+        return processMainCommand(arg1)
+    processMainRequest(id, arg1, arg2)
+}
+
+async function processMainRequest(id, req, body) {
+    try {
+        let result = handleRequest(req, body)
+        process.send(`${id} 0 ${getFormattedBody(result)}`)
+    } catch (e) {
+        process.send(`${id} 1 ${getFormattedBody(e.toString)}`)
+    }
+}
+
+async function handleRequest(req, body) {
+    // TODO
+}
+
+async function processMainCommand() {
     if (isEventEcho(msg)) return
     if (isInvalidRequest(msg)) throw `${msg} (main) not accepted`
     if (msg === "stop")
