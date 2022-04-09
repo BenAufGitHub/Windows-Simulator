@@ -1,14 +1,15 @@
 import sys, functools, traceback, threading
 from typing import Tuple
-import InnerProcess
+
+from requests import request
+import InnerProcess, request_lib
 print = functools.partial(print, flush=True)
 
 starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-empty_requests = ["exit"]
-body_requests = ["spit"]
+requests = ["exit", "spit"]
 
 process = None
 state_lock = threading.Lock()
@@ -18,18 +19,14 @@ flush_orderly_lock = threading.Lock()
 # ----------------------------------- Executing bubbling --------------------------------
 
 
-def execute(cmd):
+def execute(cmd, body):
     throw_if_not_accepted(cmd)
     if cmd in starter_commands:
         return start_process(cmd)
     if cmd in process_actions:
         return mutate_process(cmd)
-    if cmd in empty_requests:
-        return answer_bodyless_request(cmd)
-    cmd_arr = cmd.split()
-    if cmd_arr[0] in body_requests:
-        if len(cmd_arr) < 2:  raise CommandFailure(f"Command parameter required for {cmd}")
-        return answer_body_request(cmd_arr[0], ' '.join(cmd_arr[1:]))
+    if cmd in requests:
+        return answer_request(cmd, body)
     raise CommandFailure(f"Command {cmd} not found")
 
 
@@ -76,11 +73,9 @@ def get_state():
     with state_lock:
         return state             
 
-def answer_bodyless_request(cmd):
+def answer_request(cmd, body):
     if cmd == "exit":
         return 0
-        
-def answer_body_request(cmd, body):
     if cmd == 'spit':
         print_info(body)
         return 'DONE'
@@ -119,12 +114,13 @@ def return_answer(id, answer, command):
     update_state()
     with flush_orderly_lock:
         if command in process_actions and command != translate_state_to_command(): return
+        answer = request_lib.transform_to_output_protocol(answer)
         print(f'{id} 0 {answer}')
 
 
 # 1 for failure
-def return_failure(id, reason):
-    print(f'{id} 1 {reason}')
+def return_failure(id, reason: str):
+    print(f'{id} 1 t {len(reason)} {reason}')
 
 
 def translate_state_to_command():
@@ -144,18 +140,20 @@ def translate_state_to_command():
 def read_in():
     try:
         while(True):
-            input = sys.stdin.readline().rstrip()
+            input = sys.stdin.readline()
             processIn(input)
     except InputStop:
         pass
 
 
 def processIn(input):
-    if not is_valid_input(input):
-        return print_info("Not a valid input") # None
-    id, cmd = split_input(input)
     try:
-        result = execute(cmd) 
+        id, cmd, body = request_lib.split_request(input)
+        if id < 2: raise request_lib.InvalidRequest("ID must be greater than 1")
+    except request_lib.InvalidRequest as exc:
+        return print_info(f"Not a valid input: {input}, reason: {str(exc)}")
+    try:
+        result = execute(cmd, body) 
         return_answer(id, result, cmd)
     except (CommandNotAccepted, CommandFailure) as e:
         return_failure(id, str(e))
@@ -166,27 +164,10 @@ def processIn(input):
     if cmd == 'exit':
         raise InputStop()
 
-
-
-
-# only identifiers from 2 upwards, since 0 and 1 are used for outgoing signals (python -> electron)
-def is_valid_input(input):
-    if not isinstance(input, str): return False
-    words = input.split()
-    if len(words) < 2: return False
-    return words[0].isnumeric() and int(words[0]) > 1
-
-
-# returns id (first word) and cmd (rest)
-def split_input(input: str) -> Tuple[int, str]:
-    arr = input.split()
-    cmd = ' '.join(arr[1:])
-    return arr[0], cmd
-
-
-
  
+
 def main():
+    print_info("starting")
     read_in()
 
 
