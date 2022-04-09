@@ -156,13 +156,8 @@ process.on("message", (msg) => processMainMsg(msg.toString().trim()))
 async function request(req, args) {
     let id = get_rand_id()
     return new Promise((resolve, reject) => {
-<<<<<<< HEAD
         saveRequest(id, resolve, reject)
-        sendPy(id, msg)
-=======
-        save_request(id, resolve, reject)
         sendPy(id, req, getFormattedBody(args))
->>>>>>> dev/protocol2
     })
 }
 
