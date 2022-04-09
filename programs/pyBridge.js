@@ -98,7 +98,7 @@ function update_state(command) {
     if(command === "start" || command === "resume")
         state = "running"
     if(command === "pause")
-        state = "pausing"
+        state = "paused"
     if(command === "stop")
         state = "idle"
 }
@@ -180,7 +180,7 @@ async function processMainMsg(msg) {
 
 // request answers: [id, 0/1, answer]
 function isAcceptedRequest(requestAnswer) {
-    return requestAnswer[1] === '0'
+    return requestAnswer[1] === 0
 }
 
 
@@ -193,7 +193,7 @@ function isInvalidRequest (req) {
 
 // only usuable for methods comming from main, preventing the event at restoring window to fire pause or resume
 function isEventEcho (msg) {
-    return msg === 'pause' && (state === 'stopped' || state === 'idle') || child == null && msg == 'pause'
+    return msg === 'pause' && ["stopped", "idle", "paused"].includes(state) || child == null && msg == 'pause'
 }
 
 
