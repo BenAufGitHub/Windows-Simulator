@@ -2,22 +2,108 @@ const {spawn} = require("child_process");
 let {FormatError, splitRequestMessage, splitAnswerMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
 const path = require("path");
 
+const pyPath = './programs/capturer/src/pyCommunicator.py'
 
+// subprogramm coordination in terms of command and state management
 let child = null;
 let state = "idle";
 const states = ["idle", "running", "paused", "stopped"]
 const process_cmds = ["pause", "resume", "stop"]
 const start_cmds = ["record", "simulate"]
-const main_requests = ["wait_until_py_initiation"]
-const pyPath = './programs/capturer/src/pyCommunicator.py'
 
+// shallow request don't go into the python subprogramm
+const mainShallowRequests = ["wait_until_py_initiation"]
+// deep requests go into python subprograms
+const mainDeepRequests = []
+
+// promise-resolving, can be triggered when certain things happen in this process, main can check for these events to complete with awaiting those
 const awaitingEvents = new Map()
+// ipc handling: when sending a request the promise-resolve is stored under an id, which will be fetched
+// if py application answers with that id
 const promiseMap = new Map()
 let idStack = []
 
 
 function logMsg(msg, writer) {
     console.log(`${writer}: ${msg}`)
+}
+
+
+// important notes:
+// the term 'command' is used for one way operations that do not await an answer
+// commands from main refer to telling python programm how to act, see 'process_cmds' or 'start_cmds'
+// commands from py indicates which commands python HAS enacted (in correct order), which is bubbled to main to show the user
+// note that python can enact commands itself with keyboard input
+// race condition/ verifying is handled in python, because the bubbling happens in correct order, there should not be any major problems
+
+// requests expect an answer and await it with a promise
+// sending commands to py is a request to see whether they get accepted
+// main can also send requests (may be bubbled into python) which can expect a return value
+
+
+// -------------------------------------- main handling --------------------------------------------------
+
+
+// here is where messages from main get picked up
+process.on("message", (msg) => processMainMsg(msg.toString()))
+
+async function processMainMsg(msg) {
+    let [id, arg1, arg2] = splitRequestMessage(msg)
+    if(id===1)
+        return processMainCommand(arg1)
+    processMainRequest(id, arg1, arg2)
+}
+
+            // ------------------ Command handling ---------------------------
+
+async function processMainCommand(command) {
+    if (isEventEcho(command)) return
+    if (isInvalidCommandRequest(command)) throw `${command} (main) not accepted`
+    if (command === "stop")
+        state = "stopped"
+    let answer = await requestToPy(command)
+    if(!isAcceptedRequest(answer)) return
+    processSuccessfulRequest(command, answer[2])
+}
+
+// request answers: [id, 0/1, answer]
+function isAcceptedRequest(requestAnswer) {
+    return requestAnswer[1] === 0
+}
+
+
+function isInvalidCommandRequest (req) {
+    if(start_cmds.includes(req) && state != 'idle') return true
+    if(process_cmds.includes(req) && (state == 'idle' || state == 'stopped') ) return true
+    return false
+}
+
+// only usuable for methods comming from main, preventing the event at restoring window to fire pause or resume
+function isEventEcho (msg) {
+    return msg === 'pause' && ["stopped", "idle", "paused"].includes(state) || child == null && msg == 'pause'
+}
+
+
+            // ------------------- request handling ---------------------------
+
+
+async function processMainRequest(id, req, body) {
+    try {
+        let result = await handleRequest(req, body)
+        process.send(`${id} 0 ${getFormattedBody(result)}`)
+    } catch (e) {
+        process.send(`${id} 1 ${getFormattedBody(e.toString())}`)
+    }
+}
+
+async function handleRequest(req, body) {
+  if(req === "wait_until_py_initiation"){
+    if(child != null) return
+    let prom = new Promise((resolve, reject) => {
+        awaitingEvents.set("wait_until_py_initiation", resolve)
+    })
+    return await prom
+  }
 }
 
 
@@ -36,19 +122,55 @@ function retrive_request(id) {
     return obj
 }
 
-function denyEarliestUnresolved(){
-    if(idStack.length == 0) return
-    id = idStack[0]
-    retrive_request(id).res([id, '1', 'error'])
-}
-
-
 function get_rand_id() {
     for(let i=2; i<32; i++){
         if(!idStack.includes(i))
             return i
     }
     throw "Request-Stackoverflow, max is 30"
+}
+
+
+async function requestToPy(req, args) {
+    let id = get_rand_id()
+    return new Promise((resolve, reject) => {
+        saveRequest(id, resolve, reject)
+        sendPy(id, req, getFormattedBody(args))
+    })
+}
+
+
+
+// -------------------------------- Python initialization -------------------------------
+
+
+function startPyApplication() {
+    if(child != null && child.connected) throw "Cannot spawn multiple processes simultaneously"
+    child = spawn("py", [pyPath])
+    initIpcPython();
+    awaitingEvents.get("wait_until_py_initiation")?.()
+}
+
+
+function initIpcPython () {
+    if(child==null) throw "No child to ipc with"
+    child.stdout.on("data", (data) => {
+        let msg = data.toString().trim();
+        let cmds = msg.split(/\r\n|\n|\r/)
+        cmds.forEach(element => {
+            processPyMsg(element)
+        });
+    })
+
+    child.stderr.on("data", (data) => {
+        console.log("An error occured in Python Child:")
+        console.log(data.toString())
+    })
+}
+
+function sendPy (id, req, body) {
+    child?.stdin?.setEncoding("utf-8")
+    child?.stdin?.write(`${id} ${req} | ${body}` + "\n")
 }
 
 
@@ -112,118 +234,8 @@ function processSuccessfulRequest(command, answer) {
         return sendCommandUpwards("start", "main")
     if(process_cmds.includes(command))
         return sendCommandUpwards(command, "main")
-    handleRequestsWithAnswers(command, answer)
 }
 
-
-function handleRequestsWithAnswers(command, answer) {
-    // TODO when main-invoking is introced
-}
-
-
-
-
-// -------------------------------- Python initialization -------------------------------
-
-
-function startPyApplication() {
-    if(child != null && child.connected) throw "Cannot spawn multiple processes simultaneously"
-    child = spawn("py", [pyPath])
-    initIpcPython();
-    awaitingEvents.get("wait_until_py_initiation")?.()
-}
-
-
-function initIpcPython () {
-    if(child==null) throw "No child to ipc with"
-    child.stdout.on("data", (data) => {
-        let msg = data.toString().trim();
-        let cmds = msg.split(/\r\n|\n|\r/)
-        cmds.forEach(element => {
-            processPyMsg(element)
-        });
-    })
-
-    child.stderr.on("data", (data) => {
-        console.log("An error occured in Python Child:")
-        console.log(data.toString())
-    })
-}
-
-
-// -------------------------------------- main handling --------------------------------------------------
-
-process.on("message", (msg) => processMainMsg(msg.toString()))
-
-
-async function request(req, args) {
-    let id = get_rand_id()
-    return new Promise((resolve, reject) => {
-        saveRequest(id, resolve, reject)
-        sendPy(id, req, getFormattedBody(args))
-    })
-}
-
-function sendPy (id, req, body) {
-    child?.stdin?.setEncoding("utf-8")
-    child?.stdin?.write(`${id} ${req} | ${body}` + "\n")
-}
-
-async function processMainMsg(msg) {
-    let [id, arg1, arg2] = splitRequestMessage(msg)
-    if(id===1)
-        return processMainCommand(arg1)
-    processMainRequest(id, arg1, arg2)
-}
-
-async function processMainRequest(id, req, body) {
-    try {
-        let result = await handleRequest(req, body)
-        process.send(`${id} 0 ${getFormattedBody(result)}`)
-    } catch (e) {
-        process.send(`${id} 1 ${getFormattedBody(e.toString())}`)
-    }
-}
-
-async function handleRequest(req, body) {
-  if(req === "wait_until_py_initiation"){
-    if(child != null) return
-    let prom = new Promise((resolve, reject) => {
-        awaitingEvents.set("wait_until_py_initiation", resolve)
-    })
-    return await prom
-  }
-}
-
-async function processMainCommand(command) {
-    if (isEventEcho(command)) return
-    if (isInvalidRequest(command)) throw `${command} (main) not accepted`
-    if (command === "stop")
-        state = "stopped"
-    let answer = await request(command)
-    if(!isAcceptedRequest(answer))
-        return
-    processSuccessfulRequest(command, answer[2])
-}
-
-
-// request answers: [id, 0/1, answer]
-function isAcceptedRequest(requestAnswer) {
-    return requestAnswer[1] === 0
-}
-
-
-function isInvalidRequest (req) {
-    if(start_cmds.includes(req) && state != 'idle') return true
-    if(process_cmds.includes(req) && (state == 'idle' || state == 'stopped') ) return true
-    return false
-}
-
-
-// only usuable for methods comming from main, preventing the event at restoring window to fire pause or resume
-function isEventEcho (msg) {
-    return msg === 'pause' && ["stopped", "idle", "paused"].includes(state) || child == null && msg == 'pause'
-}
 
 
 main:
