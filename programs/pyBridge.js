@@ -8,9 +8,10 @@ let state = "idle";
 const states = ["idle", "running", "paused", "stopped"]
 const process_cmds = ["pause", "resume", "stop"]
 const start_cmds = ["record", "simulate"]
-const main_requests = ["wait_until_completion"]
+const main_requests = ["wait_until_py_initiation"]
 const pyPath = './programs/capturer/src/pyCommunicator.py'
 
+const awaitingEvents = new Map()
 const promiseMap = new Map()
 let idStack = []
 
@@ -129,6 +130,7 @@ function startPyApplication() {
     if(child != null && child.connected) throw "Cannot spawn multiple processes simultaneously"
     child = spawn("py", [pyPath])
     initIpcPython();
+    awaitingEvents.get("wait_until_py_initiation")?.()
 }
 
 
@@ -176,15 +178,21 @@ async function processMainMsg(msg) {
 
 async function processMainRequest(id, req, body) {
     try {
-        let result = handleRequest(req, body)
+        let result = await handleRequest(req, body)
         process.send(`${id} 0 ${getFormattedBody(result)}`)
     } catch (e) {
-        process.send(`${id} 1 ${getFormattedBody(e.toString)}`)
+        process.send(`${id} 1 ${getFormattedBody(e.toString())}`)
     }
 }
 
 async function handleRequest(req, body) {
-    // TODO
+  if(req === "wait_until_py_initiation"){
+    if(child != null) return
+    let prom = new Promise((resolve, reject) => {
+        awaitingEvents.set("wait_until_py_initiation", resolve)
+    })
+    return await prom
+  }
 }
 
 async function processMainCommand(command) {

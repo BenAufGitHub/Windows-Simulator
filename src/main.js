@@ -72,7 +72,9 @@ const createFirstWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', atStart);
 
-function atStart() {
+async function atStart() {
+  let data = await request("wait_until_py_initiation")
+  if(!data.isSuccessful) console.log("waiting for python unsuccessful, reason:", data.answer)
   createFirstWindow()
 }
 
