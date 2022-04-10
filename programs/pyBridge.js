@@ -94,6 +94,7 @@ async function processMainRequest(id, req, body) {
     } catch (e) {
         process.send(`${id} 1 ${getFormattedBody(e.toString())}`)
     }
+    if(req === 'exit') process.disconnect()
 }
 
 async function handleRequest(req, body) {

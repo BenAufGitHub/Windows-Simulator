@@ -263,6 +263,7 @@ function sendCommandToBridge(command) {
 process.on("exit", (code) => {
   func = async function () {
     await request("exit")
+    settings.process?.disconnect()
   }
   func()
 })
