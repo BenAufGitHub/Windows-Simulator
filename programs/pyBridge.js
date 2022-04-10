@@ -104,6 +104,7 @@ async function handleRequest(req, body) {
     })
     return await prom
   }
+  if(req == "exit") return await requestToPy("exit")
 }
 
 
