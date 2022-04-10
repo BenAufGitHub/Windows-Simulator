@@ -1,7 +1,11 @@
 const { app, BrowserWindow, ipcMain, remote} = require('electron');
 const { fork } = require("child_process")
+let {FormatError, splitAnswerMessage, splitRequestMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
 const path = require('path');
 let window = null;
+
+const promiseMap = new Map()
+let idStack = []
 
 const settings = {
   state: "menu",              // menu / recording / simulating
@@ -41,7 +45,7 @@ function createWindow () {
 
 const prepareEventListeners = (window) => {
   window.on("restore", (event, args) => {
-    sendToChild(null, "pause")
+    sendCommandToBridge("pause")
   })
 }
 
@@ -100,22 +104,14 @@ app.on('activate', () => {
 // ------------------------- ipcMain listeners -----------------------------------------
 
 ipcMain.on("start", _initProcess)
-ipcMain.on("tell-process", sendToChild)
-
-/** args: 'pause', 'resume' or 'stop' */
-function sendToChild (event, args) {
-  if(settings?.process)
-    settings.process.send(args)
-}
-
+ipcMain.on("tell-process", (event, args) => sendCommandToBridge(args))
 
 // ------------------------ reaction to pyBridge -------------------------------------------
 
 
 function _initProcess (event, args) {
   if(!["record", "simulate"].includes(args)) throw `Illegal Argument ${args}`;
-  if (settings.process)
-    settings.process.send(args)
+    sendCommandToBridge(args)
 }
 
 
@@ -175,24 +171,93 @@ function startPythonBridge () {
 
 function configurePythonBridge () {
   settings.process?.on("message", (m) => {
-    switch (m) {
-      case 'resume':
-        resumeProcess()
-        break;
-      case 'pause':
-        pauseProcess()
-        break;
-      case 'stop':
-        stopProcess()
-        break;
-      case 'start':
-        startProcess()
-        break;
-      default:
-        console.log(`A message from child: ${m}`)
-    }
+    let msg = m.toString()
+    let [id, arg1, arg2] = splitAnswerMessage(msg)
+    if(id===1) return processCommandFromBridge(arg1)
+    processAnswerFromBridge(id, arg1, arg2)
   })
 }
+
+function processAnswerFromBridge(id, errorcode, body) {
+  const promise = retrive_request(id)
+  answer_obj = {
+    isSuccessful: errorcode==0,
+    id: id,
+    answer: body,
+  }
+  promise.res(answer_obj)
+}
+
+function processCommandFromBridge(command) {
+  switch (command) {
+    case 'resume':
+      resumeProcess()
+      break;
+    case 'pause':
+      pauseProcess()
+      break;
+    case 'stop':
+      stopProcess()
+      break;
+    case 'start':
+      startProcess()
+      break;
+    default:
+      console.log(`Command from bridge not available: ${m}`)
+  }
+}
+
+
+// -------------------------------------- mapping IDs -------------------------------------------------
+
+function saveRequest(id, resolveFunc, rejectFunc) {
+  promiseMap.set(id, {res: resolveFunc, rej: rejectFunc})
+  idStack.push(id)
+}
+
+function retrive_request(id) {
+  let obj = promiseMap.get(id)
+  promiseMap.delete(id)
+  idStack.shift()
+  return obj
+}
+
+function denyEarliestUnresolved(){
+  if(idStack.length == 0) return
+  id = idStack[0]
+  retrive_request(id).res([id, '1', 'error'])
+}
+
+
+function get_rand_id() {
+  for(let i=2; i<32; i++){
+      if(!idStack.includes(i))
+          return i
+  }
+  throw "Request-Stackoverflow, max is 30"
+}
+
+// ------------------------------------------------------ requesting -------------------------------------------------
+
+
+async function request(req, args) {
+  let id = get_rand_id()
+  return new Promise((resolve, reject) => {
+      saveRequest(id, resolve, reject)
+      sendRequestToBridge(id, req, getFormattedBody(args))
+  })
+}
+
+async function sendRequestToBridge(id, req, body) {
+  settings.process?.send(`${id} ${req} | ${body}`)
+}
+
+// can currently command record, simulate, pause, resume, stop
+function sendCommandToBridge(command) {
+  settings.process?.send(`1 ${command}`)
+}
+
+
 
 
 

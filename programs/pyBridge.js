@@ -92,7 +92,7 @@ function processPyAnswer(id, state,  content) {
 function sendCommandUpwards (cmd, caller) {
     updateState(cmd)
     logMsg(cmd, caller)
-    process.send(cmd)
+    process.send(`1 ${cmd}`)
 }
 
 function updateState(command) {
@@ -187,15 +187,15 @@ async function handleRequest(req, body) {
     // TODO
 }
 
-async function processMainCommand() {
-    if (isEventEcho(msg)) return
-    if (isInvalidRequest(msg)) throw `${msg} (main) not accepted`
-    if (msg === "stop")
+async function processMainCommand(command) {
+    if (isEventEcho(command)) return
+    if (isInvalidRequest(command)) throw `${command} (main) not accepted`
+    if (command === "stop")
         state = "stopped"
-    let answer = await request(msg)
+    let answer = await request(command)
     if(!isAcceptedRequest(answer))
         return
-    processSuccessfulRequest(msg, answer[2])
+    processSuccessfulRequest(command, answer[2])
 }
 
 
