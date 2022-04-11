@@ -95,6 +95,7 @@ def transform_to_output_protocol(input):
     if input == None:
         return "n"
     if type(input) == str:
+        input = input.encode("ascii", "ignore").decode()
         return f"t {len(input)} {input}"
     if type(input) == int:
         return f"i {input}"
@@ -113,5 +114,6 @@ def array_to_output_protocol(input):
         result_str = ' '.join(map(lambda i: str(i), input))
         return f"ai {result_str}"
     for content in input:
+        content = content.encode("ascii", "ignore").decode()
         result_str += f"{len(str(content))} {str(content)}"
     return result_str

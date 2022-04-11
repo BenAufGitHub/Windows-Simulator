@@ -2,7 +2,7 @@ import sys, functools, traceback, threading
 from typing import Tuple
 
 from requests import request
-import InnerProcess, request_helper
+import InnerProcess, request_helper, request_lib
 print = functools.partial(print, flush=True)
 
 starter_commands = ["simulate", "record"]
@@ -80,8 +80,7 @@ def answer_request(cmd, body):
         print_info(body)
         return 'DONE'
     if cmd == 'getWinNames':
-        # TODO
-        raise Exception("Not impplemented: getWinNames")
+        return list(request_lib.get_filtered_window_collection())
 
 
 
