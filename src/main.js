@@ -241,6 +241,11 @@ function get_rand_id() {
 
 // ------------------------------------------------------ requesting -------------------------------------------------
 
+ipcMain.handle("request", async (event, arg1, arg2) => {
+  let data = await request(arg1, arg2)
+  if (!data.isSuccessful) return null
+  return data.answer
+})
 
 async function request(req, args) {
   let id = get_rand_id()

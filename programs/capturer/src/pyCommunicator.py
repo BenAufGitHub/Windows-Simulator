@@ -9,7 +9,7 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-requests = ["exit", "spit"]
+requests = ["exit", "spit", "getWinNames"]
 
 process = None
 state_lock = threading.Lock()
@@ -79,6 +79,9 @@ def answer_request(cmd, body):
     if cmd == 'spit':
         print_info(body)
         return 'DONE'
+    if cmd == 'getWinNames':
+        # TODO
+        raise Exception("Not impplemented: getWinNames")
 
 
 

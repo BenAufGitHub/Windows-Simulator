@@ -14,7 +14,7 @@ const start_cmds = ["record", "simulate"]
 // shallow request don't go into the python subprogramm
 const mainShallowRequests = ["wait_until_py_initiation"]
 // deep requests go into python subprograms
-const mainDeepRequests = []
+const mainDeepRequests = ["getWinNames", "exit"]
 
 // promise-resolving, can be triggered when certain things happen in this process, main can check for these events to complete with awaiting those
 const awaitingEvents = new Map()
@@ -98,14 +98,23 @@ async function processMainRequest(id, req, body) {
 }
 
 async function handleRequest(req, body) {
-  if(req === "wait_until_py_initiation"){
-    if(child != null) return
-    let prom = new Promise((resolve, reject) => {
-        awaitingEvents.set("wait_until_py_initiation", resolve)
-    })
-    return await prom
+  if(mainShallowRequests.includes(req))
+    return answerShallowRequest(req, body)
+  if(mainDeepRequests.includes(req)){
+    let data = await requestToPy(req, body)
+    if(data[1] !== 0) throw 'Request not accepted'
+    return data[2]
   }
-  if(req == "exit") return await requestToPy("exit")
+  return null
+}
+
+async function answerShallowRequest (req, body) {
+    if(req === "wait_until_py_initiation"){
+        if(child != null) return
+        return await new Promise((resolve, reject) => {
+            awaitingEvents.set("wait_until_py_initiation", resolve)
+        })
+      }
 }
 
 
@@ -157,10 +166,11 @@ function startPyApplication() {
 function initIpcPython () {
     if(child==null) throw "No child to ipc with"
     child.stdout.on("data", (data) => {
-        let msg = data.toString().trim();
+        let msg = data.toString();
         let cmds = msg.split(/\r\n|\n|\r/)
         cmds.forEach(element => {
-            processPyMsg(element)
+            if(element?.trim().length)
+                processPyMsg(element)
         });
     })
 
