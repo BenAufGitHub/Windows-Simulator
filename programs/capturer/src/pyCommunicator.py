@@ -2,7 +2,7 @@ import sys, functools, traceback, threading
 from typing import Tuple
 
 from requests import request
-import InnerProcess, request_lib
+import InnerProcess, request_helper
 print = functools.partial(print, flush=True)
 
 starter_commands = ["simulate", "record"]
@@ -117,7 +117,7 @@ def return_answer(id, answer, command):
     update_state()
     with flush_orderly_lock:
         if command in process_actions and command != translate_state_to_command(): return
-        answer = request_lib.transform_to_output_protocol(answer)
+        answer = request_helper.transform_to_output_protocol(answer)
         print(f'{id} 0 {answer}')
 
 
@@ -151,9 +151,9 @@ def read_in():
 
 def processIn(input):
     try:
-        id, cmd, body = request_lib.split_request(input)
-        if id < 2: raise request_lib.InvalidRequest("ID must be greater than 1")
-    except request_lib.InvalidRequest as exc:
+        id, cmd, body = request_helper.split_request(input)
+        if id < 2: raise request_helper.InvalidRequest("ID must be greater than 1")
+    except request_helper.InvalidRequest as exc:
         return print_info(f"Not a valid input: {input}, reason: {str(exc)}")
     try:
         result = execute(cmd, body) 
