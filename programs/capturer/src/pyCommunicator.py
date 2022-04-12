@@ -1,7 +1,5 @@
 import sys, functools, traceback, threading
 from typing import Tuple
-
-from requests import request
 import InnerProcess, request_helper, request_lib
 print = functools.partial(print, flush=True)
 
@@ -9,12 +7,16 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-requests = ["exit", "spit", "getWinNames"]
+requests = ["exit", "spit", "getWinNames", "setWindow"]
 
 process = None
 state_lock = threading.Lock()
 flush_orderly_lock = threading.Lock()
 
+class ExecutionContainer:
+    def __init__(self):
+        self.open_window = None
+exec_vars = ExecutionContainer()
 
 # ----------------------------------- Executing bubbling --------------------------------
 
@@ -46,6 +48,7 @@ def start_process(cmd):
     process = InnerProcess.Simulator() if (cmd == 'simulate') else InnerProcess.Recorder()
     process.print_cmd = print_cmd
     process.print_info = print_info
+    if exec_vars.open_window: request_lib.maximize(exec_vars.open_window)
     process.run()
     update_state()
     return "DONE"
@@ -81,6 +84,10 @@ def answer_request(cmd, body):
         return 'DONE'
     if cmd == 'getWinNames':
         return list(request_lib.get_filtered_window_collection())
+    if cmd == 'setWindow':
+        if not request_lib.is_current_win(body): raise CommandFailure("Cannot find window")
+        exec_vars.open_window = body
+        return "DONE"
 
 
 

@@ -15,15 +15,23 @@ const WINDOW_API = {
 const startRecording = () => WINDOW_API.start("record")
 const startSimulate = () => WINDOW_API.start("simulate")
 const getActiveWins = async () => {
-    const winNames = await WINDOW_API.getInfo("getWinNames", null)
-    createSelection(winNames, getVidBtn)
-    // winNames?.forEach((name) => console.log(name))
+    getVidBtn.disabled = true
+    const listWins = async () => {
+        const winNames = await WINDOW_API.getInfo("getWinNames", null)
+        createSelection(winNames, getVidBtn)
+    }
+    listWins()
 }
 
 const createSelection = (options_arr, parent) => {
-    console.log("hehe")
-    if(options_arr.length)
-        parent.disabled = true
+    let back = document.createElement("button")
+    back.innerHTML = "back"
+    back.onclick = () => {
+        while(parent.lastElementChild)
+                parent.removeChild(parent.lastElementChild)
+            setTimeout(() => parent.disabled = false, 20)
+    }
+    parent.appendChild(back)
     for(let i=0; i<options_arr.length; i++) {
         let option = document.createElement("button")
         option.innerHTML = options_arr[i]
@@ -32,7 +40,8 @@ const createSelection = (options_arr, parent) => {
             while(parent.lastElementChild)
                 parent.removeChild(parent.lastElementChild)
             setTimeout(() => parent.disabled = false, 20)
-            // await WINDOW_API.getInfo("setWindow", option.innerHTML)
+            isAccepted = await WINDOW_API.getInfo("setWindow", option.innerHTML)
+            console.log(isAccepted)
         }
     }
 }
