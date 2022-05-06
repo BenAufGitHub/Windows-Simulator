@@ -3,7 +3,12 @@ const {ipcRenderer, contextBridge} = require("electron")
 const simulate = document.getElementById("simulate")
 const select = document.getElementById("videoSelectBtn")
 const record = document.getElementById("record")
-const getVidBtn = document.getElementById("showOpenWindows")
+const showWins = document.getElementById("showOpenWindows")
+
+function styleButton(btn) {
+    btn.style["display"] = "inline-block";
+    btn.style["text-align"] = "center"
+}
 
 const WINDOW_API = {
     pause: (application) => ipcRenderer.send("pause", application),
@@ -15,10 +20,10 @@ const WINDOW_API = {
 const startRecording = () => WINDOW_API.start("record")
 const startSimulate = () => WINDOW_API.start("simulate")
 const getActiveWins = async () => {
-    getVidBtn.disabled = true
+    showWins.disabled = true
     const listWins = async () => {
         const winNames = await WINDOW_API.getInfo("getWinNames", null)
-        createSelection(winNames, getVidBtn)
+        createSelection(winNames, showWins)
     }
     listWins()
 }
@@ -26,33 +31,39 @@ const getActiveWins = async () => {
 const createSelection = (options_arr, parent) => {
     let back = document.createElement("button")
     back.innerHTML = "back"
-    back.onclick = () => {
-        while(parent.lastElementChild)
-                parent.removeChild(parent.lastElementChild)
-            setTimeout(() => parent.disabled = false, 20)
-    }
+    back.onclick = () => removeChildrenThenActivate(parent)
     parent.appendChild(back)
-    for(let i=0; i<options_arr.length; i++) {
+    addOptionButtons(options_arr, parent, async (value, parent) => {
+        console.log("hu")
+        removeChildrenThenActivate(parent)
+        isAccepted = await WINDOW_API.getInfo("setWindow", value)
+        console.log(isAccepted)
+    })
+}
+
+const addOptionButtons = (options, parent, callback) => {
+    options.forEach((element) => {
         let option = document.createElement("button")
-        option.innerHTML = options_arr[i]
+        option.innerHTML = element
         parent.appendChild(option)
-        option.onclick = async () => {
-            while(parent.lastElementChild)
-                parent.removeChild(parent.lastElementChild)
-            setTimeout(() => parent.disabled = false, 20)
-            isAccepted = await WINDOW_API.getInfo("setWindow", option.innerHTML)
-            console.log(isAccepted)
-        }
-    }
+        option.onclick = () => callback(element, parent)
+    })
+}
+
+const removeChildrenThenActivate = (button) => {
+    while(button.lastElementChild)
+        button.removeChild(button.lastElementChild)
+    setTimeout(() => button.disabled = false, 20)
 }
 
 const addClickEvents = () => {
     record.onclick = startRecording;
     simulate.onclick = startSimulate;
-    getVidBtn.onclick = getActiveWins
+    showWins.onclick = getActiveWins
 }
 
 main:
 {
+    styleButton(showWins)
     addClickEvents();
 }
