@@ -1,4 +1,4 @@
-import sys, functools, traceback, threading
+import sys, functools, traceback, threading, json
 from typing import Tuple
 import InnerProcess, request_helper, request_lib
 print = functools.partial(print, flush=True)
@@ -9,6 +9,7 @@ possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
 requests = ["exit", "spit", "getWinNames", "setWindow"]
 
+session_capture = './resources/session_data.json'
 process = None
 state_lock = threading.Lock()
 flush_orderly_lock = threading.Lock()
@@ -86,7 +87,7 @@ def answer_request(cmd, body):
         return list(request_lib.get_filtered_window_collection())
     if cmd == 'setWindow':
         if not request_lib.is_current_win(body): raise CommandFailure("Cannot find window")
-        exec_vars.open_window = body
+        exec_vars.open_window = request_lib.session_names[body]
         return "DONE"
 
 
@@ -153,6 +154,7 @@ def read_in():
             processIn(input)
     except InputStop:
         pass
+    exit()
 
 
 def processIn(input):
@@ -173,9 +175,28 @@ def processIn(input):
     if cmd == 'exit':
         raise InputStop()
 
+def init():
+    with open(session_capture, 'r') as file:
+        data_str = file.read()
+        session_restored = json.loads(data_str)
+        print_info(data_str)
+        exec_vars.open_window = request_lib.find_window(session_restored["name"], session_restored["process"])
+        print_info(exec_vars.open_window)
+    
+def exit():
+    if not exec_vars.open_window: return
+    hwnd = request_lib.session_hwnd[exec_vars.open_window]
+    session_data = {
+        "name": exec_vars.open_window,
+        "process": request_lib.get_proc_name_by_hwnd(hwnd)
+    }
+    with open(session_capture, "w") as file:
+        file.write(json.dumps(session_data))
+
  
 
 def main():
+    init()
     print_info("starting")
     read_in()
 
