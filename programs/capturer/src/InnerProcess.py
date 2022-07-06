@@ -1,5 +1,6 @@
 import ctypes, threading, json
 from pynput import mouse, keyboard
+from save_status import WindowSaver, WindowReproducer
 import JSONHandler, timing, UnicodeReverse, Unpress
 
 
@@ -100,6 +101,7 @@ def config_monitor():
 class Simulator(InnerProcess):
     def __init__(self):
         super().__init__()
+        WindowReproducer().reproduce_window_states()
         self.timer = timing.TaskAwaitingTimeKeeper()
         # wait until simulation begins
         self.timer.register_pause()
@@ -187,6 +189,7 @@ def exec_keyboard_instruction(instruction: dict, controller):
 class Recorder(InnerProcess):
     def __init__(self):
         super().__init__()
+        WindowSaver().save_current_win_status()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
         self.storage = JSONHandler.JSONStorage()
@@ -210,6 +213,7 @@ class Recorder(InnerProcess):
 
     # override
     def run(self):
+        
         self.listen_to_input()
         self.state = "running"
         self.ready = True
