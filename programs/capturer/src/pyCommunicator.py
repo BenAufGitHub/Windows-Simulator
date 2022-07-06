@@ -1,4 +1,4 @@
-import sys, functools, traceback, threading, json
+import sys, functools, traceback, threading, json, os
 from typing import Tuple
 import InnerProcess, request_helper, request_lib
 print = functools.partial(print, flush=True)
@@ -7,7 +7,7 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-requests = ["exit", "spit", "getWinNames", "setWindow"]
+requests = ["exit", "spit", "getWinNames", "setWindow", "getWindow"]
 
 session_capture = './resources/session_data.json'
 process = None
@@ -49,7 +49,12 @@ def start_process(cmd):
     process = InnerProcess.Simulator() if (cmd == 'simulate') else InnerProcess.Recorder()
     process.print_cmd = print_cmd
     process.print_info = print_info
-    if exec_vars.open_window: request_lib.maximize(exec_vars.open_window)
+    # TODO and tickbox filled
+    with open(session_capture, 'r') as file:
+        data_str = file.read()
+        session_data = json.loads(data_str)
+        if exec_vars.open_window and session_data["checkbox"]:
+            request_lib.maximize(exec_vars.open_window)
     process.run()
     update_state()
     return "DONE"
@@ -89,6 +94,9 @@ def answer_request(cmd, body):
         if not request_lib.is_current_win(body): raise CommandFailure("Cannot find window")
         exec_vars.open_window = request_lib.session_names[body]
         return "DONE"
+    if cmd == 'getWindow':
+        return exec_vars.open_window
+    
 
 
 
@@ -117,7 +125,10 @@ def print_cmd(cmd: str):
 
 # identifier 0: outgoing info
 def print_info(info: str):
-    print(f'0 {info}')
+    if info:
+        print(f'0 {info.encode("ascii", "ignore").decode()}')
+    else:
+        print(f'0 {info}')
 
 # 0 for success
 def return_answer(id, answer, command):
@@ -176,20 +187,27 @@ def processIn(input):
         raise InputStop()
 
 def init():
+    if not os.path.exists(session_capture):
+        with open(session_capture, 'w') as f:
+            f.write('{"name": null, "process": null, "checkbox": false}')
     with open(session_capture, 'r') as file:
         data_str = file.read()
         session_restored = json.loads(data_str)
-        print_info(data_str)
+        if not (session_restored["name"] and session_restored["process"]):
+            return
         exec_vars.open_window = request_lib.find_window(session_restored["name"], session_restored["process"])
-        print_info(exec_vars.open_window)
+
     
 def exit():
     if not exec_vars.open_window: return
     hwnd = request_lib.session_hwnd[exec_vars.open_window]
-    session_data = {
-        "name": exec_vars.open_window,
-        "process": request_lib.get_proc_name_by_hwnd(hwnd)
-    }
+    with open(session_capture, 'r') as f:
+        checkbox = json.loads(f.read())["checkbox"]
+        session_data = {
+            "name": exec_vars.open_window,
+            "process": request_lib.get_proc_name_by_hwnd(hwnd),
+            "checkbox": checkbox
+        }
     with open(session_capture, "w") as file:
         file.write(json.dumps(session_data))
 
