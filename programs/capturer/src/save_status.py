@@ -2,13 +2,13 @@ from pywinauto import Desktop, uia_defines, findwindows, controls
 import win32gui, win32con
 import win32api, ctypes
 import win32process
-import json
+import json, time
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
 class Constants:
     def __init__(self):
-        self._save_file = "window_start_capture.json"
+        self._save_file = "./resources/window_start_capture.json"
     
     def get_filename(self):
         return self._save_file
@@ -57,12 +57,10 @@ class WindowReproducer():
                 self._reproduce(win, found_windows)
 
     def _minimize_all_windows(self):
-        for handle in WinUtils.get_windows_in_z_order_ctypes():
-            try:
-                if not WinUtils.is_normal_win(findwindows.find_window(handle=handle)): raise Exception() 
-                win32gui.ShowWindow(handle, win32con.SW_MINIMIZE)
-            except:
-                pass
+        for win in WinUtils.get_ordered_wins():
+            if not WinUtils.is_normal_win(win): 
+                continue
+            win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)            
 
     def _reproduce(self, win, found_windows):
         width = win["dimensions"][0]
@@ -78,7 +76,7 @@ class WindowReproducer():
             return
 
         wrapper = controls.hwndwrapper.HwndWrapper(window.element_info)
-        wrapper.restore()
+        win32gui.ShowWindow(window.handle, win32con.SW_NORMAL)
         wrapper.move_window(x=x, y=y, width=width, height=height, repaint=True)
 
                 
@@ -107,20 +105,21 @@ class WinUtils:
 
     @staticmethod
     def is_normal_win(win):
-            try:
-                proc = WinUtils.get_proc_name_by_hwnd(win.handle)
-                if proc.find("electron.exe") != -1: return False
-                return win.get_show_state() != None
-            except uia_defines.NoPatternInterfaceError:
-                return
+        # if type(win) != 'pywinauto.controls.uiawrapper.UIAWrapper': return
+        try:
+            proc = WinUtils.get_proc_name_by_hwnd(win.handle)
+            if proc.find("electron.exe") != -1: return False
+            return win.get_show_state() != None
+        except uia_defines.NoPatternInterfaceError:
+            return
 
 
     @staticmethod
     def get_proc_name_by_hwnd(hwnd):
-            pid = win32process.GetWindowThreadProcessId(hwnd)
-            handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid[1])
-            full_name = win32process.GetModuleFileNameEx(handle, 0)
-            return WinUtils.filter_exec_title(full_name)
+        pid = win32process.GetWindowThreadProcessId(hwnd)
+        handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid[1])
+        full_name = win32process.GetModuleFileNameEx(handle, 0)
+        return WinUtils.filter_exec_title(full_name)
 
 
     @staticmethod
@@ -170,8 +169,8 @@ class WinUtils:
 
 
 def main():
-    # WindowReproducer().reproduce_window_states()
-    WindowSaver().save_current_win_status()
+    WindowReproducer().reproduce_window_states()
+    # WindowSaver().save_current_win_status()
 
 if __name__ == '__main__':
     main()

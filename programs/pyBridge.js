@@ -14,7 +14,7 @@ const start_cmds = ["record", "simulate"]
 // shallow request don't go into the python subprogramm
 const mainShallowRequests = ["wait_until_py_initiation"]
 // deep requests go into python subprograms
-const mainDeepRequests = ["getWinNames", "exit", "setWindow", "getWindow"]
+const mainDeepRequests = ["getWinNames", "exit"]
 
 // promise-resolving, can be triggered when certain things happen in this process, main can check for these events to complete with awaiting those
 const awaitingEvents = new Map()
