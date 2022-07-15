@@ -34,11 +34,17 @@ class WindowSaver:
     def _get_win_properties_as_dict(self, win, z_index):
         win_name = win.window_text().encode("ascii", "ignore").decode()
         process_name = WinUtils.get_proc_name_by_hwnd(win.handle)
+
+        if win.is_maximized():
+            return {"name": win_name, "process": process_name, "max": True, "z_index": z_index}
+
         coordinates = (win.rectangle().left, win.rectangle().top)
         dimensions = (win.rectangle().width(), win.rectangle().height())
+
         return {
             "name": win_name,
             "process": process_name,
+            "max": False,
             "coordinates": coordinates,
             "dimensions": dimensions,
             "z_index": z_index
@@ -53,8 +59,60 @@ class WindowReproducer():
         with open(Constants().get_filename(), "r") as file:
             windows = json.loads(file.readline())
             found_windows = WinUtils.get_ordered_wins()
-            for win in reversed(windows):
-                self._reproduce(win, found_windows)
+            self._replicate_window_pool(windows, found_windows)
+
+
+    def _replicate_window_pool(self, windows, found_windows):
+        window_mapping = dict()
+        while(windows):
+            win0 = windows.pop()
+            process0 = win0["process"].lower()
+            # find window with same process name, hoping the '*' works as spread fine
+            recorded_wins_from_process = [win0, *(self._pop_wins_from_process(process0, windows))]
+            available_wins_from_process = self._pop_available_from_pool(process0, found_windows)
+            self._match(recorded_wins_from_process, available_wins_from_process, window_mapping)
+        self._replicate_full_map(window_mapping)
+    
+
+    def _match(self, recorded_wins, available_wins, window_mapping):
+        print("Matching windows from process: " + recorded_wins[0]["process"])
+        for win in recorded_wins:
+            if not available_wins: return
+            print(f"Looking for '{win['name']}' with available matches:")
+            for i, win2 in enumerate(available_wins):
+                print(f"{i}: {win2.window_text()}")
+            str_num = input("Enter the number of the window you want to match: ")
+            num = int(str_num)
+            window_mapping[win["z_index"]] = (win, available_wins.pop(num))
+        
+
+    def _replicate_full_map(self, window_mapping):
+        for win_key in window_mapping.keys():
+            print(win_key)
+            self._reproduce(*window_mapping[win_key])
+
+
+
+    # from the recording pool
+    def _pop_wins_from_process(self, process, windows):
+        wins = list()
+        i = 0
+        while i < len(windows):
+            if windows[i]["process"].lower() == process:
+                wins.append(windows.pop(i))
+            else:
+                i += 1
+        return wins
+
+    def _pop_available_from_pool(self, process_name, pool):
+        avail = list()
+        i = 0
+        while i < len(pool):
+            if WinUtils.get_proc_name_by_hwnd(pool[i].handle).lower() == process_name:
+                avail.append(pool.pop(i))
+            else:
+                i += 1
+        return avail
 
     def _minimize_all_windows(self):
         for win in WinUtils.get_ordered_wins():
@@ -62,23 +120,25 @@ class WindowReproducer():
                 continue
             win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)            
 
-    def _reproduce(self, win, found_windows):
+    def _reproduce(self, win, active_win):
+        if win["max"]:
+            return self._reproduceMaximized(active_win)
+        self._reproduceRectangle(win, active_win)
+
+
+    def _reproduceMaximized(self, active_win):
+        active_win.maximize()
+
+    def _reproduceRectangle(self, win, active_win):
+        left = win["coordinates"][0]
+        top = win["coordinates"][1]
         width = win["dimensions"][0]
         height = win["dimensions"][1]
-        x = win["coordinates"][0]
-        y = win["coordinates"][1]
         
         if width == 0 == height: return
-
-        window = WinUtils.find_window(win["name"], win["process"], found_windows)
-        if not window:
-            print(win["name"] + " not found")
-            return
-
-        wrapper = controls.hwndwrapper.HwndWrapper(window.element_info)
-        win32gui.ShowWindow(window.handle, win32con.SW_NORMAL)
-        wrapper.move_window(x=x, y=y, width=width, height=height, repaint=True)
-
+        wrapper = controls.hwndwrapper.HwndWrapper(active_win.element_info)
+        win32gui.ShowWindow(active_win.handle, win32con.SW_NORMAL)
+        wrapper.move_window(x=left, y=top, width=width, height=height, repaint=True)
                 
 
 # ====================================== UTILS =======================================
@@ -171,6 +231,8 @@ class WinUtils:
 def main():
     WindowReproducer().reproduce_window_states()
     # WindowSaver().save_current_win_status()
+
+
 
 if __name__ == '__main__':
     main()
