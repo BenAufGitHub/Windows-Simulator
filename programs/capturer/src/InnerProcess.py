@@ -232,8 +232,16 @@ class InputHandler:
         self.storage = process.storage
         self.input_lock = threading.Lock()
         self.is_paused = lambda: process.state == 'pause'
-        self.get_time = lambda: round(process.timer.get_exec_time(), process.round_to)
+        self.first_interaction_time = None
+        self.get_raw_time = lambda: round(process.timer.get_exec_time(), process.round_to)
 
+
+    # always start with the first interaction 0.1 seconds after programm start (in the simulation)
+    def get_time(self):
+        if not self.first_interaction_time:
+            self.first_interaction_time = self.get_raw_time()
+            return 0.1
+        return round(self.get_raw_time() + 0.1 - self.first_interaction_time, self.process.round_to)
 
     # ------------------------- individual recording ---------------------------------
 
