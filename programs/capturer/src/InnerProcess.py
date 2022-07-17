@@ -1,8 +1,9 @@
-import ctypes, threading, json
+import ctypes, threading, json, os
 from pynput import mouse, keyboard
+from programs.capturer.src.JSONHandler import MetaData
 from save_status import WindowSaver, WindowReproducer
 import JSONHandler, timing, UnicodeReverse, Unpress
-
+from threading import Lock
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
 class InnerProcess:
@@ -93,6 +94,101 @@ def config_monitor():
 
 
 
+# ------------------------------------- Reproducer --------------------------------------------------
+
+# ensures that the window is in the same state as it was when the window was recorded, thus Reproducer-Quality-Ensurance
+class ReproducerQA():
+    
+    def __init__(self, command_callback):
+        self.reproducer = WindowReproducer()
+        self.upstream_requests_executed = 0
+        self.print_cmd = command_callback
+        self._access_flag_lock = Lock()
+        self._resolve_flag = False
+
+    def notify_resolve_ready(self):
+        with self._access_flag_lock:
+            self._resolve_flag = True
+
+    def resolve_and_ready_up_windows(self):
+        problem_pools = self.reproducer.get_unresolved_pools()
+        solution = dict()
+        for pool in problem_pools:
+            result_list = self._resolve_pool(problem_pools[pool], pool)
+            solution[pool] = result_list
+        self._delete_cache_files()
+        mapping = self.reproducer.get_resolved_map(problem_pools, solution)
+        self.reproducer.replicate_map(mapping)
+
+
+        
+    def _delete_cache_files(self):
+        if os.path.exists(MetaData().window_assigned_data):
+            os.remove(MetaData().window_assigned_data)
+        if os.path.exists(MetaData().window_unassigned_data):
+            os.remove(MetaData().window_unassigned_data)
+
+    def _resolve_pool(self, pool, process_name):
+        recorded_wins = pool[0]
+        active_wins = pool[1]
+        active_wins_copy = active_wins.copy()
+        results = []
+        for i, win in enumerate(recorded_wins):
+            active_win = self._resolve_window(win, active_wins_copy, process_name)
+            active_wins_copy.remove(active_win)
+            results[i] = active_wins.index(active_win) if active_win else None
+        return results
+
+    def _resolve_window(self, old_win, selection, process_name):
+        if len(selection) == 0: return None
+        if len(selection) == 1: return selection[0]
+        if self._title_match(old_win["name"], selection):
+            selection = self._filter_only_matching_windows(old_win["name"], selection)
+        return self._send_and_await_response(old_win, selection, process_name)
+
+    def _filter_only_matching_windows(self, name, selection):
+        return list(filter(lambda x: x.window_title() == name, selection))
+
+    def _title_match(self, title, selection):
+        for win in selection:
+            if win.window_title() == title:
+                return True
+        return False
+
+        
+    def _prepare_file_info(self, old_win, selection, process_name):
+        info_map = {
+            "recorded": old_win["name"],
+            "z_index": old_win["z_index"],
+            "process_name": process_name,
+            "selection": []
+        }
+        for i, win in enumerate(selection):
+            info_map["selection"][i] = win.window_title()
+        return info_map
+
+
+    def _send_and_await_response(self, old_win, selection, process_name):
+        self.upstream_requests_executed += 1
+        info_map = self._prepare_file_info(old_win, selection, process_name)
+        with open(MetaData().window_unassigned_data, 'w') as file:
+            file.write(json.dumps(info_map))
+        self.print_cmd("reproducer_resolve_window")
+        self._stay_here_while_waiting()
+        return self._get_response(selection)
+
+    def _get_response(self, selection):
+        with open(MetaData().window_assigned_data, 'r') as file:
+            response = json.loads(file.read())
+            return selection[response["selection"]]
+            
+    
+    def stay_here_while_waiting(self):
+        while True:
+            if self._resolve_flag:
+                with self._access_flag_lock:
+                    self._resolve_flag = False
+                break
 
 # ------------------------------------- Simulation -------------------------------------------------------
 

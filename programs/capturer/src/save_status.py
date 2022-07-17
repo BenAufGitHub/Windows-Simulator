@@ -61,6 +61,44 @@ class WindowReproducer():
             found_windows = WinUtils.get_ordered_wins()
             self._replicate_window_pool(windows, found_windows)
 
+    def get_unresolved_pools(self):
+        # list entries: [list process_name_saved, list process_name_available]
+        old_windows = None
+        with open(Constants().get_filename(), "r") as file:
+            old_windows = json.loads(file.readline())
+        found_windows = WinUtils.get_ordered_wins()
+        return self._group_together(old_windows, found_windows)
+
+    def _group_together(self, saved, found):
+        groupings = dict()
+        for win in saved:
+            process = win["process"].lower()
+            if process not in groupings:
+                groupings[process] = (list(), list())
+            groupings[process][0].append(win)
+        for win in found:
+            process = WinUtils.get_proc_name_by_hwnd(win.handle).lower()
+            if process in groupings:
+                groupings[process][1].append(win)
+        return groupings
+
+
+    def get_resolved_map(self, groups, solutions):
+        resolved_map = dict()
+        for group_name in groups:
+            group = groups[group_name]
+            resolved_wins = len(group[0])
+            for i in range(resolved_wins):
+                answer = solutions[group_name][i]
+                if answer == -1:
+                    resolved_map[group[0][i]["z_index"]] = None
+                resolved_map[group[0][i]["z_index"]] = group[1][answer]
+        return resolved_map
+
+
+    def replicate_map(self, mapping):
+        self._replicate_full_map(mapping)
+
 
     def _replicate_window_pool(self, windows, found_windows):
         window_mapping = dict()
@@ -235,4 +273,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    problems = WindowReproducer().get_unresolved_pools()
+    solution = {
+        "code.exe": [0],
+        "spotify.exe": [0]
+    }
+    win_map = WindowReproducer().get_resolved_map(problems, solution)
+    print(win_map)

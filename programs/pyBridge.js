@@ -10,6 +10,7 @@ let state = "idle";
 const states = ["idle", "running", "paused", "stopped"]
 const process_cmds = ["pause", "resume", "stop"]
 const start_cmds = ["record", "simulate"]
+const other_one_way_information = ["resolveFinished"]
 
 // shallow request don't go into the python subprogramm
 const mainShallowRequests = ["wait_until_py_initiation"]

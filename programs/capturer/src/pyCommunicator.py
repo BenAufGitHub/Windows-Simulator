@@ -1,6 +1,8 @@
+from concurrent.futures import thread
 import sys, functools, traceback, threading
 from typing import Tuple
 import InnerProcess, request_helper, request_lib
+from programs.capturer.src.InnerProcess import ReproducerQA
 print = functools.partial(print, flush=True)
 
 starter_commands = ["simulate", "record"]
@@ -8,11 +10,13 @@ state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
 requests = ["exit", "spit", "getWinNames"]
-
+information = ["resolveFinished"]
 
 process = None
 state_lock = threading.Lock()
 flush_orderly_lock = threading.Lock()
+in_prep_for_simulation = False
+resolving_windows_notify = lambda x: None
 
 class ExecutionContainer:
     def __init__(self):
@@ -28,12 +32,16 @@ def execute(cmd, body):
         return start_process(cmd)
     if cmd in process_actions:
         return mutate_process(cmd)
+    if cmd in information:
+        return processInformation(cmd, body)
     if cmd in requests:
         return answer_request(cmd, body)
     raise CommandFailure(f"Command {cmd} not found")
 
 
 def throw_if_not_accepted(cmd):
+    if cmd in starter_commands or cmd in process_actions and in_prep_for_simulation:
+        raise CommandNotAccepted(f"Not possible while in preparation for simulation")
     if cmd in starter_commands and get_state() != 'idle':
        raise CommandNotAccepted("A process already running")
     if cmd in process_actions and (get_state() == 'idle' or not process):
@@ -50,9 +58,27 @@ def start_process(cmd):
     process.print_cmd = print_cmd
     process.print_info = print_info
 
+    if cmd == "simulate":
+        start_simulation(process)
+        return "DONE"
+
     process.run()
     update_state()
     return "DONE"
+
+def start_simulation(process):
+    global in_prep_for_simulation
+    in_prep_for_simulation = True
+    qa = ReproducerQA()
+    resolving_windows_notify = lambda: qa.notify_resolve_ready()
+    threading.Thread(lambda: threaded_simulation_start(resolving_windows_notify, process)).start()
+
+def threaded_simulation_start(quality_assurance, process):
+    global in_prep_for_simulation
+    quality_assurance.resolve_and_ready_up_windows()
+    process.run()
+    update_state()
+    in_prep_for_simulation = False
 
 
 def mutate_process(cmd):
@@ -86,7 +112,14 @@ def answer_request(cmd, body):
     if cmd == 'getWinNames':
         return list(request_lib.get_filtered_window_collection())
     
+def processInformation(cmd, body):
+    if cmd == "resolveFinished":
+        catchSolutionToWindows()
+        return "DONE"
+    return f"{cmd} NOT FOUND"
 
+def catchSolutionToWindows():
+    resolving_windows_notify()
 
 
 # ------------------- Exceptions ---------------------------------------

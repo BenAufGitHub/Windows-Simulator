@@ -5,6 +5,8 @@ import json, time
 class MetaData:
     def __init__(self):
         self.filename = "./resources/recording.json"
+        self.window_unassigned_data = "./resources/window_unresolved.json"
+        self.window_assigned_data = "./resources/window_resolved.json"
         self.auto_time = 0.1
         self.start_time = time.time()
 

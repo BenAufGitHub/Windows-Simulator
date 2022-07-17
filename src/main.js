@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, remote} = require('electron');
 const { fork } = require("child_process")
+const fs = require("fs")
 let {FormatError, splitAnswerMessage, splitRequestMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
 const path = require('path');
 let window = null;
@@ -158,6 +159,30 @@ ipcMain.handle("get-settings", (event, args) => {
   return settings[args]
 })
 
+ipcMain.handle("getWindowResolveInfo", (event, args) => {
+  
+  fs.readFile('./resources/window_unresolved.json', 'utf8', function(err, data) {
+    if (err) throw err; // TODO might need a safe solution later
+    return JSON.parse(data)
+  });
+})
+
+ipcMain.on("windowResolveResults", (event, args) => {
+  saveObj = {"selection": args}
+  fs.writeFile("./resources/window_resolved.json", JSON.stringify(saveObj))
+  sendRequestToBridge("resolveFinished", null)
+})
+
+function resolveIdentifyingWindow() {
+  window.restore()
+  open("resolving.html")
+  // TODO
+  // read file
+  // make a new window
+  // communicate with window
+  // send response to py
+}
+
 
 /** --------------------- python bridge ---------------------------------------- */
 
@@ -192,6 +217,9 @@ function processAnswerFromBridge(id, errorcode, body) {
 
 function processCommandFromBridge(command) {
   switch (command) {
+    case 'reproducer_resolve_window':
+      resolveIdentifyingWindow()
+      break;
     case 'resume':
       resumeProcess()
       break;
@@ -259,7 +287,7 @@ async function sendRequestToBridge(id, req, body) {
   settings.process?.send(`${id} ${req} | ${body}`)
 }
 
-// can currently command record, simulate, pause, resume, stop
+// can currently command record, simulate, pause, resume, stop, resolveFinished
 function sendCommandToBridge(command) {
   settings.process?.send(`1 ${command}`)
 }
