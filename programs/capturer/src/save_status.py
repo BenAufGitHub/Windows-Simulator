@@ -92,7 +92,8 @@ class WindowReproducer():
                 answer = solutions[group_name][i]
                 if answer == -1:
                     resolved_map[group[0][i]["z_index"]] = None
-                resolved_map[group[0][i]["z_index"]] = group[1][answer]
+                    continue
+                resolved_map[group[0][i]["z_index"]] = (group[0][i], group[1][answer])
         return resolved_map
 
 
@@ -125,9 +126,12 @@ class WindowReproducer():
         
 
     def _replicate_full_map(self, window_mapping):
-        for win_key in window_mapping.keys():
-            print(win_key)
-            self._reproduce(*window_mapping[win_key])
+        for win_key in reversed(window_mapping.keys()):
+
+            if not window_mapping[win_key]:
+                continue
+            saved, active = window_mapping[win_key]
+            self._reproduce(saved, active)
 
 
 
@@ -165,19 +169,35 @@ class WindowReproducer():
 
 
     def _reproduceMaximized(self, active_win):
+        active_win.minimize()
+        self._quick_wait(active_win.is_minimized)
         active_win.maximize()
+        self._quick_wait(active_win.is_maximized)
 
     def _reproduceRectangle(self, win, active_win):
+        active_win.minimize()
+
+        # apperently minimize is asynchronous or sth. so we need to wait it out, thx for not putting that into the docs...
+        self._quick_wait(active_win.is_minimized)
+
         left = win["coordinates"][0]
         top = win["coordinates"][1]
         width = win["dimensions"][0]
         height = win["dimensions"][1]
         
-        if width == 0 == height: return
+
+        if width == 0 and 0 == height: return
+        active_win.restore()
         wrapper = controls.hwndwrapper.HwndWrapper(active_win.element_info)
         win32gui.ShowWindow(active_win.handle, win32con.SW_NORMAL)
         wrapper.move_window(x=left, y=top, width=width, height=height, repaint=True)
-                
+        self._quick_wait(active_win.is_normal)
+
+    def _quick_wait(self, callback):
+        t0 = time.time()
+        while True:
+            if callback() or time.time()-t0 > 0.1:
+                break
 
 # ====================================== UTILS =======================================
 

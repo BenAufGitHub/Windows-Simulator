@@ -2,7 +2,7 @@ from concurrent.futures import thread
 import sys, functools, traceback, threading
 from typing import Tuple
 import InnerProcess, request_helper, request_lib
-from programs.capturer.src.InnerProcess import ReproducerQA
+from InnerProcess import ReproducerQA
 print = functools.partial(print, flush=True)
 
 starter_commands = ["simulate", "record"]
@@ -40,7 +40,7 @@ def execute(cmd, body):
 
 
 def throw_if_not_accepted(cmd):
-    if cmd in starter_commands or cmd in process_actions and in_prep_for_simulation:
+    if (cmd in starter_commands or cmd in process_actions) and in_prep_for_simulation:
         raise CommandNotAccepted(f"Not possible while in preparation for simulation")
     if cmd in starter_commands and get_state() != 'idle':
        raise CommandNotAccepted("A process already running")
@@ -58,6 +58,7 @@ def start_process(cmd):
     process.print_cmd = print_cmd
     process.print_info = print_info
 
+
     if cmd == "simulate":
         start_simulation(process)
         return "DONE"
@@ -67,17 +68,18 @@ def start_process(cmd):
     return "DONE"
 
 def start_simulation(process):
-    global in_prep_for_simulation
+    global in_prep_for_simulation, resolving_windows_notify
     in_prep_for_simulation = True
-    qa = ReproducerQA()
+    qa = ReproducerQA(print_cmd)
     resolving_windows_notify = lambda: qa.notify_resolve_ready()
-    threading.Thread(lambda: threaded_simulation_start(resolving_windows_notify, process)).start()
+    threading.Thread(target=lambda: threaded_simulation_start(qa, process)).start()
 
 def threaded_simulation_start(quality_assurance, process):
     global in_prep_for_simulation
     quality_assurance.resolve_and_ready_up_windows()
     process.run()
     update_state()
+    print_cmd("start")
     in_prep_for_simulation = False
 
 

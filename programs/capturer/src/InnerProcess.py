@@ -1,6 +1,6 @@
 import ctypes, threading, json, os
 from pynput import mouse, keyboard
-from programs.capturer.src.JSONHandler import MetaData
+from JSONHandler import MetaData
 from save_status import WindowSaver, WindowReproducer
 import JSONHandler, timing, UnicodeReverse, Unpress
 from threading import Lock
@@ -135,8 +135,9 @@ class ReproducerQA():
         results = []
         for i, win in enumerate(recorded_wins):
             active_win = self._resolve_window(win, active_wins_copy, process_name)
-            active_wins_copy.remove(active_win)
-            results[i] = active_wins.index(active_win) if active_win else None
+            if active_win:
+                active_wins_copy.remove(active_win)
+            results.append(active_wins.index(active_win) if active_win else -1)
         return results
 
     def _resolve_window(self, old_win, selection, process_name):
@@ -147,11 +148,11 @@ class ReproducerQA():
         return self._send_and_await_response(old_win, selection, process_name)
 
     def _filter_only_matching_windows(self, name, selection):
-        return list(filter(lambda x: x.window_title() == name, selection))
+        return list(filter(lambda x: x.window_text() == name, selection))
 
     def _title_match(self, title, selection):
         for win in selection:
-            if win.window_title() == title:
+            if win.window_text() == title:
                 return True
         return False
 
@@ -163,8 +164,9 @@ class ReproducerQA():
             "process_name": process_name,
             "selection": []
         }
-        for i, win in enumerate(selection):
-            info_map["selection"][i] = win.window_title()
+        
+        for index, win in enumerate(selection):
+            info_map["selection"].append(win.window_text())
         return info_map
 
 
@@ -180,10 +182,10 @@ class ReproducerQA():
     def _get_response(self, selection):
         with open(MetaData().window_assigned_data, 'r') as file:
             response = json.loads(file.read())
-            return selection[response["selection"]]
+            return selection[int(response["selection"])]
             
     
-    def stay_here_while_waiting(self):
+    def _stay_here_while_waiting(self):
         while True:
             if self._resolve_flag:
                 with self._access_flag_lock:
@@ -197,7 +199,6 @@ class ReproducerQA():
 class Simulator(InnerProcess):
     def __init__(self):
         super().__init__()
-        WindowReproducer().reproduce_window_states()
         self.timer = timing.TaskAwaitingTimeKeeper()
         # wait until simulation begins
         self.timer.register_pause()

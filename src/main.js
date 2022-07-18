@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, remote} = require('electron');
 const { fork } = require("child_process")
-const fs = require("fs")
+const fs = require("fs/promises")
 let {FormatError, splitAnswerMessage, splitRequestMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
 const path = require('path');
 let window = null;
@@ -159,18 +159,17 @@ ipcMain.handle("get-settings", (event, args) => {
   return settings[args]
 })
 
-ipcMain.handle("getWindowResolveInfo", (event, args) => {
-  
-  fs.readFile('./resources/window_unresolved.json', 'utf8', function(err, data) {
-    if (err) throw err; // TODO might need a safe solution later
-    return JSON.parse(data)
-  });
+ipcMain.handle("getWindowResolveInfo", async (event, args) => {
+  let data = await fs.readFile('./resources/window_unresolved.json', { encoding: 'utf8' });
+  // TODO might need a safe solution later (try-catch)
+  info = JSON.parse(data);
+  return info;
 })
 
 ipcMain.on("windowResolveResults", (event, args) => {
   saveObj = {"selection": args}
   fs.writeFile("./resources/window_resolved.json", JSON.stringify(saveObj))
-  sendRequestToBridge("resolveFinished", null)
+  sendCommandToBridge("resolveFinished", null)
 })
 
 function resolveIdentifyingWindow() {
@@ -233,7 +232,7 @@ function processCommandFromBridge(command) {
       startProcess()
       break;
     default:
-      console.log(`Command from bridge not available: ${m}`)
+      console.log(`Command from bridge not available: ${command}`)
   }
 }
 
