@@ -142,9 +142,9 @@ class ReproducerQA():
 
     def _resolve_window(self, old_win, selection, process_name):
         if len(selection) == 0: return None
-        if len(selection) == 1: return selection[0]
         if self._title_match(old_win["name"], selection):
             selection = self._filter_only_matching_windows(old_win["name"], selection)
+        if len(selection) == 1: return selection[0]
         return self._send_and_await_response(old_win, selection, process_name)
 
     def _filter_only_matching_windows(self, name, selection):
@@ -182,7 +182,8 @@ class ReproducerQA():
     def _get_response(self, selection):
         with open(MetaData().window_assigned_data, 'r') as file:
             response = json.loads(file.read())
-            return selection[int(response["selection"])]
+            index = int(response["selection"])
+            return selection[index] if index >= 0 else None
             
     
     def _stay_here_while_waiting(self):
