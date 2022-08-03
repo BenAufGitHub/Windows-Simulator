@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, remote} = require('electron');
 const { fork } = require("child_process")
-const fs = require("fs/promises")
+const fs = require("fs")
+const fsPromises = require("fs/promises")
 let {FormatError, splitAnswerMessage, splitRequestMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
 const path = require('path');
 let window = null;
@@ -160,7 +161,7 @@ ipcMain.handle("get-settings", (event, args) => {
 })
 
 ipcMain.handle("getWindowResolveInfo", async (event, args) => {
-  let data = await fs.readFile('./resources/window_unresolved.json', { encoding: 'utf8' });
+  let data = await fsPromises.readFile('./resources/window_unresolved.json', { encoding: 'utf8' });
   // TODO might need a safe solution later (try-catch)
   info = JSON.parse(data);
   return info;
@@ -168,7 +169,7 @@ ipcMain.handle("getWindowResolveInfo", async (event, args) => {
 
 ipcMain.on("windowResolveResults", (event, args) => {
   saveObj = {"selection": args}
-  fs.writeFile("./resources/window_resolved.json", JSON.stringify(saveObj))
+  fs.writeFileSync("./resources/window_resolved.json", JSON.stringify(saveObj))
   sendCommandToBridge("resolveFinished", null)
 })
 
