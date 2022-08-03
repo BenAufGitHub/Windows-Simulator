@@ -2,20 +2,20 @@
 <html>
     <head>
         <title>Resolving Window Identification</title>
-        <style>
-            body {
-                background-color: rebeccapurple;
-                color: whitesmoke;
-            }
-        </style>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"
+        />
+        <link rel="stylesheet" href="index.css">
         <script defer src="resolving.js"></script>
     </head>
-    <body>
+    <body class="content">
         <div id="info"></div><br>
         <div id="radio-selection">
             <p>Please enter the corresponding window.</p>
             <form id="form"></form>
         </div>
-        <button id="submit" >Submit</button>>
+        <button id="skip" class="button is-primary is-light is-dark is-outlined">Leave out</button>
+        <button id="submit" class="button is-info">Submit</button>
     </body>
 </html>

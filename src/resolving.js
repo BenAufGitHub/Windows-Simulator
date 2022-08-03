@@ -25,35 +25,67 @@ function customizeSubmit() {
 
 async function customizeInfo() {
     let information = await WINDOW_API.getInfo()
-    displayInformation(information.process, information.recorded, information.selection)
+    displayInformation(information.process_name, information.recorded, information.selection)
 }
 
 function displayInformation(process, recorded, selection) {
-    info.innerHTML = `Matching windows for process ${process}<br>`;
-    info.innerHTML += `Recorded window named: ${recorded}<br>`;
+    info.appendChild(generateTitle(`Matching windows for process <strong>'${process}'<strong><br>`));
+    info.appendChild(generateRecordingInformation(recorded));
     createRadiobuttons(selection);
+}
+
+function generateRecordingInformation(recorded) {
+    let p = document.createElement('p');
+    p.classList.add('content');
+    p.style.border = "2px solid black";
+    p.style.marginLeft = "10%";
+    p.style.marginRight = "10%";
+
+    let header = document.createElement('h6');
+    header.innerHTML = "Recording information:";
+    header.style.textDecoration = "underline";
+
+    p.appendChild(header);
+    p.innerHTML += `Window title: <strong>${recorded}</strong><br>`;
+    p.innerHTML += "Capture from first interaction:<br>";
+    return p;
+}
+
+function generateTitle(text) {
+    let title = document.createElement('h3');
+    title.classList.add('title');
+    title.style.marginTop = "10px";
+    title.innerHTML = text;
+    return title;
 }
 
 function createRadiobuttons(selection) {
     let form = document.getElementById("form")
     selection.forEach((element, i) => {
+        let div = document.createElement('div');
+        div.classList.add('column');
+
         let radio = createRadioOption(i, i);
         if(i === 0)
             radio.setAttribute("checked", "checked");
-        form.appendChild(radio);
-        createRadioLabel(radio.id, element);
+        div.appendChild(radio);
+        div.appendChild(createRadioLabel(radio.id, element));
+        form.appendChild(div);
     })
-    addNothingOption(form, selection.length);
 }
 
-const addNothingOption = (form, position) => {
-    let radio = createRadioOption(-1, position);
-    form.appendChild(radio);
-    createRadioLabel(radio.id, "Nothing");
+const customizeSkip = () => {
+    let skip = document.getElementById('skip');
+    skip.onclick = () => {
+        WINDOW_API.sendResults(-1);
+    }
 }
 
 const createRadioLabel = (id, text) => {
-    form.innerHTML += `<label for="${id}">${text}</label><br>`;
+    let label = document.createElement('label');
+    label.htmlFor = id;
+    label.innerHTML = text;
+    return label;
 }
 
 function createRadioOption(value, elementNumber) {
@@ -68,3 +100,4 @@ function createRadioOption(value, elementNumber) {
 
 customizeSubmit();
 customizeInfo();
+customizeSkip();
