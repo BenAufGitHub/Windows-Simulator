@@ -134,18 +134,18 @@ class ReproducerQA():
         active_wins_copy = active_wins.copy()
         results = []
         for i, win in enumerate(recorded_wins):
-            active_win = self._resolve_window(win, active_wins_copy, process_name)
+            active_win = self._resolve_window(win, active_wins_copy, process_name, i+1)
             if active_win:
                 active_wins_copy.remove(active_win)
             results.append(active_wins.index(active_win) if active_win else -1)
         return results
 
-    def _resolve_window(self, old_win, selection, process_name):
+    def _resolve_window(self, old_win, selection, process_name, resolve_attempt):
         if len(selection) == 0: return None
         if self._title_match(old_win["name"], selection):
             selection = self._filter_only_matching_windows(old_win["name"], selection)
         if len(selection) == 1: return selection[0]
-        return self._send_and_await_response(old_win, selection, process_name)
+        return self._send_and_await_response(old_win, selection, process_name, resolve_attempt)
 
     def _filter_only_matching_windows(self, name, selection):
         return list(filter(lambda x: x.window_text() == name, selection))
@@ -157,11 +157,12 @@ class ReproducerQA():
         return False
 
         
-    def _prepare_file_info(self, old_win, selection, process_name):
+    def _prepare_file_info(self, old_win, selection, process_name, resolve_attempt):
         info_map = {
             "recorded": old_win["name"],
             "z_index": old_win["z_index"],
             "process_name": process_name,
+            "resolve_step_no": resolve_attempt,
             "selection": []
         }
         
@@ -170,9 +171,9 @@ class ReproducerQA():
         return info_map
 
 
-    def _send_and_await_response(self, old_win, selection, process_name):
+    def _send_and_await_response(self, old_win, selection, process_name, resolve_attempt):
         self.upstream_requests_executed += 1
-        info_map = self._prepare_file_info(old_win, selection, process_name)
+        info_map = self._prepare_file_info(old_win, selection, process_name, resolve_attempt)
         with open(MetaData().window_unassigned_data, 'w') as file:
             file.write(json.dumps(info_map))
         self.print_cmd("reproducer_resolve_window")

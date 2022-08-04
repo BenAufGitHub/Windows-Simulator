@@ -25,11 +25,11 @@ function customizeSubmit() {
 
 async function customizeInfo() {
     let information = await WINDOW_API.getInfo()
-    displayInformation(information.process_name, information.recorded, information.selection)
+    displayInformation(information.process_name, information.recorded, information.selection, information.resolve_step_no)
 }
 
-function displayInformation(process, recorded, selection) {
-    info.appendChild(generateTitle(`Matching windows for process <strong>'${process}'<strong><br>`));
+function displayInformation(process, recorded, selection, number) {
+    info.appendChild(generateTitle(`Matching windows for process <strong>'${process}'<strong> (#${number})<br>`));
     info.appendChild(generateRecordingInformation(recorded));
     createRadiobuttons(selection);
 }
@@ -85,6 +85,7 @@ const createRadioLabel = (id, text) => {
     let label = document.createElement('label');
     label.htmlFor = id;
     label.innerHTML = text;
+    label.classList.add("radio");
     return label;
 }
 
@@ -94,6 +95,7 @@ function createRadioOption(value, elementNumber) {
     radio.type = 'radio';
     radio.id = `checkbox-${elementNumber}`;
     radio.value = value;
+    radio.style.marginRight = "5px"; 
     return radio;
 }
 
