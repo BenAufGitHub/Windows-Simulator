@@ -4,6 +4,8 @@
 !.gitignore
 !/src/**
 !/programs/**
+!/resources/screenshots/**
+!/resources/protocolConversion.js
 
 programs/capturer/install/**
 programs/capturer/logs/**
