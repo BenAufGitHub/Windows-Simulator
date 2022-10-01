@@ -10,18 +10,37 @@ class Constants:
     def __init__(self):
         self._save_file = "./resources/window_start_capture.json"
     
-    def get_filename(self):
+    def get_savename(self):
         return self._save_file
 
 
 class WindowSaver:
+
+    _window_dict = dict()
+
+    # get the z_index noted at the start of the recording for the given window
+    @staticmethod
+    def get_window_number(handle: int):
+        if not handle in WindowSaver._window_dict:
+            return -1
+        return WindowSaver._window_dict[handle]
+
+
+    @staticmethod
+    def set_window_number(handle, number):
+        WindowSaver._window_dict[handle] = number
+
+
     def save_current_win_status(self):
-        self._enter_windows_into_file(WinUtils.get_ordered_wins())
+        wins = WinUtils.get_ordered_wins()
+        for index, win in enumerate(wins):
+            WindowSaver.set_window_number(win.handle, index)
+        self._enter_windows_into_file(wins)
 
 
 
     def _enter_windows_into_file(self, windows):
-        with open(Constants().get_filename(), "w") as file:
+        with open(Constants().get_savename(), "w") as file:
             file.write("[")
             for index, win in enumerate(windows):
                 if index != 0:
@@ -54,9 +73,33 @@ class WindowSaver:
 
 
 class WindowReproducer():
+
+
+    _window_dict = dict()
+    _hwnd_values = []
+
+
+    @staticmethod
+    def get_handle(z_index: int):
+        if(z_index == -1):
+            return None
+        return WindowReproducer._window_dict[z_index]
+
+
+    @staticmethod
+    def is_hwnd_match(z_index, clicked_handle):
+        if WindowReproducer.get_handle(z_index) == None:
+            return not (clicked_handle in WindowReproducer._hwnd_values)
+        return WindowReproducer.get_handle(z_index) == clicked_handle
+
+
+    @staticmethod
+    def set_window_handle(number, handle):
+        WindowReproducer._window_dict[number] = handle
+    
     def reproduce_window_states(self):
         self._minimize_all_windows()
-        with open(Constants().get_filename(), "r") as file:
+        with open(Constants().get_savename(), "r") as file:
             windows = json.loads(file.readline())
             found_windows = WinUtils.get_ordered_wins()
             self._replicate_window_pool(windows, found_windows)
@@ -64,7 +107,7 @@ class WindowReproducer():
     def get_unresolved_pools(self):
         # list entries: [list process_name_saved, list process_name_available]
         old_windows = None
-        with open(Constants().get_filename(), "r") as file:
+        with open(Constants().get_savename(), "r") as file:
             old_windows = json.loads(file.readline())
         found_windows = WinUtils.get_ordered_wins()
         return self._group_together(old_windows, found_windows)
@@ -163,6 +206,8 @@ class WindowReproducer():
             win32gui.ShowWindow(win.handle, win32con.SW_MINIMIZE)            
 
     def _reproduce(self, win, active_win):
+        WindowReproducer.set_window_handle(win["z_index"], active_win.handle)
+        WindowReproducer._hwnd_values.append(active_win.handle)
         if win["max"]:
             return self._reproduceMaximized(active_win)
         self._reproduceRectangle(win, active_win)
@@ -203,6 +248,13 @@ class WindowReproducer():
 
 
 class WinUtils:
+
+    _desktop = Desktop(backend="uia")
+
+    @staticmethod
+    def get_top_from_point(x, y):
+        WinUtils._desktop.top_from_point(x, y)
+
 
     @staticmethod
     def get_windows_in_z_order_ctypes():
@@ -256,7 +308,7 @@ class WinUtils:
 
     @staticmethod
     def get_ordered_wins():
-        windows = Desktop(backend="uia").windows()
+        windows = WinUtils._desktop.windows()
         normal_windows = filter(lambda win: WinUtils.is_normal_win(win), windows)
         normal_windows = list(normal_windows)
         return WinUtils.sort_per_z_axis(normal_windows)
