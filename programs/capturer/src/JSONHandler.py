@@ -1,6 +1,8 @@
 from pynput.mouse import Controller, Button
 from pynput.keyboard import Key
 import json, time
+from save_status import WindowSaver, WinUtils
+from threading import Thread
 
 class MetaData:
     def __init__(self):
@@ -21,6 +23,11 @@ class JSONStorage:
 
     def add_mouse_click(self, button: str, time: float, pressed: bool, point):
         click_instance = {"action": "click", "name": button, "time": time, "args": [pressed, point[0], point[1]]}
+        Thread(target=lambda: self.append_with_windex(point, click_instance)).start()
+
+    def append_with_windex(self, point, click_instance):
+        windex = WindowSaver.get_window_number(WinUtils.get_top_from_point(point[0], point[1]).handle)
+        click_instance["windex"] = windex
         self.data[0].append(click_instance)
 
     def add_mouse_scroll(self, time: float, dx: int, dy: int):

@@ -253,7 +253,7 @@ class WinUtils:
 
     @staticmethod
     def get_top_from_point(x, y):
-        WinUtils._desktop.top_from_point(x, y)
+        return WinUtils._desktop.top_from_point(x, y)
 
 
     @staticmethod
