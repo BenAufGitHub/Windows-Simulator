@@ -232,11 +232,13 @@ class WindowReproducer():
         
 
         if width == 0 and 0 == height: return
-        active_win.restore()
+        # may consider reactivating the restore function, but putting it away fixed an issue regarding windows not reappearing
+        # active_win.restore()
         wrapper = controls.hwndwrapper.HwndWrapper(active_win.element_info)
         win32gui.ShowWindow(active_win.handle, win32con.SW_NORMAL)
         wrapper.move_window(x=left, y=top, width=width, height=height, repaint=True)
         self._quick_wait(active_win.is_normal)
+
 
     def _quick_wait(self, callback):
         t0 = time.time()
