@@ -188,7 +188,7 @@ def stop_exec(bool, process, reason):
     # eliminate python-side
     process.request("stop", flush=False)
     # inform front-end
-    print(f"1 special-end {reason}", flush=True)
+    process.print_cmd(f"special-end {reason}")
 
 
 
