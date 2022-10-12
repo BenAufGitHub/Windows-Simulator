@@ -265,6 +265,7 @@ class Simulator(InnerProcess):
 
     def complete_before_end(self, flush):
         Unpress.key_press_warnings(self.keyboard_controller)
+        Unpress.release_all()
         if not flush:
             self.event_thread.stop()
             self.event_thread.join()

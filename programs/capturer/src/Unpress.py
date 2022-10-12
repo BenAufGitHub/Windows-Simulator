@@ -1,4 +1,6 @@
-from pynput.keyboard import Controller, Key
+from pynput.keyboard import Key
+from pynput.mouse import Button
+from pynput import keyboard, mouse
 import Logger, logging
 
 
@@ -9,10 +11,21 @@ def key_press_warnings(controller):
             logging.warn(f"Modifier still pressed: {modifier}")
             controller.release(modifier)
 
+def release_all():
+    _release_modifiers()
+    _release_mouse_buttons()
+
+
+def _release_mouse_buttons():
+    c = mouse.Controller()
+    c.release(Button.left)
+    c.release(Button.right)
+
+
 
 def _release_modifiers():
     keys = {"cmd", "ctrl", "shift", "alt", "alt_gr"}
-    c = Controller()
+    c = keyboard.Controller()
     for key in keys:
         c.release(Key[key])
 
