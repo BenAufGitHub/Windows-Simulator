@@ -237,7 +237,7 @@ function updateState(command) {
         state = "running"
     if(command === "pause")
         state = "paused"
-    if(command === "stop")
+    if(command === "stop" || command.indexOf("special-end") != -1)
         state = "idle"
 }
 

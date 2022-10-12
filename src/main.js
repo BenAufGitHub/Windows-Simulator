@@ -14,6 +14,7 @@ const settings = {
   processState: null,         // going / idle
   selectedWindow: 'index',    // index / recording / pause
   process: null,              // the pyBridge
+  latestInfo: null            // will be displayed on hint.html
 }
 
 
@@ -155,6 +156,16 @@ function pauseProcess() {
 }
 
 
+function processSpecialEnd(reason) {
+  if(settings.selectedWindow === 'hint') return;
+  settings.selectedWindow = 'hint'
+  settings.processState = null
+  settings.latestInfo = reason
+  open("hint.html")
+  window.restore()
+}
+
+
 
 ipcMain.handle("get-settings", (event, args) => {
   return settings[args]
@@ -181,6 +192,14 @@ function resolveIdentifyingWindow() {
   // make a new window
   // communicate with window
   // send response to py
+}
+
+ipcMain.on("load-menu", (event, args) => loadMenu())
+
+const loadMenu = () => {
+  settings.selectedWindow = 'index'
+  settings.state = 'menu'
+  open("index.html")
 }
 
 
@@ -233,10 +252,23 @@ function processCommandFromBridge(command) {
       startProcess()
       break;
     default:
-      console.log(`Command from bridge not available: ${command}`)
+      processSecondaryCommandFromBridge(command)
   }
 }
 
+function processSecondaryCommandFromBridge(command) {
+  let words = command.split(" ")
+  let cmd = words[0]
+  let argArray = words.slice(1, cmd.length)
+  let arg = argArray.join(" ")
+  switch (cmd) {
+    case 'special-end':
+      processSpecialEnd(arg);
+      break;
+    default:
+      console.log(`Command from bridge not available: ${command}`)
+  }
+}
 
 // -------------------------------------- mapping IDs -------------------------------------------------
 

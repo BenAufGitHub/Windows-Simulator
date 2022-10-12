@@ -244,7 +244,7 @@ class Simulator(InnerProcess):
     def simulate_instruction(self, instruction: dict):
         # action (press, release, scroll) belongs to a mouse instruction
         if "action" in instruction:
-            exec_mouse_instruction(instruction, self.mouse_controller)
+            exec_mouse_instruction(instruction, self.mouse_controller, self)
         else:
             exec_keyboard_instruction(instruction, self.keyboard_controller)
 
@@ -271,8 +271,8 @@ class Simulator(InnerProcess):
 
 
 
-def exec_mouse_instruction(instruction: dict, controller):
-	func, args = JSONHandler.get_function_from_mouse_object(instruction, controller)
+def exec_mouse_instruction(instruction: dict, controller, simulator):
+	func, args = JSONHandler.get_function_from_mouse_object(instruction, controller, simulator)
 	func(*args)
 
 

@@ -169,10 +169,10 @@ def mouse_move(controller, x, y):
 
 
 # Return: functions and args that match the json instruction.
-def get_function_from_mouse_object(obj: dict, controller):
+def get_function_from_mouse_object(obj: dict, controller, simulator):
     action = obj["action"]
     if action == "click":
-        func = lambda: fail_if(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]))
+        func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "Error: Wrong window position detected.")
         Thread(target=func).start()
         args = [controller, obj["args"][1], obj["args"][2], obj["name"]]
         return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
@@ -182,12 +182,15 @@ def get_function_from_mouse_object(obj: dict, controller):
         return mouse_scroll, [controller, obj["args"][0], obj["args"][1]]
 
 
-class SimulationClickNotAlignedWithExpectedWindow(Exception):
-    pass
 
-def fail_if(bool):
+def stop_exec(bool, process, reason):
     if not bool: return
-    raise SimulationClickNotAlignedWithExpectedWindow()
+    # eliminate python-side
+    process.request("stop", flush=False)
+    # inform front-end
+    print(f"1 special-end {reason}", flush=True)
+
+
 
 
 def is_click_matching_window(original_windex, x, y):
