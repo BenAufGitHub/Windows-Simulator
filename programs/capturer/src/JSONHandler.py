@@ -1,7 +1,7 @@
 from pynput.mouse import Controller, Button
 from pynput.keyboard import Key
 import json, time
-from save_status import WindowSaver, WinUtils
+from save_status import WindowSaver, WinUtils, WindowReproducer
 from threading import Thread
 
 class MetaData:
@@ -172,6 +172,8 @@ def mouse_move(controller, x, y):
 def get_function_from_mouse_object(obj: dict, controller):
     action = obj["action"]
     if action == "click":
+        func = lambda: fail_if(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]))
+        Thread(target=func).start()
         args = [controller, obj["args"][1], obj["args"][2], obj["name"]]
         return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
     elif action == "move":
@@ -179,6 +181,18 @@ def get_function_from_mouse_object(obj: dict, controller):
     elif action == "scroll":
         return mouse_scroll, [controller, obj["args"][0], obj["args"][1]]
 
+
+class SimulationClickNotAlignedWithExpectedWindow(Exception):
+    pass
+
+def fail_if(bool):
+    if not bool: return
+    raise SimulationClickNotAlignedWithExpectedWindow()
+
+
+def is_click_matching_window(original_windex, x, y):
+    found_handle = WinUtils.get_top_from_point(x, y).handle
+    return WindowReproducer().is_hwnd_match(original_windex, found_handle)
 
 def key_press(controller, key):
     controller.press(key)
