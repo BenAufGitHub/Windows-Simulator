@@ -254,9 +254,9 @@ class Simulator(InnerProcess):
         self.listen_to_pause_toggle()
         # timer is invoked
         self.timer.register_resume()
-        self.init_simulation()
         self.state = "running"
         self.ready = True
+        self.init_simulation()
 
     def init_simulation(self):
         t = KillableThread(self.simulate_events)
