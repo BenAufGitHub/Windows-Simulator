@@ -276,8 +276,8 @@ class Simulator(InnerProcess):
 
 
 def exec_mouse_instruction(instruction: dict, controller, simulator):
-	func, args = JSONHandler.get_function_from_mouse_object(instruction, controller, simulator)
-	func(*args)
+    func, args = JSONHandler.get_function_from_mouse_object(instruction, controller, simulator)
+    func(*args)
 
 
 def exec_keyboard_instruction(instruction: dict, controller):

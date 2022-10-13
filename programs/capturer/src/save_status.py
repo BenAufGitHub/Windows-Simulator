@@ -125,6 +125,8 @@ class WindowReproducer():
 
     @staticmethod
     def is_hwnd_match(z_index, clicked_handle):
+        # -2 represents that the window doesnt matter
+        if z_index == -2: return True
         if WindowReproducer.get_handle(z_index) == None:
             return not (clicked_handle in WindowReproducer._hwnd_values)
         return WindowReproducer.get_handle(z_index) == clicked_handle

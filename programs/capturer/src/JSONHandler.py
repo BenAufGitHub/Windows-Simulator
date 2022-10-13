@@ -19,6 +19,7 @@ class JSONStorage:
         mouse_clicks, mouse_scrolls, mouse_moves, key_presses = [], [], [], []
         self.containers = ["mouse_clicks", "mouse_scrolls", "mouse_moves", "key_presses"]
         self.data = [mouse_clicks, mouse_scrolls, mouse_moves, key_presses]
+        self.manual_releases = []
         self.controller = Controller()
 
     def add_mouse_click(self, button: str, time: float, pressed: bool, point):
@@ -87,8 +88,14 @@ def merge_containers(storage: JSONStorage) -> list:
         for i in range(4):
             times[i] = storage._get_time(i, indices[i])
             index = _compare_min(*times)
+    appendManualReleases(storage, merged)
     return merged
 
+def appendManualReleases(storage: JSONStorage, merged):
+    if not merged: return
+    for entry in storage.manual_releases:
+        entry["time"] = round(merged[-1]["time"] + 0.05, 3)
+        merged.append(entry)
 
 def _compare_min(*args) -> int:
     lowest = None
@@ -115,16 +122,18 @@ def release_container(storage: JSONStorage, container: str):
     index = storage.containers.index(container) if container in storage.containers else -1
     if index != 0 and index != 3: return
     pressed = _get_pressed_buttons(storage.data[index])
-    _append_release_pressed(storage, pressed, container)
+    _append_release_pressed(storage, pressed)
 
 
-def _append_release_pressed(storage: JSONStorage, pressed, container: str):
+def _append_release_pressed(storage: JSONStorage, pressed):
     for button in pressed:
         is_mouse, name = button
         if is_mouse:
-            storage.add_mouse_click(button, 0, False, storage.controller.position)
+            entry = {"action": "click", "name": name, "args": [False, storage.controller.position[0], storage.controller.position[1]], "windex": -2}
+            storage.manual_releases.append(entry)
         else:
-            storage.add_key_stroke(name, 0, name in Key.__members__, False)
+            entry = {"name": name, "args": [False, name in Key.__members__]}
+            storage.manual_releases.append(entry)
 
 
 # return those button's names of which are pressed but not released at end of simulation
