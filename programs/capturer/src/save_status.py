@@ -17,6 +17,7 @@ class Constants:
 class WindowSaver:
 
     _window_dict = dict()
+    _cached_window_positions_for_pause = None
 
     # get the z_index noted at the start of the recording for the given window
     @staticmethod
@@ -69,11 +70,47 @@ class WindowSaver:
             "z_index": z_index
         }
 
+    
+    # ===================== saving windows for pausing ===========================
+
+
+    def save_windows_for_pause(self):
+        WindowSaver._cached_window_positions_for_pause = self._get_current_windows()
+
+    @staticmethod
+    def get_cached_wins():
+        return WindowSaver._cached_window_positions_for_pause
+
+    @staticmethod
+    def clear_cache_for_pause():
+        WindowSaver._cached_window_positions_for_pause = None
+
+    def _get_current_windows(self):
+        winlist = list()
+        windows = WinUtils.get_ordered_wins()
+        for zindex, win in enumerate(windows):
+            wininfo = self._get_positional_properties(win, zindex)
+            winlist.append(wininfo)
+        return winlist
+
+    def _get_positional_properties(self, win, zindex):
+        if win.is_maximized(): return {"ref": win, "max": True, "z": zindex}
+        return {
+            "ref": win,
+            "max": False,
+            "x": win.rectangle().left,
+            "y": win.rectangle().top,
+            "z": zindex,
+            "width": win.rectangle().width(),
+            "height": win.rectangle().height()
+        }
+
+
 
 
 
 class WindowReproducer():
-
+     
 
     _window_dict = dict()
     _hwnd_values = []
@@ -200,6 +237,7 @@ class WindowReproducer():
         return avail
 
     def _minimize_all_windows(self):
+        # TODO maybe add a win+D press with pynput
         for win in WinUtils.get_ordered_wins():
             if not WinUtils.is_normal_win(win): 
                 continue
@@ -210,7 +248,7 @@ class WindowReproducer():
         WindowReproducer._hwnd_values.append(active_win.handle)
         if win["max"]:
             return self._reproduceMaximized(active_win)
-        self._reproduceRectangle(win, active_win)
+        self.win_to_normalised_rect(active_win, win["coordinates"][0], win["coordinates"][1], win["dimensions"][0], win["dimensions"][1])
 
 
     def _reproduceMaximized(self, active_win):
@@ -219,25 +257,20 @@ class WindowReproducer():
         active_win.maximize()
         self._quick_wait(active_win.is_maximized)
 
-    def _reproduceRectangle(self, win, active_win):
-        active_win.minimize()
+
+    def win_to_normalised_rect(self, win, left, top, width, height):
+        win.minimize()
 
         # apperently minimize is asynchronous or sth. so we need to wait it out, thx for not putting that into the docs...
-        self._quick_wait(active_win.is_minimized)
-
-        left = win["coordinates"][0]
-        top = win["coordinates"][1]
-        width = win["dimensions"][0]
-        height = win["dimensions"][1]
+        self._quick_wait(win.is_minimized)
         
-
         if width == 0 and 0 == height: return
         # may consider reactivating the restore function, but putting it away fixed an issue regarding windows not reappearing
         # active_win.restore()
-        wrapper = controls.hwndwrapper.HwndWrapper(active_win.element_info)
-        win32gui.ShowWindow(active_win.handle, win32con.SW_NORMAL)
+        wrapper = controls.hwndwrapper.HwndWrapper(win.element_info)
+        win32gui.ShowWindow(win.handle, win32con.SW_NORMAL)
         wrapper.move_window(x=left, y=top, width=width, height=height, repaint=True)
-        self._quick_wait(active_win.is_normal)
+        self._quick_wait(win.is_normal)
 
 
     def _quick_wait(self, callback):
@@ -245,6 +278,30 @@ class WindowReproducer():
         while True:
             if callback() or time.time()-t0 > 0.1:
                 break
+
+
+    # ================= reproduction after pausing =============================
+
+
+    def reproduce_windows_after_pause(self):
+        if not WindowSaver.get_cached_wins():
+            print("0 No cached windows to reproduce found while reproducing after pause.", flush=True)
+            return
+        winlist = WindowSaver.get_cached_wins()
+        self._minimize_all_windows()
+        for i, wininfo in enumerate(reversed(winlist)):
+            if i + wininfo["z"] != len(winlist)-1:
+                print("0 Aborting Window-Reproduction: list not z-ordered", flush=True)
+                return
+            self._replecate_win_after_pause(wininfo)
+        WindowSaver.clear_cache_for_pause()
+
+
+    def _replecate_win_after_pause(self, wininfo):
+        if wininfo["max"]:
+            return self._reproduceMaximized(wininfo["ref"])
+        self.win_to_normalised_rect(wininfo["ref"], wininfo["x"], wininfo["y"], wininfo["width"], wininfo["height"])
+
 
 # ====================================== UTILS =======================================
 

@@ -30,22 +30,22 @@ class InnerProcess:
 
     # flush: whether accepted requests should be spread with print_cmd(cmd) - done so if request comes from Innerprocess itself
     # return: bool whether accepted or not
-    def request(self, arg: str, flush=False):
+    def request(self, arg: str, flush=False, _stop_pause=False):
         with self._req_lock:
-            return self._req(arg, flush)
+            return self._req(arg, flush, _stop_pause)
 
 
-    def _req(self, arg, flush):
+    def _req(self, arg, flush, _stop_pause=False):
         if self.state == "stop" or not self.ready: return False
         paused = (self.state == 'pause')
         if arg == 'pause' and not paused:
-            self.pause(flush)
+            self.pause(flush, _stop_pause)
             return True
         if arg == 'resume' and paused:
             self.resume(flush)
             return True
         if arg == 'stop':
-            self.request("pause")
+            self.request("pause", _stop_pause=True)
             self.end(flush)
             return True
         return False
@@ -59,12 +59,15 @@ class InnerProcess:
             return True
         return False
 
-    def pause(self, flush=False):
+    def pause(self, flush=False, _stop_pause=False):
         self.state = 'pause'
         self.timer.register_pause()
+        if not _stop_pause:
+            WindowSaver().save_windows_for_pause()
         if flush: self.print_cmd(self.state)
 
     def resume(self, flush=False):
+        WindowReproducer().reproduce_windows_after_pause()
         self.state = 'running'
         self.timer.register_resume()
         if flush: self.print_cmd("resume")
