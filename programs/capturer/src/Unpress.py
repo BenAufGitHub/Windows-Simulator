@@ -2,6 +2,7 @@ from pynput.keyboard import Key
 from pynput.mouse import Button
 from pynput import keyboard, mouse
 import Logger, logging
+import win32api
 
 
 def key_press_warnings(controller):
@@ -11,6 +12,7 @@ def key_press_warnings(controller):
             logging.warn(f"Modifier still pressed: {modifier}")
             controller.release(modifier)
 
+
 def release_all():
     _release_modifiers()
     _release_mouse_buttons()
@@ -18,9 +20,10 @@ def release_all():
 
 def _release_mouse_buttons():
     c = mouse.Controller()
-    c.release(Button.left)
-    c.release(Button.right)
-
+    if win32api.GetKeyState(0x01)<0:
+        c.release(Button.left)
+    if win32api.GetKeyState(0x02)<0:
+        c.release(Button.right)
 
 
 def _release_modifiers():
