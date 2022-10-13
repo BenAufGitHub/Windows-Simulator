@@ -16,9 +16,9 @@ class MetaData:
 class JSONStorage:
 
     def __init__(self):
-        mouse_clicks, mouse_scrolls, mouse_moves, key_presses = [], [], [], []
-        self.containers = ["mouse_clicks", "mouse_scrolls", "mouse_moves", "key_presses"]
-        self.data = [mouse_clicks, mouse_scrolls, mouse_moves, key_presses]
+        mouse_clicks, mouse_scrolls, mouse_moves, key_presses, commands = [], [], [], [], []
+        self.containers = ["mouse_clicks", "mouse_scrolls", "mouse_moves", "key_presses", "commands"]
+        self.data = [mouse_clicks, mouse_scrolls, mouse_moves, key_presses, commands]
         self.manual_releases = []
         self.controller = Controller()
 
@@ -42,6 +42,12 @@ class JSONStorage:
     def add_key_stroke(self, name: str, time: float, special_key: bool, pressed: bool):
         stroke_instance = {"name": name, "time": time, "args": [pressed, special_key]}
         self.data[3].append(stroke_instance)
+
+    def add_command(self, command: str, time: float, details: dict):
+        details["command"] = command
+        details["time"] = time
+        self.data[4].append(details)
+
 
     def _get_time(self, list_index, index) -> int:
         try:
@@ -77,15 +83,15 @@ def trim_shift(storage: JSONStorage):
 # merges all lists in the correct order of actions and returns the list
 def merge_containers(storage: JSONStorage) -> list:
     merged = []
-    indices = [0,0,0,0]
-    times = [None, None, None, None]
-    for i in range(4):
+    indices = [0,0,0,0,0]
+    times = [None, None, None, None, None]
+    for i in range(5):
         times[i] = storage._get_time(i, indices[i])
     index = _compare_min(*times)
     while not index is None:
         merged.append(storage.data[index][indices[index]])
         indices[index] = indices[index] + 1
-        for i in range(4):
+        for i in range(5):
             times[i] = storage._get_time(i, indices[i])
             index = _compare_min(*times)
     appendManualReleases(storage, merged)

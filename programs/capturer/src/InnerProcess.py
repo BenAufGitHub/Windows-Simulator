@@ -64,13 +64,23 @@ class InnerProcess:
         self.timer.register_pause()
         if not _stop_pause:
             WindowSaver().save_windows_for_pause()
+        self.on_pause(flush, _stop_pause)
         if flush: self.print_cmd(self.state)
+
+    # empty, override it with subclass
+    def on_pause(self, flush, stop_pause):
+        pass
 
     def resume(self, flush=False):
         WindowReproducer().reproduce_windows_after_pause()
         self.state = 'running'
         self.timer.register_resume()
+        self.on_resume(flush)
         if flush: self.print_cmd("resume")
+
+    # empty, override it with subclass
+    def on_resume(self, flush):
+        pass
 
     def end(self, flush=False):
         self.state = 'stop'
@@ -246,7 +256,9 @@ class Simulator(InnerProcess):
 
     def simulate_instruction(self, instruction: dict):
         # action (press, release, scroll) belongs to a mouse instruction
-        if "action" in instruction:
+        if "command" in instruction:
+            exec_cmd_instruction(instruction)
+        elif "action" in instruction:
             exec_mouse_instruction(instruction, self.mouse_controller, self)
         else:
             exec_keyboard_instruction(instruction, self.keyboard_controller)
@@ -273,6 +285,11 @@ class Simulator(InnerProcess):
             self.event_thread.stop()
             self.event_thread.join()
 
+
+
+def exec_cmd_instruction(instruction: dict):
+    if instruction["command"] == "release-all":
+        Unpress.release_all()
 
 
 def exec_mouse_instruction(instruction: dict, controller, simulator):
@@ -316,10 +333,16 @@ class Recorder(InnerProcess):
 
     # override
     def run(self):
-        
         self.listen_to_input()
         self.state = "running"
         self.ready = True
+
+    # override
+    # used for adding release-all to commands
+    def on_pause(self, flush, stop_pause):
+        if stop_pause: return
+        self.in_handler.on_command("release-all", {})
+
 
     # overwrite
     def complete_before_end(self, flush):
@@ -347,6 +370,10 @@ class InputHandler:
         return round(self.get_raw_time() + 0.1 - self.first_interaction_time, self.process.round_to)
 
     # ------------------------- individual recording ---------------------------------
+
+
+    def on_command(self, command, details):
+        self.storage.add_command(command, self.get_time(), details)
 
     def on_click(self, x, y, mouse_button, pressed):
         if self.is_paused(): return
