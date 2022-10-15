@@ -3,6 +3,7 @@ from pynput.keyboard import Key
 import json, time
 from save_status import WindowSaver, WinUtils, WindowReproducer
 from threading import Thread
+import win32api, win32con
 
 class MetaData:
     def __init__(self):
@@ -179,8 +180,19 @@ def mouse_release(controller, x, y, name):
 def mouse_scroll(controller, dx, dy):
     controller.scroll(dx, dy)
 
+
+# code from https://github.com/akmalmzamri/mousemover/blob/master/mousemover/mouse_handler.py
 def mouse_move(controller, x, y):
-    controller.position = (x, y)
+    x1, y1 = controller.position
+    screen_width = win32api.GetSystemMetrics(0)
+    screen_height = win32api.GetSystemMetrics(1)
+    win32api.mouse_event(
+            win32con.MOUSEEVENTF_MOVE | win32con.MOUSEEVENTF_ABSOLUTE,
+            int((x / screen_width * 65535.0) + (x-x1)),
+            int((y / screen_height * 65535.0) + (y-y1))
+        )
+    if controller.position != (x, y):
+        controller.position = (x, y)
 
 
 # Return: functions and args that match the json instruction.
