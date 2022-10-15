@@ -248,6 +248,8 @@ class WindowReproducer():
     def _reproduce(self, win, active_win):
         WindowReproducer.set_window_handle(win["z_index"], active_win.handle)
         WindowReproducer._hwnd_values.append(active_win.handle)
+        # if window has been eliminated during this process
+        if active_win.element_info.process_id == None: return
         if win["max"]:
             return self._reproduceMaximized(active_win)
         self.win_to_normalised_rect(active_win, win["coordinates"][0], win["coordinates"][1], win["dimensions"][0], win["dimensions"][1])
@@ -300,6 +302,7 @@ class WindowReproducer():
 
 
     def _replecate_win_after_pause(self, wininfo):
+        if wininfo["ref"].element_info.process_id == None: return
         if wininfo["max"]:
             return self._reproduceMaximized(wininfo["ref"])
         self.win_to_normalised_rect(wininfo["ref"], wininfo["x"], wininfo["y"], wininfo["width"], wininfo["height"])
