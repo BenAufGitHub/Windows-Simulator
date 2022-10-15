@@ -10,10 +10,20 @@ const changeTitle = async () => {
     title.innerHTML = await WINDOW_API.getSettings("pause-state")
 }
 
+const sendFromButton = (command) => {
+    disableButtons()
+    WINDOW_API.send(command)
+}
+
+const disableButtons = () => {
+    resumeBtn.setAttribute("disabled", true)
+    stopBtn.setAttribute("disabled", true)
+}
+
 changeTitle()
 const resumeBtn = document.getElementById("resume");
 const stopBtn = document.getElementById("stop");
 
-resumeBtn.onclick = () => WINDOW_API.send("resume")
-stopBtn.onclick = () => WINDOW_API.send("stop")
+resumeBtn.onclick = () => sendFromButton("resume")
+stopBtn.onclick = () => sendFromButton("stop")
 
