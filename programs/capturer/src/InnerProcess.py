@@ -148,11 +148,13 @@ class ReproducerQA():
         return self._send_and_await_response(old_win, selection, process_name, resolve_attempt)
 
     def _filter_only_matching_windows(self, name, selection):
-        return list(filter(lambda x: x.window_text() == name, selection))
+        return list(filter(lambda x: x.window_text().encode("ascii", "ignore").decode() == name, selection))
 
     def _title_match(self, title, selection):
         for win in selection:
-            if win.window_text() == title:
+            # ignores troublesome characters same way as the titles from the recording
+            current_title = win.window_text().encode("ascii", "ignore").decode()
+            if current_title == title:
                 return True
         return False
 
