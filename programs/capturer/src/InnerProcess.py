@@ -280,6 +280,16 @@ class Simulator(InnerProcess):
         self.event_thread = t
         t.start()
 
+    # override
+    def on_pause(self, flush, stop_pause):
+        if stop_pause: return
+        Unpress.rememeber_pressed(self.keyboard_controller)
+        Unpress.release_all()
+
+    # override
+    def on_resume(self, flush):
+        Unpress.press_remembered(self.keyboard_controller)
+
     def complete_before_end(self, flush):
         Unpress.key_press_warnings(self.keyboard_controller)
         Unpress.release_all()
