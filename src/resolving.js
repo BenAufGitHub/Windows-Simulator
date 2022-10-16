@@ -25,21 +25,41 @@ function customizeSubmit() {
 
 async function customizeInfo() {
     let information = await WINDOW_API.getInfo()
-    displayInformation(information.process_name, information.recorded, information.selection, information.resolve_step_no)
+    displayInformation(information.process_name, information.recorded, information.selection, information.resolve_step_no, information.z_index)
 }
 
-function displayInformation(process, recorded, selection, number) {
+function displayInformation(process, recorded, selection, number, z_index) {
     info.appendChild(generateTitle(`Matching windows for process <strong>'${process}'<strong> (#${number})<br>`));
-    info.appendChild(generateRecordingInformation(recorded));
+    info.appendChild(generateRecordingInformation(recorded, z_index));
     createRadiobuttons(selection);
 }
 
-function generateRecordingInformation(recorded) {
+function loadImage(z_index) {
+    let div = document.createElement('div');
+    let img = document.createElement('img')
+    img.src = "./../resources/screenshots/" + z_index + ".jpg"
+    img.alt = "Nothing to see here :("
+
+    div.style["marginLeft"] = "7px";
+    div.style["marginRight"] = "7px";
+    div.appendChild(img)
+    return div
+}
+
+function generateRecordingInformation(recorded, z_index) {
+    let div = document.createElement('div');
+    div.classList.add('content');
+    div.style.border = "2px solid black";
+    div.style.marginLeft = "10%";
+    div.style.marginRight = "10%";
+
+    div.appendChild(createParagraph(recorded));
+    div.appendChild(loadImage(z_index));
+    return div;
+}
+
+function createParagraph(recorded) {
     let p = document.createElement('p');
-    p.classList.add('content');
-    p.style.border = "2px solid black";
-    p.style.marginLeft = "10%";
-    p.style.marginRight = "10%";
 
     let header = document.createElement('h6');
     header.innerHTML = "Recording information:";

@@ -90,7 +90,7 @@ class WindowSaver:
         info = uia_element_info.UIAElementInfo(handle_or_elem=hwnd)
         wrapper = controls.hwndwrapper.HwndWrapper(info)
         image = wrapper.capture_as_image(wrapper.rectangle())
-        image.save(f"{Constants()._screenshots}{windex}.jpg", quality=30)
+        image.save(f"{Constants()._screenshots}{windex}.jpg", quality=75)
         
 
     
