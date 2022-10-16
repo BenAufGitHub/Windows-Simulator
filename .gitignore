@@ -5,7 +5,7 @@
 !/src/**
 !/programs/capturer/**
 !/programs/pyBridge.js
-!/resources/screenshots/**
+!/resources/screenshots/.gitkeep
 !/resources/protocolConversion.js
 
 programs/capturer/install/**
