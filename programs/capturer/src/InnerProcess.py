@@ -1,9 +1,10 @@
 import ctypes, threading, json, os
 from pynput import mouse, keyboard
 from JSONHandler import MetaData
-from save_status import WindowSaver, WindowReproducer
+from save_status import WindowSaver, WindowReproducer, Constants
 import JSONHandler, timing, UnicodeReverse, Unpress
 from threading import Lock
+from rt import ClickInfo
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
 class InnerProcess:
@@ -322,6 +323,7 @@ class Recorder(InnerProcess):
     def __init__(self):
         super().__init__()
         WindowSaver().save_current_win_status()
+        ClickInfo().clear_clicked_windecies()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
         self.storage = JSONHandler.JSONStorage()
@@ -343,6 +345,20 @@ class Recorder(InnerProcess):
         JSONHandler.release_all(self.storage)
         JSONHandler.write_storage_file(self.storage, self.data.filename)
 
+
+    def _load_capture(self) -> list:
+        with open(Constants().get_savename(), "r") as file:
+            return json.loads(file.read())
+
+    # all inactive windows during the recording get deleted
+    def overwrite_window_capture(self):
+        active_indecies = ClickInfo().get_clicked_windecies_list()
+        data = self._load_capture()
+        data = list(filter(lambda d: d["z_index"] in active_indecies, data))
+        with open(Constants().get_savename(), "w") as file:
+            file.write(json.dumps(data))
+
+
     # override
     def run(self):
         self.listen_to_input()
@@ -359,6 +375,7 @@ class Recorder(InnerProcess):
     # overwrite
     def complete_before_end(self, flush):
         self.save_data()
+        self.overwrite_window_capture()
 
 
 

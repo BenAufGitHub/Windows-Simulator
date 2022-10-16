@@ -4,6 +4,7 @@ import json, time
 from save_status import WindowSaver, WinUtils, WindowReproducer
 from threading import Thread
 import win32api, win32con
+from rt import ClickInfo
 
 class MetaData:
     def __init__(self):
@@ -29,6 +30,7 @@ class JSONStorage:
 
     def append_with_windex(self, point, click_instance):
         windex = WindowSaver.get_window_number(WinUtils.get_top_from_point(point[0], point[1]).handle)
+        ClickInfo().add_clicked_windex(windex)
         click_instance["windex"] = windex
         self.data[0].append(click_instance)
 
