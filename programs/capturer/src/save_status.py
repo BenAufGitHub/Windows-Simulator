@@ -1,4 +1,4 @@
-from pywinauto import Desktop, uia_defines, findwindows, controls
+from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_info
 import win32gui, win32con
 import win32api, ctypes
 import win32process
@@ -9,9 +9,13 @@ ctypes.windll.shcore.SetProcessDpiAwareness(2)
 class Constants:
     def __init__(self):
         self._save_file = "./resources/window_start_capture.json"
+        self._screenshots = "./resources/screenshots/"
     
     def get_savename(self):
         return self._save_file
+
+    def get_screenshot_name(self):
+        return self._screenshots
 
 
 class WindowSaver:
@@ -25,6 +29,15 @@ class WindowSaver:
         if not handle in WindowSaver._window_dict:
             return -1
         return WindowSaver._window_dict[handle]
+
+
+    @staticmethod
+    def get_handle(windex):
+        is_answer = lambda h: WindowSaver._window_dict[h] == windex
+        l = list(filter(is_answer, WindowSaver._window_dict.keys()))
+        if not l: return None
+        return l[0]
+
 
 
     @staticmethod
@@ -69,6 +82,16 @@ class WindowSaver:
             "dimensions": dimensions,
             "z_index": z_index
         }
+
+
+    def save_screenshot(self, windex):
+        hwnd = self.get_handle(windex)
+        if hwnd == None: return
+        info = uia_element_info.UIAElementInfo(handle_or_elem=hwnd)
+        wrapper = controls.hwndwrapper.HwndWrapper(info)
+        image = wrapper.capture_as_image(wrapper.rectangle())
+        image.save(f"{Constants()._screenshots}{windex}.jpg", quality=30)
+        
 
     
     # ===================== saving windows for pausing ===========================

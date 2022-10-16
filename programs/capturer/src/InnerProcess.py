@@ -324,12 +324,19 @@ class Recorder(InnerProcess):
         super().__init__()
         WindowSaver().save_current_win_status()
         ClickInfo().clear_clicked_windecies()
+        self.clear_screenshots()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
         self.storage = JSONHandler.JSONStorage()
         self.in_handler = InputHandler(self)
         self.round_to = 3
 
+    def clear_screenshots(self):
+        directory = Constants().get_screenshot_name()
+        files = os.listdir(rf'{directory}')
+        jpgs = filter(lambda f: f.find(".jpg") != -1, files)
+        for f in list(jpgs):
+            os.remove(directory+f)
 
     def listen_to_input(self):
         ih = self.in_handler

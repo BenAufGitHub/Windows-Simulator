@@ -30,7 +30,9 @@ class JSONStorage:
 
     def append_with_windex(self, point, click_instance):
         windex = WindowSaver.get_window_number(WinUtils.get_top_from_point(point[0], point[1]).handle)
-        ClickInfo().add_clicked_windex(windex)
+        if windex >= 0 and not ClickInfo().clicked_contains(windex):
+            ClickInfo().add_clicked_windex(windex)
+            Thread(target=lambda: WindowSaver().save_screenshot(windex)).start()
         click_instance["windex"] = windex
         self.data[0].append(click_instance)
 

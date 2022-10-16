@@ -22,5 +22,8 @@ class ClickInfo():
         copy = []
         copy.extend(self._clicked_wins)
         return copy
+
+    def clicked_contains(self, windex: int) -> bool:
+        return windex in self._clicked_wins
     
 
