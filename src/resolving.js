@@ -20,6 +20,7 @@ function processData() {
 }
 
 function customizeSubmit() {
+    submit.style["marginBottom"] = "20px";
     submit.onclick = processData;
 }
 
@@ -39,7 +40,6 @@ function loadImage(z_index) {
     let img = document.createElement('img')
     img.src = "./../resources/screenshots/" + z_index + ".jpg"
     img.alt = "Nothing to see here :("
-
     div.style["marginLeft"] = "7px";
     div.style["marginRight"] = "7px";
     div.appendChild(img)
@@ -96,6 +96,7 @@ function createRadiobuttons(selection) {
 
 const customizeSkip = () => {
     let skip = document.getElementById('skip');
+    skip.style["marginBottom"] = "20px";
     skip.onclick = () => {
         WINDOW_API.sendResults(-1);
     }
