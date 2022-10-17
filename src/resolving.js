@@ -40,8 +40,10 @@ function loadImage(z_index) {
     let img = document.createElement('img')
     img.src = "./../resources/screenshots/" + z_index + ".jpg"
     img.alt = "Nothing to see here :("
+    img.style["marginTop"] = "2px";
     div.style["marginLeft"] = "7px";
     div.style["marginRight"] = "7px";
+    div.style["marginTop"] = "2px";
     div.appendChild(img)
     return div
 }
@@ -64,10 +66,12 @@ function createParagraph(recorded) {
     let header = document.createElement('h6');
     header.innerHTML = "Recording information:";
     header.style.textDecoration = "underline";
+    header.style["marginTop"] = "5px";
 
     p.appendChild(header);
     p.innerHTML += `Window title: <strong>${recorded}</strong><br>`;
     p.innerHTML += "Capture from first interaction:<br>";
+    p.style["marginBottom"] = "2px";
     return p;
 }
 
@@ -80,6 +84,8 @@ function generateTitle(text) {
 }
 
 function createRadiobuttons(selection) {
+    let p = document.getElementById('pick-info');
+    p.innerHTML = p.innerHTML += ` ${selection.length} found:`
     let form = document.getElementById("form")
     selection.forEach((element, i) => {
         let div = document.createElement('div');
@@ -90,8 +96,22 @@ function createRadiobuttons(selection) {
             radio.setAttribute("checked", "checked");
         div.appendChild(radio);
         div.appendChild(createRadioLabel(radio.id, element));
+        div.appendChild(createShowButton(i));
         form.appendChild(div);
     })
+}
+
+const createShowButton = (index) => {
+    let button = document.createElement('button');
+    button.type = 'button';
+     button.style["marginLeft"] = "10px";
+    button.style["marginBottom"] = "7px";
+    button.classList.add('button');
+    button.classList.add('is-link');
+    button.classList.add('is-small');
+    button.classList.add('is-outlined');
+    button.innerHTML = "show";
+    return button;
 }
 
 const customizeSkip = () => {
