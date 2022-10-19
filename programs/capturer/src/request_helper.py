@@ -51,6 +51,7 @@ def get_int(text):
     space = text.find(" ")
     if space != -1:
         text = text[:space]
+    text = text.rstrip()
     if not text.isdigit(): raise InvalidRequest("Request with identifier i requires integer")
     return int(text)
 

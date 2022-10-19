@@ -4,6 +4,7 @@ const {ipcRenderer} = require('electron');
 
 const WINDOW_API = {
     getInfo: async () => ipcRenderer.invoke("getWindowResolveInfo", null),
+    showWindow: async (handle) => ipcRenderer.invoke("request", "showWindow", handle),
     sendResults: (result) => ipcRenderer.send("windowResolveResults", result)
 }
 
@@ -95,22 +96,26 @@ function createRadiobuttons(selection) {
         if(i === 0)
             radio.setAttribute("checked", "checked");
         div.appendChild(radio);
-        div.appendChild(createRadioLabel(radio.id, element));
-        div.appendChild(createShowButton(i));
+        div.appendChild(createRadioLabel(radio.id, element[0]));
+        div.appendChild(createShowButton(element[1]));
         form.appendChild(div);
     })
 }
 
-const createShowButton = (index) => {
+const createShowButton = (handle) => {
     let button = document.createElement('button');
     button.type = 'button';
-     button.style["marginLeft"] = "10px";
+    button.style["marginLeft"] = "10px";
     button.style["marginBottom"] = "7px";
     button.classList.add('button');
     button.classList.add('is-link');
     button.classList.add('is-small');
     button.classList.add('is-outlined');
     button.innerHTML = "show";
+    
+    button.onclick = () => {
+        WINDOW_API.showWindow(handle).then((msg)=>console.log(msg), (error) => console.log(`Error occured: ${error}`));
+    }
     return button;
 }
 

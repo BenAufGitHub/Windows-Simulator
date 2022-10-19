@@ -1,6 +1,4 @@
-from concurrent.futures import thread
 import sys, functools, traceback, threading
-from typing import Tuple
 import InnerProcess, request_helper, request_lib
 from InnerProcess import ReproducerQA
 print = functools.partial(print, flush=True)
@@ -9,7 +7,7 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-requests = ["exit", "spit", "getWinNames"]
+requests = ["exit", "spit", "getWinNames", 'showWindow']
 information = ["resolveFinished"]
 
 process = None
@@ -113,6 +111,9 @@ def answer_request(cmd, body):
         return 'DONE'
     if cmd == 'getWinNames':
         return list(request_lib.get_filtered_window_collection())
+    if cmd == 'showWindow':
+        request_lib.show_window(body)
+        return "DONE"
     
 def processInformation(cmd, body):
     if cmd == "resolveFinished":
@@ -196,6 +197,7 @@ def processIn(input):
         id, cmd, body = request_helper.split_request(input)
         if id < 2: raise request_helper.InvalidRequest("ID must be greater than 1")
     except request_helper.InvalidRequest as exc:
+        input = input.strip("\n")
         return print_info(f"Not a valid input: {input}, reason: {str(exc)}")
     try:
         result = execute(cmd, body) 

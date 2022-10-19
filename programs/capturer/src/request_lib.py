@@ -1,7 +1,9 @@
-from pywinauto import Desktop, uia_defines, findwindows
+from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_info
+import pywinauto
 import win32gui, win32con
 import win32api
 import win32process
+import time
 
 session_hwnd = dict()
 session_names = dict()
@@ -56,3 +58,30 @@ def get_proc_name_by_hwnd(hwnd):
     pid = win32process.GetWindowThreadProcessId(hwnd)
     handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid[1])
     return win32process.GetModuleFileNameEx(handle, 0)
+
+
+def show_window(hwnd):
+    info = uia_element_info.UIAElementInfo(handle_or_elem=hwnd)
+    wrapper = controls.hwndwrapper.HwndWrapper(info)
+    x, y = win32api.GetCursorPos()
+    win_to_normalised_rect(wrapper, hwnd, x, y)
+
+
+def win_to_normalised_rect(wrapper, hwnd, left, top):
+        wrapper.minimize()
+
+        # apperently minimize is asynchronous or sth. so we need to wait it out, thx for not putting that into the docs...
+        _quick_wait(wrapper.is_minimized)
+        
+        # may consider reactivating the restore function, but putting it away fixed an issue regarding windows not reappearing
+        # active_win.restore()
+        win32gui.ShowWindow(hwnd, win32con.SW_NORMAL)
+        wrapper.move_window(x=left, y=top, repaint=True)
+        _quick_wait(wrapper.is_normal)
+
+
+def _quick_wait(callback):
+    t0 = time.time()
+    while True:
+        if callback() or time.time()-t0 > 0.05:
+            break

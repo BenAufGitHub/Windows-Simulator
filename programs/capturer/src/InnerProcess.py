@@ -183,7 +183,7 @@ class ReproducerQA():
         }
         
         for index, win in enumerate(selection):
-            info_map["selection"].append(win.window_text())
+            info_map["selection"].append([win.window_text(), win.handle])
         return info_map
 
 
