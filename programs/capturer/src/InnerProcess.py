@@ -322,6 +322,7 @@ def exec_keyboard_instruction(instruction: dict, controller):
 class Recorder(InnerProcess):
     def __init__(self):
         super().__init__()
+        WindowSaver.reset_handle()
         WindowSaver().save_current_win_status()
         ClickInfo().clear_clicked_windecies()
         self.clear_screenshots()

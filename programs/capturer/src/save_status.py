@@ -38,6 +38,10 @@ class WindowSaver:
         if not l: return None
         return l[0]
 
+    
+    @staticmethod
+    def reset_handle():
+        WindowSaver._window_dict = dict()
 
 
     @staticmethod
