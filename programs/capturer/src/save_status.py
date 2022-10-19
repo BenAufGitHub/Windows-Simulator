@@ -145,11 +145,19 @@ class WindowReproducer():
             return None
         return WindowReproducer._window_dict[z_index]
 
+    
+    @staticmethod
+    def has_handle(z_index):
+        return z_index in WindowReproducer._window_dict
+
+
 
     @staticmethod
     def is_hwnd_match(z_index, clicked_handle):
         # -2 represents that the window doesnt matter
         if z_index == -2: return True
+        if z_index >= 0 and not WindowReproducer.has_handle(z_index):
+            return False
         if WindowReproducer.get_handle(z_index) == None:
             return not (clicked_handle in WindowReproducer._hwnd_values)
         return WindowReproducer.get_handle(z_index) == clicked_handle

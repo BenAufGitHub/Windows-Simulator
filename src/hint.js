@@ -10,7 +10,7 @@ let p = document.getElementById("reason")
 
 async function fillParagraph() {
     let reason = await WINDOW_API.getSettings("latestInfo")
-    p.innerHTML = reason
+    p.innerHTML = `<center>${reason}</center>`;
 }
 
 start:
