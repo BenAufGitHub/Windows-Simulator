@@ -203,15 +203,21 @@ def mouse_move(controller, x, y):
 def get_function_from_mouse_object(obj: dict, controller, simulator):
     action = obj["action"]
     if action == "click":
-        func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "Error: Wrong window position detected.")
-        Thread(target=func).start()
-        args = [controller, obj["args"][1], obj["args"][2], obj["name"]]
-        return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
+        return get_mouse_click_func(obj, controller, simulator)
     elif action == "move":
         return mouse_move, [controller, obj["args"][0], obj["args"][1]]
     elif action == "scroll":
         return mouse_scroll, [controller, obj["args"][0], obj["args"][1]]
 
+
+def get_mouse_click_func(obj, controller, simulator):
+    # if window was ignored or not found while resolving, no click will be done
+    if not WindowReproducer.has_handle(obj["windex"]):
+            return lambda: None, []
+    func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "Error: Wrong window position detected.")
+    Thread(target=func).start()
+    args = [controller, obj["args"][1], obj["args"][2], obj["name"]]
+    return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
 
 
 def stop_exec(bool, process, reason):
