@@ -150,6 +150,10 @@ class WindowReproducer():
     def has_handle(z_index):
         return z_index in WindowReproducer._window_dict
 
+    @staticmethod
+    def reset_handles():
+        WindowReproducer._window_dict = dict()
+        WindowReproducer._hwnd_values = []
 
 
     @staticmethod
@@ -279,7 +283,7 @@ class WindowReproducer():
     def _reproduce(self, win, active_win):
         WindowReproducer.set_window_handle(win["z_index"], active_win.handle)
         WindowReproducer._hwnd_values.append(active_win.handle)
-        # if window has been eliminated during this process
+        # if process has been eliminated during this process
         if active_win.element_info.process_id == None: return
         if win["max"]:
             return self._reproduceMaximized(active_win)

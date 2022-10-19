@@ -1,5 +1,6 @@
 import sys, functools, traceback, threading
 import InnerProcess, request_helper, request_lib
+from save_status import WindowReproducer
 from InnerProcess import ReproducerQA
 print = functools.partial(print, flush=True)
 
@@ -68,6 +69,7 @@ def start_process(cmd):
 def start_simulation(process):
     global in_prep_for_simulation, resolving_windows_notify
     in_prep_for_simulation = True
+    WindowReproducer.reset_handles()
     qa = ReproducerQA(print_cmd)
     resolving_windows_notify = lambda: qa.notify_resolve_ready()
     threading.Thread(target=lambda: threaded_simulation_start(qa, process)).start()
