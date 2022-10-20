@@ -60,12 +60,17 @@ async function processMainMsg(msg) {
 
 async function processMainCommand(command) {
     if (isEventEcho(command)) return
-    if (isInvalidCommandRequest(command)) throw `${command} (main) not accepted`
+    if (isInvalidCommandRequest(command)) return informOfRequestError();
     if (command === "stop")
         state = "stopped"
     let answer = await requestToPy(command)
     if(!isAcceptedRequest(answer)) return
     processSuccessfulRequest(command, answer[2])
+}
+
+async function informOfRequestError() {
+    let text = "special-end Command could not be processed correctly."
+    sendCommandUpwards(text, "main")
 }
 
 // request answers: [id, 0/1, answer]

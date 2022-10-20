@@ -15,8 +15,15 @@ const WINDOW_API = {
     getInfo: async (request, body) => ipcRenderer.invoke("request", request, body)
 }
 
-const startRecording = () => WINDOW_API.start("record")
-const startSimulate = () => WINDOW_API.start("simulate")
+const startRecording = () => {
+    record.onclick = () => null;
+    WINDOW_API.start("record")
+}
+const startSimulate = () => {
+    simulate.onclick = () => {
+        WINDOW_API.start("simulate")
+    }
+}
 
 
 
