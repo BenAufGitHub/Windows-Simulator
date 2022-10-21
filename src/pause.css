@@ -1,0 +1,28 @@
+html, body {
+    margin-top: 0px;
+    height: 100vh;
+    width: 100vw;
+    background-color: mediumpurple;
+}
+
+
+strong {
+    color:white;
+    font-size: large;
+}
+
+#instructions {
+    text-align: center;
+    padding-top: 10%;
+    padding-bottom: 6%;
+}
+
+#button-section {
+    text-align: center;
+    width: 100vw;
+    height:100vh;
+}
+
+.my-button {
+    margin-inline: 10px;
+}
