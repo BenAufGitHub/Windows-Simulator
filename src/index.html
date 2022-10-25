@@ -8,12 +8,23 @@
       href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"
     />
     <link rel="stylesheet" href="index.css" />
-    <script defer src="render.js"></script>
+    <script defer src="index.js"></script>
   </head>
   <body class="content">
 
     <button id="record" class="button is-primary">Aufzeichnen</button>
     <button id="simulate" class="button is-warning">Simulieren</button>
+
+    <hr />
+
+    <div id="save-menu">
+      <label for="save-input" class="inner-save-menu" style="margin-left: 10px;">Save: </label>
+      <span id=input-field class="inner-save-menu">
+        <input disabled id="save-input" type="text" size="15" />
+        <button id="expand-saves" onclick="">&#x2B07;</button>
+      </span>
+      <button class="inner-save-menu">Refresh</button>
+    </div>
 
     <hr />
 
