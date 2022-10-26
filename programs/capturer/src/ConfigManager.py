@@ -1,10 +1,14 @@
 from genericpath import isfile
 import pickle
 from os import path
+import os
 
 
 def filename():
     return "./resources/setting.cfg"
+
+def savepath():
+    return "./resources/recordings/"
 
 
 # ====== setup =====>
@@ -19,7 +23,7 @@ def get_standard_settings():
 
 
 def init_config_file():
-    obj = get_standard_settings();
+    obj = get_standard_settings()
     with open(filename(), 'wb') as f: 
         pickle.dump(obj, f)
 
@@ -41,17 +45,30 @@ def write(obj):
 
 # <==== setupt =====
 
+def save_file_exists(name):
+    directory = "./resources/recordings/"
+    filename = f"{name}.json"
+    return filename in os.listdir(rf'{directory}')
+
+
 
 def set_recording(name, obj=load()):
     init_if_new()
     obj["recording"]=f"{name}.json"
     write(obj)
+    if save_file_exists(name):
+        return "Careful"
     return "Done"
+
 
 def create_new_recording(name):
     obj = load()
     set_recording(name, obj=obj)
     append_recording(obj, name)
+    if save_file_exists(name):
+        return "Careful"
+    return "Done"
+
 
 def append_recording(obj, name):
     if not hasattr(obj, "recordingList"):

@@ -31,26 +31,46 @@ const addClickEvents = () => {
     record.onclick = startRecording;
     simulate.onclick = startSimulate;
     expand.onclick = expandRecordFiles;
+    document.getElementById('approve-new').onclick = evaluateNewRecording;
 }
 
 function resolveChooseRecordFile (result, filenames) {
     removeRecordSelectOptions();
     if(result==0)
-        createNewRecording();
-    else
-        selectRecording(filenames[result]);
+        return createNewRecording();
+    selectRecording(filenames[result]);
 }
 
 function getRecordFiles () {
     // TODO
-    return ["Boba Fett", "Tyrannus Saurus Rex.exe", "Stevosaurus TV", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"];
+    return ["Boba Fett", "Tyrannus Saurus Rex.exe", "Stevosaurus TV", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"];
 }
 
 async function registerRecording(filename) {
-    answer = await WINDOW_API.setRecording(filename);
-    return answer.isSuccessful;
+    return await WINDOW_API.setRecording(filename);
 }
 
+
+function evaluateNewRecording() {
+    result = input.value;
+    if(warn_if_not_valid(result)) return;
+    hideRecordWarning();
+    selectRecording(result.trim());
+}
+
+function warn_if_not_valid(save) {
+    save = save.trim();
+    if(save.length <4 || save.length>20){
+        setRecordWarning("Save must contain between 4 and 20 characters.");
+        return true;
+    }
+    regex = /^[0-9a-zA-Z-_ ]+$/g
+    if(!save.match(regex)){
+        setRecordWarning("Save must only contain A-Z, a-z, 0-9, '-', '_' and spaces.");
+        return true
+    }
+    return false
+}
 
 // ============================= Responsiveness =====================================
 
@@ -85,13 +105,23 @@ const addRecordExpansionToDocument = (container, children) => {
 
 // ======= record removal ====>
 
-function selectRecording (filename) {
+async function selectRecording (filename) {
     input.setAttribute("disabled", "");
-    registered = registerRecording(filename);
-    if(!registered)
+    let {isSuccessful, answer} = await registerRecording(filename);
+    if(!isSuccessful){
+        // TODO: get saved recording
         return setRecordWarning("Recording couldn't be selected.");
+    }
     setRecordFileInput(filename);
-    hideRecordWarning();
+    toggleWarning(answer == 'Careful')
+    hideCheckmark();
+}
+
+async function toggleWarning(needsWarning){
+    if(needsWarning)
+        setRecordWarning("Careful: This save would overwrite an existing instance.");
+    else
+        hideRecordWarning();
 }
 
 function setRecordFileInput (text) {
@@ -110,6 +140,7 @@ function createNewRecording() {
     input.removeAttribute("disabled");
     input.focus()
     hideRecordWarning();
+    showCheckmark();
 }
 
 function setRecordWarning (text) {
@@ -123,6 +154,16 @@ function hideRecordWarning () {
     p.setAttribute("hidden", "");
 }
 
+
+function showCheckmark () {
+    let b = document.getElementById('approve-new');
+    b.removeAttribute('hidden');
+}
+
+function hideCheckmark () {
+    let b = document.getElementById('approve-new');
+    b.setAttribute('hidden', '');
+}
 
 // ============================ DOM-Elements =========================================
 
