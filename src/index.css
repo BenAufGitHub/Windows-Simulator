@@ -71,3 +71,11 @@ body {
 .no-border {
   border-width: 0px !important;
 }
+
+.warning-text {
+  margin-top: 20px;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+  font-style: italic;
+  color: red;
+}

@@ -13,7 +13,8 @@ const WINDOW_API = {
     pause: (application) => ipcRenderer.send("pause", application),
     start: (application) => ipcRenderer.send("start", application),
     resume: (application) => ipcRenderer.send("resume", application),
-    getInfo: async (request, body) => ipcRenderer.invoke("request", request, body)
+    getInfo: async (request, body) => ipcRenderer.invoke("request", request, body),
+    setRecording: async (filename) => ipcRenderer.invoke("set-recording", filename),
 }
 
 const startRecording = () => {
@@ -45,6 +46,11 @@ function getRecordFiles () {
     return ["Boba Fett", "Tyrannus Saurus Rex.exe", "Stevosaurus TV", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"];
 }
 
+async function registerRecording(filename) {
+    answer = await WINDOW_API.setRecording(filename);
+    return answer.isSuccessful;
+}
+
 
 // ============================= Responsiveness =====================================
 
@@ -59,6 +65,7 @@ window.addEventListener('mouseup', function(e){
 // ===== record creation ====>
 
 const expandRecordFiles = () => {
+    hideRecordWarning();
     let filenames = getRecordFiles();
     filenames.unshift("----&#60;new&#62;----");
     let optionButtions = createButtons(filenames, resolveChooseRecordFile);
@@ -80,8 +87,11 @@ const addRecordExpansionToDocument = (container, children) => {
 
 function selectRecording (filename) {
     input.setAttribute("disabled", "");
-    //TODO actually set Recording
+    registered = registerRecording(filename);
+    if(!registered)
+        return setRecordWarning("Recording couldn't be selected.");
     setRecordFileInput(filename);
+    hideRecordWarning();
 }
 
 function setRecordFileInput (text) {
@@ -99,6 +109,18 @@ function createNewRecording() {
     setRecordFileInput("");
     input.removeAttribute("disabled");
     input.focus()
+    hideRecordWarning();
+}
+
+function setRecordWarning (text) {
+    let p = document.getElementById('warning-recording');
+    p.removeAttribute("hidden");
+    p.innerHTML = text;
+}
+
+function hideRecordWarning () {
+    let p = document.getElementById('warning-recording');
+    p.setAttribute("hidden", "");
 }
 
 

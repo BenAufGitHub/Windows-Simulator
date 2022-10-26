@@ -179,6 +179,15 @@ ipcMain.handle("getWindowResolveInfo", async (event, args) => {
   return info;
 })
 
+ipcMain.handle("set-recording", async (event, filename) => {
+  try {
+    return await request("set-recording", filename);
+  }
+  catch{
+    return {isSuccessful: false}
+  }
+})
+
 ipcMain.on("windowResolveResults", (event, args) => {
   saveObj = {"selection": args}
   fs.writeFileSync("./resources/window_resolved.json", JSON.stringify(saveObj))
