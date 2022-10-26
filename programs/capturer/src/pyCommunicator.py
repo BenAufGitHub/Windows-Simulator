@@ -1,5 +1,5 @@
 import sys, functools, traceback, threading
-import InnerProcess, request_helper, request_lib
+import InnerProcess, request_helper, request_lib, ConfigManager
 from save_status import WindowReproducer
 from InnerProcess import ReproducerQA
 print = functools.partial(print, flush=True)
@@ -8,7 +8,7 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-requests = ["exit", "spit", "getWinNames", 'showWindow']
+requests = ["exit", "spit", "getWinNames", 'showWindow', "set-recording"]
 information = ["resolveFinished"]
 
 process = None
@@ -116,6 +116,8 @@ def answer_request(cmd, body):
     if cmd == 'showWindow':
         request_lib.show_window(body)
         return "DONE"
+    if cmd == 'set-recording':
+        return ConfigManager.set_recording(body)
     
 def processInformation(cmd, body):
     if cmd == "resolveFinished":
