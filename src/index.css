@@ -45,6 +45,11 @@ body {
   background-color: lightblue;
   overflow: hidden;
   overflow-y:scroll;
+  caret-color: transparent;
+}
+
+.floating-top-right:focus {
+  outline: none;
 }
 
 .expand-button-option {
