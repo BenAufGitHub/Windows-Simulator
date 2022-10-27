@@ -188,6 +188,24 @@ ipcMain.handle("set-recording", async (event, filename) => {
   }
 })
 
+ipcMain.handle("get-recording", async (e,a) => {
+  try {
+    return await request("get-recording", null);
+  }
+  catch {
+    return {isSuccessful: false};
+  }
+})
+
+ipcMain.handle('get-record-list', async (e,a) => {
+  try {
+    return await request('get-record-list', null);
+  }
+  catch {
+    return {isSuccessful: false};
+  }
+})
+
 ipcMain.on("windowResolveResults", (event, args) => {
   saveObj = {"selection": args}
   fs.writeFileSync("./resources/window_resolved.json", JSON.stringify(saveObj))

@@ -5,6 +5,7 @@ const record = document.getElementById("record")
 const expand = document.getElementById("expand-saves");
 let input = document.getElementById("save-input");
 
+const standardRecordText = "Select recording"
 
 // ============================= functionality ===================================
 
@@ -15,6 +16,8 @@ const WINDOW_API = {
     resume: (application) => ipcRenderer.send("resume", application),
     getInfo: async (request, body) => ipcRenderer.invoke("request", request, body),
     setRecording: async (filename) => ipcRenderer.invoke("set-recording", filename),
+    get_selected_recording: async () => ipcRenderer.invoke("get-recording", null),
+    get_record_list: async () => ipcRenderer.invoke('get-record-list', null),
 }
 
 const startRecording = () => {
@@ -41,9 +44,10 @@ function resolveChooseRecordFile (result, filenames) {
     selectRecording(filenames[result]);
 }
 
-function getRecordFiles () {
-    // TODO
-    return ["Boba Fett", "Tyrannus Saurus Rex.exe", "Stevosaurus TV", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"];
+async function getRecordFiles () {
+    let obj = await WINDOW_API.get_record_list();
+    if(!obj.isSuccessful) return [];
+    return obj.answer;
 }
 
 async function registerRecording(filename) {
@@ -72,6 +76,14 @@ function warn_if_not_valid(save) {
     return false
 }
 
+async function put_selected_recording () {
+    let answerObj = await WINDOW_API.get_selected_recording()
+    if(answerObj.isSuccessful && answerObj.answer)
+        setRecordFileInput(answerObj.answer)
+    else
+        setRecordFileInput(standardRecordText)
+}
+
 // ============================= Responsiveness =====================================
 
 
@@ -84,9 +96,9 @@ window.addEventListener('mouseup', function(e){
 
 // ===== record creation ====>
 
-const expandRecordFiles = () => {
+const expandRecordFiles = async () => {
     hideRecordWarning();
-    let filenames = getRecordFiles();
+    let filenames = await getRecordFiles();
     filenames.unshift("----&#60;new&#62;----");
     let optionButtions = createButtons(filenames, resolveChooseRecordFile);
     container = createRecordContainer();
@@ -109,7 +121,7 @@ async function selectRecording (filename) {
     input.setAttribute("disabled", "");
     let {isSuccessful, answer} = await registerRecording(filename);
     if(!isSuccessful){
-        // TODO: get saved recording
+        put_selected_recording()
         return setRecordWarning("Recording couldn't be selected.");
     }
     setRecordFileInput(filename);
@@ -175,7 +187,6 @@ function createButtons (filenames, callbackResultFunc) {
         let b = createNewButton(i, filenames, callbackResultFunc);
         buttons.push(b);
     }
-    buttons[0].classList.add("new-recording-option")
     return buttons;
 }
 
@@ -194,7 +205,7 @@ const createNewButton = (i, filenames, callbackResultFunc) => {
 // ============== Option Container =============>
 
 function createRecordContainer () {
-    let container = document.createElement("span");
+    let container = document.createElement("div");
     container.id = "record-select-container";
     container.classList.add("floating-top-right");
     container.setAttribute("contentEditable", "");
@@ -208,5 +219,5 @@ function createRecordContainer () {
 main:
 {
     addClickEvents();
-    setRecordFileInput("Select recording");
+    put_selected_recording();
 }

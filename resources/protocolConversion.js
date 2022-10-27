@@ -19,9 +19,11 @@ function tryGetID(msg) {
 // args: floors integers
 function getFormattedBody(args) {
     if(args==null) return 'n';
-    if(!isNaN(args)) return `i ${Math.floor(args)}`
+    if(typeof args=='number') return `i ${Math.floor(args)}`
     if(typeof args == 'string') return `t ${args.length} ${args}`
-    if(Array.isArray(args)) return formatListToString(args)
+    if(Array.isArray(args)) {
+        return formatListToString(args)
+    }
     throw new Error(`Illegal argument: number, string, null or array required: ${args}`)
 }
 

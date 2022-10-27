@@ -37,8 +37,9 @@ body {
 .floating-top-right {
   position: absolute;
   top:115%;
-  height: 100px;
-  right: 5px;
+  max-height: 100px;
+  right: 0px;
+  width:100%;
   border-bottom-right-radius: 3px;
   border-bottom-left-radius: 3px;
   border: 1px solid black;
