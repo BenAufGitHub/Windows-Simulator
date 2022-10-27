@@ -179,32 +179,43 @@ ipcMain.handle("getWindowResolveInfo", async (event, args) => {
   return info;
 })
 
+
+
+// ========================= Index JS Options-Requests =============================
+
+
 ipcMain.handle("set-recording", async (event, filename) => {
-  try {
-    return await request("set-recording", filename);
-  }
-  catch{
-    return {isSuccessful: false}
-  }
+  return getRequestNoError(request("set-recording", filename));
 })
 
 ipcMain.handle("get-recording", async (e,a) => {
-  try {
-    return await request("get-recording", null);
-  }
-  catch {
-    return {isSuccessful: false};
-  }
+  return getRequestNoError(request("get-recording", null));
 })
 
 ipcMain.handle('get-record-list', async (e,a) => {
+  return getRequestNoError(request('get-record-list', null));
+})
+
+ipcMain.handle('get-simulation', async (e,a) => {
+  return getRequestNoError(request('get-simulation', null));
+})
+
+ipcMain.handle('get-simulation-list', async (e,a) => {
+  return getRequestNoError(request('get-simulation-list', null));
+})
+
+async function getRequestNoError (req) {
   try {
-    return await request('get-record-list', null);
+    return await req;
   }
   catch {
     return {isSuccessful: false};
   }
-})
+}
+
+
+//===========================================================
+
 
 ipcMain.on("windowResolveResults", (event, args) => {
   saveObj = {"selection": args}

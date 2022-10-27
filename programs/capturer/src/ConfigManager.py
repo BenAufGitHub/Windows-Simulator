@@ -85,6 +85,17 @@ def get_record_list():
     return add_imported_records(obj["recordingList"])
 
 
+def get_simulation_list():
+    directory = "./resources/recordings/"
+    files = os.listdir(rf'{directory}')
+    result = []
+    for f in files:
+        if f.find('.json') == -1: continue
+        result.append(f[:f.find('.json')])
+    return result
+    
+
+
 def add_imported_records(saved: list) -> list:
     result = list()
     result.extend(saved)
@@ -95,3 +106,12 @@ def add_imported_records(saved: list) -> list:
         if not filename.replace('.json', '') in result:
             result.append(filename.replace('.json', ''))
     return result
+
+
+def get_simulation():
+    init_if_new()
+    obj = load()
+    if not obj["simulation"]:
+        return None
+    f = obj["simulation"]
+    return f[0: f.find(".json")]

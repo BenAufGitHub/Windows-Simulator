@@ -3,9 +3,10 @@ const {ipcRenderer, contextBridge} = require("electron")
 const simulate = document.getElementById("simulate")
 const record = document.getElementById("record")
 const expand = document.getElementById("expand-saves");
-let input = document.getElementById("save-input");
+let record_input = document.getElementById("save-input");
 
-const standardRecordText = "Select recording"
+const standardRecordText = "Select recording";
+standardSimulationText = "Select Simulation";
 
 // ============================= functionality ===================================
 
@@ -18,6 +19,8 @@ const WINDOW_API = {
     setRecording: async (filename) => ipcRenderer.invoke("set-recording", filename),
     get_selected_recording: async () => ipcRenderer.invoke("get-recording", null),
     get_record_list: async () => ipcRenderer.invoke('get-record-list', null),
+    get_selected_simulation: async () => ipcRenderer.invoke("get-simulation", null),
+    get_sim_list: async () => ipcRenderer.invoke('get-simulation-list', null),
 }
 
 const startRecording = () => {
@@ -34,6 +37,7 @@ const addClickEvents = () => {
     record.onclick = startRecording;
     simulate.onclick = startSimulate;
     expand.onclick = expandRecordFiles;
+    document.getElementById('expand-sims').onclick = async () => console.log(await WINDOW_API.get_sim_list())
     document.getElementById('approve-new').onclick = evaluateNewRecording;
 }
 
@@ -56,7 +60,7 @@ async function registerRecording(filename) {
 
 
 function evaluateNewRecording() {
-    result = input.value;
+    result = record_input.value;
     if(warn_if_not_valid(result)) return;
     hideRecordWarning();
     selectRecording(result.trim());
@@ -82,6 +86,14 @@ async function put_selected_recording () {
         setRecordFileInput(answerObj.answer)
     else
         setRecordFileInput(standardRecordText)
+}
+
+async function put_selected_simulation () {
+    let answerObj = await WINDOW_API.get_selected_simulation()
+    if(answerObj.isSuccessful && answerObj.answer)
+        setSimFileInput(answerObj.answer)
+    else
+        setSimFileInput(standardSimulationText)
 }
 
 // ============================= Responsiveness =====================================
@@ -118,7 +130,7 @@ const addRecordExpansionToDocument = (container, children) => {
 // ======= record removal ====>
 
 async function selectRecording (filename) {
-    input.setAttribute("disabled", "");
+    record_input.setAttribute("disabled", "");
     let {isSuccessful, answer} = await registerRecording(filename);
     if(!isSuccessful){
         put_selected_recording()
@@ -137,7 +149,12 @@ async function toggleWarning(needsWarning){
 }
 
 function setRecordFileInput (text) {
-    input['value'] = text;
+    record_input['value'] = text;
+}
+
+function setSimFileInput (text) {
+    let sim_in = document.getElementById('save-display');
+    sim_in['value'] = text;
 }
 
 function removeRecordSelectOptions () {
@@ -149,8 +166,8 @@ function removeRecordSelectOptions () {
 
 function createNewRecording() {
     setRecordFileInput("");
-    input.removeAttribute("disabled");
-    input.focus()
+    record_input.removeAttribute("disabled");
+    record_input.focus()
     hideRecordWarning();
     showCheckmark();
 }
@@ -220,4 +237,5 @@ main:
 {
     addClickEvents();
     put_selected_recording();
+    put_selected_simulation();
 }
