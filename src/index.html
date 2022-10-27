@@ -11,13 +11,14 @@
     <script defer src="index.js"></script>
   </head>
   <body class="content">
-
-    <button id="record" class="button is-primary">Aufzeichnen</button>
-    <button id="simulate" class="button is-warning">Simulieren</button>
+    <div id="start-buttons" class="center-horizontally">
+      <button id="record" class="button is-primary">Aufzeichnen</button>
+      <button id="simulate" class="button is-warning">Simulieren</button>
+    </div>
 
     <hr />
 
-    <div id="save-menu">
+    <div id="save-menu" class="center-horizontally">
       <label for="save-input" class="inner-save-menu" style="margin-left: 10px;">Save: </label>
       <span id=input-field class="inner-save-menu">
         <input disabled id="save-input" type="text" size="18" />

@@ -34,6 +34,10 @@ body {
   position: relative;
 }
 
+.center-horizontally {
+  margin: auto;
+}
+
 .floating-top-right {
   position: absolute;
   top:115%;
