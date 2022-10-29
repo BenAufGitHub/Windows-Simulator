@@ -34,9 +34,7 @@ const startRecording = () => {
     WINDOW_API.start("record")
 }
 const startSimulate = () => {
-    simulate.onclick = () => {
-        WINDOW_API.start("simulate")
-    }
+    WINDOW_API.start("simulate")
 }
 
 const addClickEvents = () => {
