@@ -91,7 +91,9 @@ input {
 
 .inline-label {
   display: inline-block;
-  width:65px;
+  width:75px;
+  text-align:left;
+  padding-right: 0px;
 }
 
 .empty-field {
@@ -101,4 +103,8 @@ input {
   overflow: hidden;
   padding-top: 5px;
   padding-bottom: 5px;
+}
+
+.equal-pad {
+  width: 130px;
 }
