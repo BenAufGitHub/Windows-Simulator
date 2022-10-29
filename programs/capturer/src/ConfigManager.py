@@ -34,6 +34,7 @@ def init_if_new():
 
 
 def load():
+    init_if_new()
     data = None
     with open(filename(), 'rb') as f: 
         data = pickle.load(f)
@@ -52,7 +53,6 @@ def save_file_exists(name):
 
 
 def get_recording():
-    init_if_new()
     obj= load()
     if not obj["recording"]:
         return None
@@ -60,7 +60,6 @@ def get_recording():
     return f[0: f.find(".json")]
 
 def set_recording(name):
-    init_if_new()
     obj=load()
     append_recording(obj, name)
     obj["recording"]=f"{name}.json"
@@ -79,7 +78,6 @@ def append_recording(obj, name):
 
 
 def get_record_list():
-    init_if_new()
     obj = load()
 
     return add_imported_records(obj["recordingList"])
@@ -109,9 +107,22 @@ def add_imported_records(saved: list) -> list:
 
 
 def get_simulation():
-    init_if_new()
     obj = load()
     if not obj["simulation"]:
         return None
     f = obj["simulation"]
     return f[0: f.find(".json")]
+
+def set_simulation(name):
+    obj = load()
+    file = f"{name}.json"
+    raise_if_not_found(file)
+    obj["simulation"] = file
+    write(obj)
+    return "DONE"
+
+
+def raise_if_not_found(file):
+    directory = "./resources/recordings/"
+    if not file in os.listdir(rf'{directory}'):
+        raise IOError('File not found')

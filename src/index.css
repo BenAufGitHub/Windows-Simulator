@@ -30,7 +30,7 @@ body {
   border-right: 4px solid #4b42f5;
 }
 
-#input-field {
+#input-field, #display-field {
   position: relative;
 }
 
@@ -69,7 +69,7 @@ body {
   background-color: lightcyan;
 }
 
-.record-option-border {
+.expand-option-border {
   border-width: 0px 0px 1px 0px;
 }
 
@@ -87,4 +87,18 @@ body {
 
 input {
   text-align: center;
+}
+
+.inline-label {
+  display: inline-block;
+  width:65px;
+}
+
+.empty-field {
+  background-color: lightblue;
+  font-style: italic;
+  font-size: 11px;
+  overflow: hidden;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }

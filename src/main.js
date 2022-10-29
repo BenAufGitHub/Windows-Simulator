@@ -204,6 +204,10 @@ ipcMain.handle('get-simulation-list', async (e,a) => {
   return getRequestNoError(request('get-simulation-list', null));
 })
 
+ipcMain.handle('set-simulation', async (event, filename) => {
+  return getRequestNoError(request('set-simulation', filename));
+})
+
 async function getRequestNoError (req) {
   try {
     return await req;
