@@ -7,6 +7,7 @@
 !/programs/pyBridge.js
 !/resources/screenshots/.gitkeep
 !/resources/recordings/.gitkeep
+!/resources/start_capture/.gitkeep
 !/resources/protocolConversion.js
 
 programs/capturer/install/**
