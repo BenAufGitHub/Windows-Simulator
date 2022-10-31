@@ -126,7 +126,7 @@ const expandRecordFiles = async () => {
     hideRecordWarning();
     let filenames = await getRecordFiles();
     filenames.unshift("----&#60;new&#62;----");
-    let optionButtions = createButtons(filenames, resolveChooseRecordFile);
+    let optionButtions = createButtons(filenames, resolveChooseRecordFile, "hover-rec");
     container = createContainer("record");
     addRecordExpansionToDocument(container, optionButtions, "input-field");
     container.focus();
@@ -216,7 +216,7 @@ function hideCheckmark () {
 const expandSimFiles = async () => {
     hideSimWarning();
     let filenames = await getSimFiles();
-    let options = (filenames==true) ? createButtons(filenames, resolveChooseSimFile) : [getNoOptionsPanel()];
+    let options = (filenames.length) ? createButtons(filenames, resolveChooseSimFile, "hover-sim") : [getNoOptionsPanel()];
     container = createContainer("simulate");
     addRecordExpansionToDocument(container, options, "display-field");
     container.focus();
@@ -265,18 +265,19 @@ function hideSimWarning () {
 
 // ============= RecordOptionButtons ==>
 
-function createButtons (filenames, callbackResultFunc) {
+function createButtons (filenames, callbackResultFunc, hoverClass) {
     let buttons = [];
     for(let i=0; i<filenames.length; i++){
-        let b = createNewButton(i, filenames, callbackResultFunc);
+        let b = createNewButton(i, filenames, callbackResultFunc, hoverClass);
         buttons.push(b);
     }
     return buttons;
 }
 
-const createNewButton = (i, filenames, callbackResultFunc) => {
+const createNewButton = (i, filenames, callbackResultFunc, hoverClass) => {
     let b = document.createElement("button");
     b.classList.add("expand-button-option");
+    b.classList.add(hoverClass);
     if(i+1==filenames.length)
         b.classList.add("no-border");
     else
