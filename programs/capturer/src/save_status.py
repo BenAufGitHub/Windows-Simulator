@@ -8,7 +8,7 @@ ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
 class Constants:
     def __init__(self):
-        self._save_file = "./resources/window_start_capture.json"
+        self._save_file = "./resources/start_capture/"
         self._screenshots = "./resources/screenshots/"
     
     def get_savename(self):
@@ -49,16 +49,16 @@ class WindowSaver:
         WindowSaver._window_dict[handle] = number
 
 
-    def save_current_win_status(self):
+    def save_current_win_status(self, path):
         wins = WinUtils.get_ordered_wins()
         for index, win in enumerate(wins):
             WindowSaver.set_window_number(win.handle, index)
-        self._enter_windows_into_file(wins)
+        self._enter_windows_into_file(wins, path)
 
 
 
-    def _enter_windows_into_file(self, windows):
-        with open(Constants().get_savename(), "w") as file:
+    def _enter_windows_into_file(self, windows, path):
+        with open(path, "w") as file:
             file.write("[")
             for index, win in enumerate(windows):
                 if index != 0:
@@ -182,10 +182,10 @@ class WindowReproducer():
             found_windows = WinUtils.get_ordered_wins()
             self._replicate_window_pool(windows, found_windows)
 
-    def get_unresolved_pools(self):
+    def get_unresolved_pools(self, path):
         # list entries: [list process_name_saved, list process_name_available]
         old_windows = None
-        with open(Constants().get_savename(), "r") as file:
+        with open(path, "r") as file:
             old_windows = json.loads(file.readline())
         found_windows = WinUtils.get_ordered_wins()
         return self._group_together(old_windows, found_windows)

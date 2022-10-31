@@ -8,7 +8,7 @@ from rt import ClickInfo
 
 class MetaData:
     def __init__(self):
-        self.filename = "./resources/recording.json"
+        self.record_path = "./resources/recordings/"
         self.window_unassigned_data = "./resources/window_unresolved.json"
         self.window_assigned_data = "./resources/window_resolved.json"
         self.auto_time = 0.1
@@ -24,7 +24,7 @@ class JSONStorage:
         self.manual_releases = []
         self.controller = Controller()
 
-    def add_mouse_click(self, button: str, time: float, pressed: bool, point):
+    def add_mouse_click(self, button: str, time: float, pressed: bool, point): 
         click_instance = {"action": "click", "name": button, "time": time, "args": [pressed, point[0], point[1]]}
         Thread(target=lambda: self.append_with_windex(point, click_instance)).start()
 
@@ -162,9 +162,11 @@ def _get_pressed_buttons(data: list) -> set:
 ''' ------------------------------------ file writing -------------------------------------------- '''
 
 def write_storage_file(storage: JSONStorage, filename: str):
+    if not filename: raise Exception('No record file specified.')
+    path = f"{MetaData().record_path}{filename}.json"
     data_set = merge_containers(storage)
     json_string = json.dumps(data_set)
-    write_file(json_string, filename)
+    write_file(json_string, path)
 
 def write_file(json_str: str, filename: str):
     with open(filename, "w") as file:

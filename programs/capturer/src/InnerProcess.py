@@ -5,6 +5,7 @@ from save_status import WindowSaver, WindowReproducer, Constants
 import JSONHandler, timing, UnicodeReverse, Unpress
 from threading import Lock
 from rt import ClickInfo
+import ConfigManager
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
 class InnerProcess:
@@ -124,8 +125,14 @@ class ReproducerQA():
         with self._access_flag_lock:
             self._resolve_flag = True
 
+    def _get_path(self):
+        file = ConfigManager.get_simulation()
+        if not file: raise Exception('No simulation file specified.')
+        return f"{Constants().get_savename()}{file}.json"
+        
     def resolve_and_ready_up_windows(self):
-        problem_pools = self.reproducer.get_unresolved_pools()
+        path = self._get_path()
+        problem_pools = self.reproducer.get_unresolved_pools(path)
         solution = dict()
         for pool in problem_pools:
             result_list = self._resolve_pool(problem_pools[pool], pool)
@@ -223,8 +230,15 @@ class Simulator(InnerProcess):
         self.keyboard_controller = keyboard.Controller()
         self.mouse_controller = mouse.Controller() 
 
+    def _put_path(self):
+        sim = ConfigManager.get_simulation()
+        if sim: return f"{self.data.record_path}{sim}.json"
+        return None
+
     def read_file(self):
-        with open(self.data.filename, "r") as file:
+        path = self._put_path()
+        if not path: raise Exception('No path for simulation specified.')
+        with open(path, "r") as file:
             content = file.read()
             self.storage = json.loads(content)
 
@@ -323,7 +337,7 @@ class Recorder(InnerProcess):
     def __init__(self):
         super().__init__()
         WindowSaver.reset_handle()
-        WindowSaver().save_current_win_status()
+        self.save_current_win_status()
         ClickInfo().clear_clicked_windecies()
         self.clear_screenshots()
         self.timer = timing.SimpleTimeKeeper()
@@ -332,6 +346,12 @@ class Recorder(InnerProcess):
         self.in_handler = InputHandler(self)
         self.round_to = 3
 
+    def save_current_win_status(self):
+        file = ConfigManager.get_recording()
+        if not file: raise Exception('No recording specified.')
+        path = f"{Constants().get_savename()}{file}.json"
+        WindowSaver().save_current_win_status(path)
+        
     def clear_screenshots(self):
         directory = Constants().get_screenshot_name()
         files = os.listdir(rf'{directory}')
@@ -351,11 +371,11 @@ class Recorder(InnerProcess):
     def save_data(self):
         JSONHandler.compress(self.storage)
         JSONHandler.release_all(self.storage)
-        JSONHandler.write_storage_file(self.storage, self.data.filename)
+        JSONHandler.write_storage_file(self.storage, ConfigManager.get_recording())
 
 
     def _load_capture(self) -> list:
-        with open(Constants().get_savename(), "r") as file:
+        with open(f"{Constants().get_savename()}{ConfigManager.get_recording()}.json", "r") as file:
             return json.loads(file.read())
 
     # all inactive windows during the recording get deleted
@@ -363,7 +383,7 @@ class Recorder(InnerProcess):
         active_indecies = ClickInfo().get_clicked_windecies_list()
         data = self._load_capture()
         data = list(filter(lambda d: d["z_index"] in active_indecies, data))
-        with open(Constants().get_savename(), "w") as file:
+        with open(f"{Constants().get_savename()}{ConfigManager.get_recording()}.json", "w") as file:
             file.write(json.dumps(data))
 
 
