@@ -26,7 +26,11 @@ class JSONStorage:
 
     def add_mouse_click(self, button: str, time: float, pressed: bool, point, record_path): 
         click_instance = {"action": "click", "name": button, "time": time, "args": [pressed, point[0], point[1]]}
-        Thread(target=lambda: self.append_with_windex(point, click_instance, record_path)).start()
+        if pressed:
+            Thread(target=lambda: self.append_with_windex(point, click_instance, record_path)).start()
+        else:
+            click_instance["windex"] = -2
+            self.data[0].append(click_instance)
 
     def append_with_windex(self, point, click_instance, record_path):
         windex = WindowSaver.get_window_number(WinUtils.get_top_from_point(point[0], point[1]).handle)
@@ -214,7 +218,7 @@ def get_function_from_mouse_object(obj: dict, controller, simulator):
 
 def get_mouse_click_func(obj, controller, simulator):
     # if window was ignored or not found while resolving, no click will be done
-    if not WindowReproducer.has_handle(obj["windex"]):
+    if obj["windex"]>= 0 and not WindowReproducer.has_handle(obj["windex"]):
             return lambda: None, []
     func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "Error: Wrong window position detected.")
     Thread(target=func).start()
