@@ -64,9 +64,17 @@ async function processMainCommand(command) {
     if (isInvalidCommandRequest(command)) return informOfRequestError();
     if (command === "stop")
         state = "stopped"
-    let answer = await requestToPy(command)
-    if(!isAcceptedRequest(answer)) return
-    processSuccessfulRequest(command, answer[2])
+    try {
+        let answer = await requestToPy(command)
+        if(!isAcceptedRequest(answer)) return
+        processSuccessfulRequest(command, answer[2])
+    } catch (e){
+        process.send(`1 special-end Following error occured while running: ${e}`)
+        try {
+            await requestToPy(command)
+            updateState("stop")
+        } catch {}
+    }
 }
 
 async function informOfRequestError() {
