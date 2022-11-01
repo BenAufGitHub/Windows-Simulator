@@ -2,7 +2,7 @@ from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_i
 import win32gui, win32con
 import win32api, ctypes
 import win32process
-import json, time
+import json, time, os
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
@@ -88,13 +88,14 @@ class WindowSaver:
         }
 
 
-    def save_screenshot(self, windex):
+    def save_screenshot(self, windex, filepath):
         hwnd = self.get_handle(windex)
         if hwnd == None: return
         info = uia_element_info.UIAElementInfo(handle_or_elem=hwnd)
         wrapper = controls.hwndwrapper.HwndWrapper(info)
         image = wrapper.capture_as_image(wrapper.rectangle())
-        image.save(f"{Constants()._screenshots}{windex}.jpg", quality=10)
+        path = Constants().get_screenshot_name() + filepath + '/'
+        image.save(f"{path}{windex}.jpg", quality=10)
         
 
     

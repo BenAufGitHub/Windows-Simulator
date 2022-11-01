@@ -339,7 +339,7 @@ class Recorder(InnerProcess):
         WindowSaver.reset_handle()
         self.save_current_win_status()
         ClickInfo().clear_clicked_windecies()
-        self.clear_screenshots()
+        self.init_screenshots()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
         self.storage = JSONHandler.JSONStorage()
@@ -352,12 +352,22 @@ class Recorder(InnerProcess):
         path = f"{Constants().get_savename()}{file}.json"
         WindowSaver().save_current_win_status(path)
         
-    def clear_screenshots(self):
-        directory = Constants().get_screenshot_name()
-        files = os.listdir(rf'{directory}')
+    def init_screenshots(self):
+        path = self._get_scr_path()
+        if not os.path.exists(path):
+            os.mkdir(path)
+        else: self._rm_all_pics(path)
+
+
+    def _rm_all_pics(self, path):
+        files = os.listdir(rf'{path}')
         jpgs = filter(lambda f: f.find(".jpg") != -1, files)
         for f in list(jpgs):
-            os.remove(directory+f)
+            os.remove(path+f)
+
+    def _get_scr_path(self):
+        outer_dir = Constants().get_screenshot_name()
+        return outer_dir + ConfigManager.get_recording() + '/'
 
     def listen_to_input(self):
         ih = self.in_handler
@@ -436,7 +446,8 @@ class InputHandler:
         if self.is_paused(): return
         with self.input_lock:
             button_name = mouse_button.name
-            self.storage.add_mouse_click(button_name, self.get_time(), pressed, (x, y))
+            record_path = ConfigManager.get_recording()
+            self.storage.add_mouse_click(button_name, self.get_time(), pressed, (x, y), record_path)
 
     def on_scroll(self, x, y, dx, dy):
         if self.is_paused(): return

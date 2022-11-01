@@ -24,15 +24,15 @@ class JSONStorage:
         self.manual_releases = []
         self.controller = Controller()
 
-    def add_mouse_click(self, button: str, time: float, pressed: bool, point): 
+    def add_mouse_click(self, button: str, time: float, pressed: bool, point, record_path): 
         click_instance = {"action": "click", "name": button, "time": time, "args": [pressed, point[0], point[1]]}
-        Thread(target=lambda: self.append_with_windex(point, click_instance)).start()
+        Thread(target=lambda: self.append_with_windex(point, click_instance, record_path)).start()
 
-    def append_with_windex(self, point, click_instance):
+    def append_with_windex(self, point, click_instance, record_path):
         windex = WindowSaver.get_window_number(WinUtils.get_top_from_point(point[0], point[1]).handle)
         if windex >= 0 and not ClickInfo().clicked_contains(windex):
             ClickInfo().add_clicked_windex(windex)
-            Thread(target=lambda: WindowSaver().save_screenshot(windex)).start()
+            Thread(target=lambda: WindowSaver().save_screenshot(windex, record_path)).start()
         click_instance["windex"] = windex
         self.data[0].append(click_instance)
 
