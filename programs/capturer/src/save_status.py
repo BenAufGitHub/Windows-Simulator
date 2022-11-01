@@ -2,7 +2,7 @@ from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_i
 import win32gui, win32con
 import win32api, ctypes
 import win32process
-import json, time, os
+import json, time, sys, traceback
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
@@ -248,6 +248,7 @@ class WindowReproducer():
         
 
     def _replicate_full_map(self, window_mapping):
+        self.minimize_non_active(window_mapping)
         for win_key in reversed(window_mapping.keys()):
 
             if not window_mapping[win_key]:
@@ -255,6 +256,23 @@ class WindowReproducer():
             saved, active = window_mapping[win_key]
             self._reproduce(saved, active)
 
+    
+    def minimize_non_active(self, window_mapping):
+        wins = WinUtils.get_ordered_wins()
+        get_handle = lambda entry: window_mapping[entry][1].handle
+        handles = list(map(get_handle, window_mapping.keys()))
+        for w in wins:
+            if w.handle not in handles:
+                self.minimize_no_err(w)
+
+
+    def minimize_no_err(self, win):
+        try:
+            if win.is_minimized(): return
+            win.minimize()
+        except Exception as e:
+            sys.stderr.write(traceback.format_exc())
+            sys.stderr.flush()
 
 
     # from the recording pool
