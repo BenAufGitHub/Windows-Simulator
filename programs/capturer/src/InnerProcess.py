@@ -1,9 +1,10 @@
-import ctypes, threading, json, os
+import ctypes, threading, json, os, sys
+import traceback
 from pynput import mouse, keyboard
 from JSONHandler import MetaData
 from save_status import WindowSaver, WindowReproducer, Constants
 import JSONHandler, timing, UnicodeReverse, Unpress
-from threading import Lock
+from threading import Lock, Thread
 from rt import ClickInfo
 import ConfigManager
 
@@ -440,32 +441,49 @@ class InputHandler:
 
 
     def on_command(self, command, details):
-        self.storage.add_command(command, self.get_time(), details)
+        expr = lambda: self.storage.add_command(command, self.get_time(), details)
+        self._fail_safe(expr)
 
     def on_click(self, x, y, mouse_button, pressed):
+        expr = lambda: self._on_click(x, y, mouse_button, pressed)
+        self._fail_safe(expr)
+
+    def _on_click(self, x, y, mouse_button, pressed):
         if self.is_paused(): return
         with self.input_lock:
             button_name = mouse_button.name
             record_path = ConfigManager.get_recording()
             self.storage.add_mouse_click(button_name, self.get_time(), pressed, (x, y), record_path)
 
+
     def on_scroll(self, x, y, dx, dy):
+        expr = lambda: self._on_scroll(x, y, dx, dy)
+        self._fail_safe(expr)
+        
+    def _on_scroll(self, x, y, dx, dy):
         if self.is_paused(): return
         with self.input_lock:
             self.storage.add_mouse_scroll(self.get_time(), dx, dy)
 
+
     def on_move(self, x, y):
+        expr = lambda: self._on_move(x, y)
+        self._fail_safe(expr)
+    
+    def _on_move(self, x, y):
         if self.is_paused(): return
         with self.input_lock:
             self.storage.add_mouse_move(self.get_time(), x, y)
 
+
     def on_press(self, key):
         with self.input_lock:
-            self.on_press_and_release(key, True)
+            self._fail_safe(lambda: self.on_press_and_release(key, True))
 
     def on_release(self, key):
         with self.input_lock:
-            self.on_press_and_release(key, False)
+            self._fail_safe(lambda: self.on_press_and_release(key, False))
+
 
     def on_press_and_release(self, key, pressed: bool):
         special_key = type(key) == keyboard.Key
@@ -475,6 +493,15 @@ class InputHandler:
         name = UnicodeReverse.convert_from_unicode(name)
         if not self.process.iterate_special_cases(name, pressed) and not self.is_paused():
             self.storage.add_key_stroke(name, self.get_time(), special_key, pressed)
+
+
+    def _fail_safe(self, callback):
+        try:
+            callback()
+        except Exception:
+            sys.stderr.write(traceback.format_exc())
+            end_on_warning = lambda: JSONHandler.stop_exec(True, self.process, "An error occured while receiving input.")
+            threading.Thread(target=end_on_warning, daemon=True).start()
 
 
 
