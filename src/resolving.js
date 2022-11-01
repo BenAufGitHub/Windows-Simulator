@@ -5,7 +5,8 @@ const {ipcRenderer} = require('electron');
 const WINDOW_API = {
     getInfo: async () => ipcRenderer.invoke("getWindowResolveInfo", null),
     showWindow: async (handle) => ipcRenderer.invoke("request", "showWindow", handle),
-    sendResults: (result) => ipcRenderer.send("windowResolveResults", result)
+    sendResults: (result) => ipcRenderer.send("windowResolveResults", result),
+    get_selected_simulation: async () => ipcRenderer.invoke("get-simulation", null),
 }
 
 const input = document.getElementById('num-input');
@@ -30,16 +31,17 @@ async function customizeInfo() {
     displayInformation(information.process_name, information.recorded, information.selection, information.resolve_step_no, information.z_index)
 }
 
-function displayInformation(process, recorded, selection, number, z_index) {
+async function displayInformation(process, recorded, selection, number, z_index) {
     info.appendChild(generateTitle(`Matching windows for process <strong>'${process}'<strong> (#${number})<br>`));
-    info.appendChild(generateRecordingInformation(recorded, z_index));
+    info.appendChild(await generateRecordingInformation(recorded, z_index));
     createRadiobuttons(selection);
 }
 
-function loadImage(z_index) {
+async function loadImage(z_index) {
     let div = document.createElement('div');
-    let img = document.createElement('img')
-    img.src = "./../resources/screenshots/" + z_index + ".jpg"
+    let img = document.createElement('img');
+
+    img.src = "./../resources/screenshots/" + await get_sim() +'/'+ z_index + ".jpg"
     img.alt = "Nothing to see here :("
     img.style["marginTop"] = "2px";
     div.style["marginLeft"] = "7px";
@@ -49,7 +51,14 @@ function loadImage(z_index) {
     return div
 }
 
-function generateRecordingInformation(recorded, z_index) {
+async function get_sim () {
+    let answerObj = await WINDOW_API.get_selected_simulation();
+    if(answerObj.isSuccessful && answerObj.answer)
+        return answerObj.answer;
+    return "";
+}
+
+async function generateRecordingInformation(recorded, z_index) {
     let div = document.createElement('div');
     div.classList.add('content');
     div.style.border = "2px solid black";
@@ -57,7 +66,7 @@ function generateRecordingInformation(recorded, z_index) {
     div.style.marginRight = "10%";
 
     div.appendChild(createParagraph(recorded));
-    div.appendChild(loadImage(z_index));
+    div.appendChild(await loadImage(z_index));
     return div;
 }
 
