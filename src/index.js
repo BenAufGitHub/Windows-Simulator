@@ -96,8 +96,11 @@ function warn_if_not_valid(save) {
 
 async function put_selected_recording () {
     let answerObj = await WINDOW_API.get_selected_recording()
-    if(answerObj.isSuccessful && answerObj.answer)
+    if(answerObj.isSuccessful && answerObj.answer) {
         setRecordFileInput(answerObj.answer)
+        let {answer} = await registerRecording(answerObj.answer);
+        toggleRecWarning(answer == 'Careful')
+    }
     else
         setRecordFileInput(standardRecordText)
 }
