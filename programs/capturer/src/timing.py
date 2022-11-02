@@ -77,9 +77,9 @@ class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
         print(f"That leaves {remainder} sec. to execute. ({exec_len+paused-total})")
 
 
-    def sleep_then_execute(self, amount, instruction):
+    def sleep_until_instruction(self, amount):
         try:
-            return self._sleep_then_execute(amount, instruction)
+            return self._sleep_until_instruction(amount)
         except Exception as e:
             get_exc = traceback.format_exc()
             sys.stderr.write(get_exc)
@@ -87,26 +87,24 @@ class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
 
     
     # return: whether the sleep is finished or needs to be picked up again later
-    def _sleep_then_execute(self, amount, instruction) -> bool:
+    def _sleep_until_instruction(self, amount) -> bool:
         if amount < 0.008 and not self.callback():
-            instruction()
             return True
         self.register(amount)
         time.sleep(amount)
-        return self.sleep_async(instruction)
+        return self.sleep_async()
 
 
     # return: whether the sleep is finished or needs to be picked up again later
-    def sleep_async(self, instruction) -> bool:
+    def sleep_async(self) -> bool:
         if self.callback():
             return False
         remaining = self.calc_edge_remaining_sleep()
         if remaining > 0.015:
             time.sleep(remaining)
-            return self.sleep_async(instruction)
+            return self.sleep_async()
 
         self.unregisterExecution()
-        instruction()
         return True
         
 

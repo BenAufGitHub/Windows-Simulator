@@ -334,28 +334,30 @@ class Simulator(InnerProcess):
     
 
     def _simulate_no_outer_pause(self, index):
-        # is_done = evaluates False if application if paused to clear stack (basically go idle)
-        is_done = self.time_exec_instruction(self.storage, index)
+        out_time = self._get_exec_time(index)
+        is_done = self.timer.sleep_until_instruction(max(out_time, 0))
         if is_done:
+            self._get_instruction(index)()
             return self.simulate_events(index=index+1)
         # pause inside of timer module, lambda method will be picked up later on resume
-        unfinished_instruction = lambda: self.simulate_instruction(self.storage[index])
-        self.simulate_later = lambda: self._get_async_timer_callback(unfinished_instruction, index+1)
+        self.simulate_later = lambda: self._get_async_timer_callback(index)
 
 
-    # times (waits for) the instruction AND executes it, 
-    def time_exec_instruction(self, instruction_list, index):
-        out_time = instruction_list[index]["time"]-self.timer.get_exec_time()
-        instruction = lambda: self.simulate_instruction(instruction_list[index])
-        return self.timer.sleep_then_execute(max(out_time, 0), instruction)
-        
+    def _get_exec_time(self, index):
+        return self.storage[index]["time"]-self.timer.get_exec_time()
+
+
+    def _get_instruction(self, index):
+        return lambda: self.simulate_instruction(self.storage[index])
+
 
     # explained as in self._simulate_no_outer_pause
-    def _get_async_timer_callback(self, instruction, new_index):
-        is_done = self.timer.sleep_async(instruction)
+    def _get_async_timer_callback(self, unfinished_index):
+        is_done = self.timer.sleep_async()
         if is_done:
-            return lambda: self.simulate_events(index=new_index)
-        self.simulate_later = lambda: self._get_async_timer_callback(instruction, new_index)
+            self._get_instruction(unfinished_index)()
+            return lambda: self.simulate_events(index=unfinished_index+1)
+        self.simulate_later = lambda: self._get_async_timer_callback(unfinished_index)
 
 
 # <=============================== end ============================================
