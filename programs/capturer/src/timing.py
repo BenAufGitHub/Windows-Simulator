@@ -1,4 +1,5 @@
-import time
+import time, traceback, sys
+from threading import Thread
 
 _print_pause_stats = False
 
@@ -45,7 +46,8 @@ class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
         self.exec_length = 0
         self.pause_length = 0
 
-    # overridden
+
+    # override
     # if resumed while awaiting execution, accumulate pause amounts to wait for again when execution thread wakes up
     def register_resume(self):
         if not self.pause_start: return
@@ -57,16 +59,15 @@ class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
         self.total_pause += curr_pause
         self.pause_start = None
 
+
     # if thread wakes up while pause, how much time has been paused
     def calc_edge_remaining_sleep(self):
         passed_time = time.time() - self.exec_start
         remainder = self.exec_length - (passed_time - self.pause_length)
 
-        if remainder >= 0:
-            if _print_pause_stats:
+        if _print_pause_stats:
                 self.output(passed_time, self.pause_length, self.exec_length, remainder)
-            return remainder
-        return 0
+        return max(0, remainder)
 
 
     def output(self, total, paused, exec_len, remainder):
@@ -76,26 +77,36 @@ class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
         print(f"That leaves {remainder} sec. to execute. ({exec_len+paused-total})")
 
 
-    # after sleep, there might be another sleep period
-    def calc_remaining_sleep(self):
-        if(self.callback()):
-            self.wait_until_unpause()
-        return self.calc_edge_remaining_sleep()
-        
+    def sleep_then_execute(self, amount, instruction):
+        try:
+            return self._sleep_then_execute(amount, instruction)
+        except Exception as e:
+            get_exc = traceback.format_exc()
+            sys.stderr.write(get_exc)
+            sys.stderr.flush()
 
-    def wait_until_unpause(self):
-        while True:
-            if not self.callback():
-                return
-
-
-    def sleep_until_ready(self, amount):
-        if amount < 0.008:
-            return
+    
+    # return: whether the sleep is finished or needs to be picked up again later
+    def _sleep_then_execute(self, amount, instruction) -> bool:
+        if amount < 0.008 and not self.callback():
+            instruction()
+            return True
         self.register(amount)
         time.sleep(amount)
-        remaining = self.calc_remaining_sleep()
-        while remaining > 0.015:
+        return self.sleep_async(instruction)
+
+
+    # return: whether the sleep is finished or needs to be picked up again later
+    def sleep_async(self, instruction) -> bool:
+        if self.callback():
+            return False
+        remaining = self.calc_edge_remaining_sleep()
+        if remaining > 0.015:
             time.sleep(remaining)
-            remaining = self.calc_remaining_sleep()
+            return self.sleep_async(instruction)
+
         self.unregisterExecution()
+        instruction()
+        return True
+        
+

@@ -223,8 +223,10 @@ class ReproducerQA():
 
 
 class Simulator(InnerProcess):
+    
     def __init__(self):
         super().__init__()
+        self.simulate_later = None
         self.timer = timing.TaskAwaitingTimeKeeper()
         # wait until simulation begins
         self.timer.register_pause()
@@ -255,33 +257,6 @@ class Simulator(InnerProcess):
         listener.start()
         
 
-    def simulate_events(self):
-        index = 0
-        while index < len(self.storage):
-            if(self.state=='pause'): continue
-            if(self.state=='stop'): break
-            self.time_exec_instruction(self.storage[index])
-            index += 1
-        self.request('stop', flush=True)
-
-
-    # returns the delay of this operation relativ to start of programm
-    def time_exec_instruction(self, instruction):
-        out_time = instruction["time"]-self.timer.get_exec_time()
-        self.timer.sleep_until_ready(max(out_time, 0))
-        self.simulate_instruction(instruction)
-
-
-    def simulate_instruction(self, instruction: dict):
-        # action (press, release, scroll) belongs to a mouse instruction
-        if "command" in instruction:
-            exec_cmd_instruction(instruction)
-        elif "action" in instruction:
-            exec_mouse_instruction(instruction, self.mouse_controller, self)
-        else:
-            exec_keyboard_instruction(instruction, self.keyboard_controller)
-
-
     def run(self):
         self.read_file()
         self.listen_to_pause_toggle()
@@ -289,12 +264,8 @@ class Simulator(InnerProcess):
         self.timer.register_resume()
         self.state = "running"
         self.ready = True
-        self.init_simulation()
+        self.init_simulation(self.simulation_wrapper)
 
-    def init_simulation(self):
-        t = KillableThread(self.simulate_events)
-        self.event_thread = t
-        t.start()
 
     # override
     def on_pause(self, flush, stop_pause):
@@ -306,12 +277,88 @@ class Simulator(InnerProcess):
     def on_resume(self, flush):
         Unpress.press_remembered(self.keyboard_controller)
 
+        if not self.simulate_later: return
+        func = self.simulate_later
+        self.simulate_later = None
+        self.init_simulation(lambda: self.simulation_wrapper(callback=func))
+
+
     def complete_before_end(self, flush):
         Unpress.key_press_warnings(self.keyboard_controller)
         Unpress.release_all()
         if not flush:
             self.event_thread.stop()
             self.event_thread.join()
+
+
+    # function is called as described in event callback chain
+    def simulate_instruction(self, instruction: dict):
+        # action (press, release, scroll) belongs to a mouse instruction
+        if "command" in instruction:
+            exec_cmd_instruction(instruction)
+        elif "action" in instruction:
+            exec_mouse_instruction(instruction, self.mouse_controller, self)
+        else:
+            exec_keyboard_instruction(instruction, self.keyboard_controller)
+
+
+# ================ event callback chain =============
+
+
+    # every simulation process (even after pause) should be inititated here, for the execution to be able to terminate properly
+    # target is usually the simulation_wrapper method
+    def init_simulation(self, target):
+        t = KillableThread(target)
+        self.event_thread = t
+        t.start()
+
+
+    # the simulation wrapper takes the first simulation command and if it receives a comand back, it goes on with that
+    # problem solved: when application is paused, the method terminates, but it is recalled on resume, which means no infinite loops waiting for a resumption (reduces power consumption a lot)
+    # advantage: before, the events were chained, which led to a recursion-depth-error
+    def simulation_wrapper(self, callback=None):
+        if not callback:
+            callback = self.simulate_events()
+        while callback:
+            callback = callback()
+
+
+    # layer of checking whether state of execution has changed, it is a loop (technically) with increased indecies through callbacks
+    def simulate_events(self, index=0):
+        if index == len(self.storage) or self.state=='stop':
+            self.request('stop', flush=True)
+        elif self.state=='pause':
+            self.simulate_later = lambda: self.simulate_events(index=index)
+        else:
+            return self._simulate_no_outer_pause(index)
+    
+
+    def _simulate_no_outer_pause(self, index):
+        # is_done = evaluates False if application if paused to clear stack (basically go idle)
+        is_done = self.time_exec_instruction(self.storage, index)
+        if is_done:
+            return self.simulate_events(index=index+1)
+        # pause inside of timer module, lambda method will be picked up later on resume
+        unfinished_instruction = lambda: self.simulate_instruction(self.storage[index])
+        self.simulate_later = lambda: self._get_async_timer_callback(unfinished_instruction, index+1)
+
+
+    # times (waits for) the instruction AND executes it, 
+    def time_exec_instruction(self, instruction_list, index):
+        out_time = instruction_list[index]["time"]-self.timer.get_exec_time()
+        instruction = lambda: self.simulate_instruction(instruction_list[index])
+        return self.timer.sleep_then_execute(max(out_time, 0), instruction)
+        
+
+    # explained as in self._simulate_no_outer_pause
+    def _get_async_timer_callback(self, instruction, new_index):
+        is_done = self.timer.sleep_async(instruction)
+        if is_done:
+            return lambda: self.simulate_events(index=new_index)
+        self.simulate_later = lambda: self._get_async_timer_callback(instruction, new_index)
+
+
+# <=============================== end ============================================
 
 
 
@@ -516,7 +563,9 @@ class KillableThread(threading.Thread):
         try:
             self.callback()
         except:
-            pass
+            exc = traceback.format_exc()
+            sys.stderr.write(exc)
+            sys.stderr.flush()
           
     def get_id(self):
         # returns id of the respective thread
