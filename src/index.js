@@ -29,12 +29,24 @@ const WINDOW_API = {
     setSimulation: async (filename) => ipcRenderer.invoke('set-simulation', filename),
 }
 
-const startRecording = () => {
-    record.onclick = () => null;
-    WINDOW_API.start("record")
+
+const startRecording = async () => {
+    record.setAttribute("disabled", "");
+    let selectedRecord = await WINDOW_API.get_selected_recording();
+    if( selectedRecord.answer && selectedRecord.isSuccessful)
+        return WINDOW_API.start("record");
+    setRecordWarning("Select a recording slot first.")
+    record.removeAttribute("disabled");
 }
-const startSimulate = () => {
-    WINDOW_API.start("simulate")
+
+
+const startSimulate = async () => {
+    simulate.setAttribute("disabled", "");
+    let selectedSim = await WINDOW_API.get_selected_simulation();
+    if( selectedSim.answer && selectedSim.isSuccessful)
+        return WINDOW_API.start("simulate")
+    setSimWarning("Select a simulation first.")
+    simulate.removeAttribute("disabled");
 }
 
 const addClickEvents = () => {
