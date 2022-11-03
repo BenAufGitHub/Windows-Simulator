@@ -17,7 +17,7 @@ body {
   padding-top: 20px;
 }
 
-#save-menu {
+#save-menu, #simulation-menu {
   width: 100vw;
 }
 
