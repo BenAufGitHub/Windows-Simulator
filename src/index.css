@@ -22,8 +22,8 @@ body {
 }
 
 .inner-save-menu {
-  margin-left: 5px;
-  margin-right: 5px;
+  margin-left: 10px;
+  margin-right: 0px;
 }
 
 .verticalLine {
@@ -40,7 +40,7 @@ body {
 
 .floating-top-right {
   position: absolute;
-  top:115%;
+  top:105%;
   max-height: 100px;
   right: 0px;
   width:100%;
@@ -115,4 +115,17 @@ input {
 
 .equal-pad {
   width: 130px;
+}
+
+.settings {
+  font-size: 14px;
+  margin-left: 0px;
+  padding: 0px 1px 0px 1px;
+}
+
+.inliner {
+  display: inline-block;
+  padding-right: 0px;
+  padding-bottom: 0px;
+  margin-bottom: 0px;
 }
