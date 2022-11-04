@@ -22,7 +22,7 @@ body {
 }
 
 .inner-save-menu {
-  margin-left: 10px;
+  margin-left: 0px;
   margin-right: 0px;
 }
 
@@ -101,7 +101,8 @@ input {
   display: inline-block;
   width:75px;
   text-align:left;
-  padding-right: 0px;
+  margin-right: 3px;
+  margin-bottom: 0px;
 }
 
 .empty-field {
@@ -128,4 +129,16 @@ input {
   padding-right: 0px;
   padding-bottom: 0px;
   margin-bottom: 0px;
+}
+
+.single-line {
+  margin-left: 3px;
+  margin-right: 3px;
+  padding-left: 0px;
+  display: inline-block;
+  line-break: strict;
+}
+
+.test-border {
+  border: 1px solid red;
 }
