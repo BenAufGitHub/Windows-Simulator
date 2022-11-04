@@ -142,3 +142,7 @@ input {
 .test-border {
   border: 1px solid red;
 }
+
+::-webkit-scrollbar {
+  display: none;
+}
