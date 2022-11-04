@@ -32,8 +32,9 @@ const WINDOW_API = {
 
 const startRecording = async () => {
     record.setAttribute("disabled", "");
+    let inputOff = record_input.hasAttribute("disabled");
     let selectedRecord = await WINDOW_API.get_selected_recording();
-    if( selectedRecord.answer && selectedRecord.isSuccessful)
+    if( selectedRecord.answer && selectedRecord.isSuccessful && inputOff)
         return WINDOW_API.start("record");
     setRecordWarning("Select a recording slot first.")
     record.removeAttribute("disabled");
