@@ -122,6 +122,7 @@ input {
   font-size: 14px;
   margin-left: 0px;
   padding: 0px 1px 0px 1px;
+  width: 24px;
 }
 
 .inliner {
@@ -132,6 +133,7 @@ input {
 }
 
 .single-line {
+  position: relative;
   margin-left: 3px;
   margin-right: 3px;
   padding-left: 0px;
@@ -145,4 +147,16 @@ input {
 
 ::-webkit-scrollbar {
   display: none;
+}
+
+.floating-left-bottom {
+  position: absolute;
+  bottom: 108%;
+  right: -7%;
+  font-style: bold;
+}
+
+.button.is-tiny {
+  border-radius: 4px;
+  font-size: .7rem;
 }

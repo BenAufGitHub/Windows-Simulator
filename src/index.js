@@ -56,6 +56,7 @@ const addClickEvents = () => {
     expand.onclick = expandRecordFiles;
     document.getElementById('expand-sims').onclick = expandSimFiles;
     document.getElementById('approve-new').onclick = evaluateNewRecording;
+    document.getElementById('settings-rec').onclick = toggleDeleteOption;
 }
 
 
@@ -275,6 +276,31 @@ function setSimWarning (text) {
 function hideSimWarning () {
     let p = document.getElementById('warning-simulation');
     p.setAttribute("hidden", "");
+}
+
+
+// ======= toggle delete button =====>
+
+function toggleDeleteOption() {
+    let del = document.getElementById('delete-recording');
+    hasAttr = del.classList.contains('is-hidden');
+    if(!hasAttr)
+        return hideDeleteOption();
+    showDeleteOption();
+}
+
+function showDeleteOption() {
+    let del = document.getElementById('delete-recording');
+    let settings = document.getElementById('settings-rec');
+    del.classList.remove('is-hidden');
+    settings.innerHTML = '&#11176;';
+}
+
+function hideDeleteOption () {
+    let del = document.getElementById('delete-recording');
+    let settings = document.getElementById('settings-rec');
+    del.classList.add('is-hidden')
+    settings.innerHTML = '&#9881;&#65039';
 }
 
 // ============================ DOM-Elements =========================================
