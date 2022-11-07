@@ -30,11 +30,16 @@ const WINDOW_API = {
 }
 
 
+const isRecSelected = async () => {
+    let selectedRecord = await WINDOW_API.get_selected_recording();
+    return selectedRecord.answer && selectedRecord.isSuccessful;
+}
+
+
 const startRecording = async () => {
     record.setAttribute("disabled", "");
     let inputOff = record_input.hasAttribute("disabled");
-    let selectedRecord = await WINDOW_API.get_selected_recording();
-    if( selectedRecord.answer && selectedRecord.isSuccessful && inputOff)
+    if( await isRecSelected() && inputOff )
         return WINDOW_API.start("record");
     setRecordWarning("Select a recording slot first.")
     record.removeAttribute("disabled");
@@ -57,6 +62,7 @@ const addClickEvents = () => {
     document.getElementById('expand-sims').onclick = expandSimFiles;
     document.getElementById('approve-new').onclick = evaluateNewRecording;
     document.getElementById('settings-rec').onclick = toggleDeleteOption;
+    record_input.onfocus = hideDeleteOption;
 }
 
 
@@ -168,7 +174,8 @@ async function selectRecording (filename) {
         return setRecordWarning("Recording couldn't be selected.");
     }
     setRecordFileInput(filename);
-    toggleRecWarning(answer == 'Careful')
+    toggleRecWarning(answer == 'Careful');
+    hideDeleteOption();
     hideCheckmark();
 }
 
@@ -281,10 +288,10 @@ function hideSimWarning () {
 
 // ======= toggle delete button =====>
 
-function toggleDeleteOption() {
+async function toggleDeleteOption() {
     let del = document.getElementById('delete-recording');
     hasAttr = del.classList.contains('is-hidden');
-    if(!hasAttr)
+    if(!hasAttr || !record_input.hasAttribute('disabled') || !(await isRecSelected()))
         return hideDeleteOption();
     showDeleteOption();
 }
