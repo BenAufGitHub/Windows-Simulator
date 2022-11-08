@@ -118,7 +118,7 @@ async function handleRequest(req, body) {
     return answerShallowRequest(req, body)
   if(mainDeepRequests.includes(req)){
     let data = await requestToPy(req, body)
-    if(data[1] !== 0) throw 'Request not accepted (JS Bridge)'
+    if(data[1] !== 0) throw data[2]
     return data[2]
   }
   return null

@@ -40,11 +40,11 @@ def execute(cmd, body):
 
 def throw_if_not_accepted(cmd):
     if (cmd in starter_commands or cmd in process_actions) and in_prep_for_simulation:
-        raise CommandNotAccepted(f"Not possible while in preparation for simulation")
+        raise CommandNotAccepted(f"'{cmd}' not possible while in preparation for simulation")
     if cmd in starter_commands and get_state() != 'idle':
-       raise CommandNotAccepted("A process already running")
+       raise CommandNotAccepted("A process is already running")
     if cmd in process_actions and (get_state() == 'idle' or not process):
-        raise CommandNotAccepted(f"No process running to {cmd} / process not found")
+        raise CommandNotAccepted(f"No process running to execute {cmd} / process not found")
     if cmd in process_actions and cmd == process.state:
         raise CommandNotAccepted(f"Request to {cmd} already fulfilled")
 
@@ -220,7 +220,7 @@ def processIn(input):
         return_failure(id, str(e))
     except Exception as e:
         sys.stderr.write(traceback.format_exc())
-        return_failure(id, "See Traceback")
+        return_failure(id, str(e))
 
     if cmd == 'exit':
         raise InputStop()
