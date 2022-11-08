@@ -1,7 +1,5 @@
-from genericpath import isfile
 import pickle
-from os import path
-import os
+import os, shutil
 
 
 def filename():
@@ -9,6 +7,12 @@ def filename():
 
 def savepath():
     return "./resources/recordings/"
+
+def capturepath():
+    return "./resources/start_capture/"
+
+def scpath():
+    return "./resources/screenshots/"
 
 
 # ====== setup =====>
@@ -29,7 +33,7 @@ def init_config_file():
 
 
 def init_if_new():
-    if path.isfile(filename()): return
+    if os.path.isfile(filename()): return
     init_config_file()
 
 
@@ -79,8 +83,43 @@ def append_recording(obj, name):
 
 def get_record_list():
     obj = load()
-
     return add_imported_records(obj["recordingList"])
+
+
+def delete_recording(filename):
+    obj = load()
+    recording = f"{filename}.json"
+    if recording != obj["recording"]:
+        raise Exception("Only the selected recording can be deleted.")
+    removeRecordingTraces(obj, filename, recording)
+    removeRecordingFiles(filename, recording)
+    write(obj)
+    return "DONE"
+
+
+def removeRecordingTraces(obj, filename, recording):
+    try:
+        obj["recording"] = None
+        obj["recordingList"].remove(filename)
+        if obj["simulation"] == recording:
+            obj["simulation"] = None
+    except ValueError:
+        pass
+
+
+def removeRecordingFiles(folder_name, file):
+    ignoreNotFound( lambda: os.remove(savepath() + file))
+    ignoreNotFound( lambda: os.remove(capturepath() + file))
+    shutil.rmtree(scpath() + folder_name, ignore_errors=True)
+
+
+
+def ignoreNotFound(io_function):
+    try:
+        return io_function()
+    except FileNotFoundError:
+        pass
+
 
 
 def get_simulation_list():

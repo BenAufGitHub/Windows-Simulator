@@ -17,7 +17,7 @@ const other_one_way_information = ["resolveFinished"]
 const mainShallowRequests = ["wait_until_py_initiation"]
 // deep requests go into python subprograms
 const mainDeepRequests = ["getWinNames", "exit", "showWindow", "spit", "set-recording", "get-recording", "get-record-list", "get-simulation", "get-simulation-list",
-"set-simulation"]
+"set-simulation", 'delete-recording']
 
 // promise-resolving, can be triggered when certain things happen in this process, main can check for these events to complete with awaiting those
 const awaitingEvents = new Map()

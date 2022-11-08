@@ -21,6 +21,7 @@ const WINDOW_API = {
     getInfo: async (request, body) => ipcRenderer.invoke("request", request, body),
 
     setRecording: async (filename) => ipcRenderer.invoke("set-recording", filename),
+    deleteRecording: async (filename) => ipcRenderer.invoke('delete-recording', filename), 
     get_selected_recording: async () => ipcRenderer.invoke("get-recording", null),
     get_record_list: async () => ipcRenderer.invoke('get-record-list', null),
 
@@ -63,6 +64,7 @@ const addClickEvents = () => {
     document.getElementById('approve-new').onclick = evaluateNewRecording;
     document.getElementById('settings-rec').onclick = toggleDeleteOption;
     record_input.onfocus = hideDeleteOption;
+    document.getElementById('delete-recording').onclick = deleteRecording;
 }
 
 
@@ -131,6 +133,20 @@ async function put_selected_simulation () {
         setSimFileInput(answerObj.answer)
     else
         setSimFileInput(standardSimulationText)
+}
+
+
+async function deleteRecording () {
+    let recordingName = record_input.value;
+    hideDeleteOption()
+    let result = await WINDOW_API.deleteRecording(recordingName);
+    if (!result.isSuccessful)
+        return (result.answer) ? setRecordWarning(`Error: ${result.answer}`) : setRecordWarning(`An internal error occured.`);
+    removeSelectOptions();
+    setRecordWarning('');
+    setSimWarning('');
+    put_selected_recording();
+    put_selected_simulation();
 }
 
 // ============================= Responsiveness =====================================

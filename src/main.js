@@ -196,6 +196,10 @@ ipcMain.handle('get-record-list', async (e,a) => {
   return getRequestNoError(request('get-record-list', null));
 })
 
+ipcMain.handle('delete-recording', async (event, filename) => {
+  return getRequestNoError(request('delete-recording', filename));
+})
+
 ipcMain.handle('get-simulation', async (e,a) => {
   return getRequestNoError(request('get-simulation', null));
 })
