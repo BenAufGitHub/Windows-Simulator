@@ -26,3 +26,7 @@ strong {
 .my-button {
     margin-inline: 10px;
 }
+
+::-webkit-scrollbar {
+    display: none;
+}

@@ -23,3 +23,7 @@ html, body {
     font-family: Georgia, 'Times New Roman', Times, serif;
     margin-right: 10px;
 }
+
+::-webkit-scrollbar {
+    display: none;
+  }
