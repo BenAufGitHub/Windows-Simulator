@@ -60,11 +60,14 @@ const addClickEvents = () => {
     record.onclick = startRecording;
     simulate.onclick = startSimulate;
     expand.onclick = expandRecordFiles;
+
     document.getElementById('expand-sims').onclick = expandSimFiles;
     document.getElementById('approve-new').onclick = evaluateNewRecording;
     document.getElementById('settings-rec').onclick = toggleDeleteOption;
     record_input.onfocus = hideDeleteOption;
     document.getElementById('delete-recording').onclick = deleteRecording;
+    
+    document.getElementById('settings-sim').onclick = toggleDetailsOption;
 }
 
 
@@ -324,6 +327,28 @@ function hideDeleteOption () {
     let settings = document.getElementById('settings-rec');
     del.classList.add('is-hidden')
     settings.innerHTML = '&#9881;&#65039';
+}
+
+
+// ====== toggle details button =====>
+
+async function toggleDetailsOption() {
+    let details = document.getElementById('show-details');
+    let settings = document.getElementById('settings-sim');
+    hasAttr = details.classList.contains('is-hidden');
+    if (!hasAttr)
+        return hideDetailsButton(details, settings);
+    showDetailsButton(details, settings);
+}
+
+async function hideDetailsButton (details, settings) {
+    details.classList.add('is-hidden');
+    settings.innerHTML = '&#9881;&#65039';
+}
+
+async function showDetailsButton (details, settings) {
+    details.classList.remove('is-hidden');
+    settings.innerHTML = '&#11176;';
 }
 
 // ============================ DOM-Elements =========================================
