@@ -52,11 +52,10 @@ def throw_if_not_accepted(cmd):
 # -------------------- Execution ---------------------------------------
 
 def start_process(cmd):
-    global process, state
+    global process
     process = InnerProcess.Simulator() if (cmd == 'simulate') else InnerProcess.Recorder()
     process.print_cmd = print_cmd
     process.print_info = print_info
-
 
     if cmd == "simulate":
         start_simulation(process)
@@ -90,8 +89,15 @@ def _resolve_and_ready_up_windows(quality_assurance):
     except Exception as e:
         exc_str = str(e).replace('\r', ' ')
         print_cmd(f'special-end Error: {exc_str}')
+        revert_simulation_start()
         raise e
 
+
+def revert_simulation_start():
+    global in_prep_for_simulation, process
+    process = None
+    update_state()
+    in_prep_for_simulation = False
 
 
 def mutate_process(cmd):
@@ -104,13 +110,11 @@ def mutate_process(cmd):
 def update_state():
     global state, process
     with state_lock:
-        if process == None: return
-        cmd = process.state
-        if cmd == 'stop':
+        if process == None or process.state == 'stop':
             state = 'idle'
             process = None
         else:
-            state = "paused" if cmd == "pause" else "running"
+            state = "paused" if process.state == "pause" else "running"
 
 def get_state():
     with state_lock:
@@ -142,6 +146,7 @@ def answer_request(cmd, body):
     if cmd == 'delete-recording':
         return ConfigManager.delete_recording(body)
     
+
 def processInformation(cmd, body):
     if cmd == "resolveFinished":
         catchSolutionToWindows()
