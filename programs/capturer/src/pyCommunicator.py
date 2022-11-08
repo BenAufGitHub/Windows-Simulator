@@ -74,13 +74,24 @@ def start_simulation(process):
     resolving_windows_notify = lambda: qa.notify_resolve_ready()
     threading.Thread(target=lambda: threaded_simulation_start(qa, process)).start()
 
+
 def threaded_simulation_start(quality_assurance, process):
     global in_prep_for_simulation
-    quality_assurance.resolve_and_ready_up_windows()
+    _resolve_and_ready_up_windows(quality_assurance)
     process.run()
     update_state()
     print_cmd("start")
     in_prep_for_simulation = False
+
+
+def _resolve_and_ready_up_windows(quality_assurance):
+    try:
+        quality_assurance.resolve_and_ready_up_windows()
+    except Exception as e:
+        exc_str = str(e).replace('\r', ' ')
+        print_cmd(f'special-end Error: {exc_str}')
+        raise e
+
 
 
 def mutate_process(cmd):
