@@ -338,7 +338,7 @@ class Simulator(InnerProcess):
         is_done = self.timer.sleep_until_instruction(max(out_time, 0))
         if is_done:
             self._get_instruction(index)()
-            return self.simulate_events(index=index+1)
+            return lambda: self.simulate_events(index=index+1)
         # pause inside of timer module, lambda method will be picked up later on resume
         self.simulate_later = lambda: self._get_async_timer_callback(index)
 
