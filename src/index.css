@@ -159,3 +159,22 @@ input {
   border-radius: 4px;
   font-size: .7rem;
 }
+
+#details-table {
+  margin: 10px 20px;
+  padding: 12px 6px;
+  border-radius: 8px;
+  border: 3px solid hsl(48, 100%, 67%);
+}
+
+table tr td:first-child, table tr th:first-child {
+  border-right-width: 1px;
+  width: max(60%, 600px);
+  word-break: break-all;
+}
+
+table tr td:nth-child(2), table tr th:nth-child(2) {
+  width: max(40%, 200px);
+  word-break: break-all;
+}
+
