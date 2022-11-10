@@ -167,7 +167,7 @@ window.addEventListener('mouseup', function(e){
 const expandRecordFiles = async () => {
     hideRecordWarning();
     let filenames = await getRecordFiles();
-    filenames.unshift("----&#60;new&#62;----");
+    filenames.unshift("--------&#60; new &#62;--------");
     let optionButtions = createButtons(filenames, resolveChooseRecordFile, "hover-rec");
     container = createContainer("record");
     addRecordExpansionToDocument(container, optionButtions, "input-field");
