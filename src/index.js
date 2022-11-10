@@ -27,6 +27,7 @@ const WINDOW_API = {
 
     get_selected_simulation: async () => ipcRenderer.invoke("get-simulation", null),
     get_sim_list: async () => ipcRenderer.invoke('get-simulation-list', null),
+    get_sim_info: async () => ipcRenderer.invoke('get-sim-info', null),
     setSimulation: async (filename) => ipcRenderer.invoke('set-simulation', filename),
 }
 
@@ -68,6 +69,7 @@ const addClickEvents = () => {
     document.getElementById('delete-recording').onclick = deleteRecording;
     
     document.getElementById('settings-sim').onclick = toggleDetailsOption;
+    document.getElementById('show-details').onclick = expandDetails;
 }
 
 
@@ -337,21 +339,109 @@ async function toggleDetailsOption() {
     let settings = document.getElementById('settings-sim');
     hasAttr = details.classList.contains('is-hidden');
     if (!hasAttr)
-        return hideDetailsButton(details, settings);
-    showDetailsButton(details, settings);
+        return hideDetailsButton();
+    let currentSim = await WINDOW_API.get_selected_simulation();
+    if(currentSim?.isSuccessful && currentSim.answer)
+        showDetailsButton();
 }
 
-async function hideDetailsButton (details, settings) {
+async function hideDetailsButton () {
+    let details = document.getElementById('show-details');
+    let settings = document.getElementById('settings-sim');
     details.classList.add('is-hidden');
     settings.innerHTML = '&#9881;&#65039';
 }
 
-async function showDetailsButton (details, settings) {
+async function showDetailsButton () {
+    let details = document.getElementById('show-details');
+    let settings = document.getElementById('settings-sim');
     details.classList.remove('is-hidden');
     settings.innerHTML = '&#11176;';
 }
 
+
+async function expandDetails () {
+    toggleDetailsOption();
+    let sim = await WINDOW_API.get_selected_simulation()
+    if (!sim?.answer) return setSimWarning('No details to display.')
+
+    let content = await WINDOW_API.get_sim_info();
+    if (!content.isSuccessful)
+        return (content.result) ? setSimWarning(`An error occured while loading the details: ${content.answer}`) : 
+                            setSimWarning(`An internal error occured while loading the details.`);
+    showTable(content.answer)
+}
+
+function showTable (list) {
+    clearDetails();
+    if(!list.length)
+        list.push({"title":"-", "process":"-"})
+    let div = document.createElement('div');
+    let h4 = document.createElement('h4');
+    let table = createDetailsTable(list);
+
+    div.id = 'details-table';
+    h4.innerHTML = "Included Windows for Simulation"
+    h4.style['text-decoration'] = "underline";
+
+    div.appendChild(h4);
+    div.appendChild(table);
+    document.getElementById('details-wrapper').appendChild(div);
+}
+
+
+const clearDetails = () => {
+    document.getElementById('details-wrapper').innerHTML = '';
+}
+
+
+function createDetailsTable (content) {
+    let table = createTable();
+    let tbody = document.createElement('tbody')
+    let header = createTableHeader();
+    tbody.appendChild(header);
+    content.forEach((e) => tbody.appendChild(getDetailsRow(e)), content);
+    table.appendChild(tbody);
+    return table;
+}
+
+
 // ============================ DOM-Elements =========================================
+
+// ============= Details Table ========>
+
+
+function createTable () {
+    return document.createElement('table');
+}
+
+
+function createTableHeader () {
+    let row = document.createElement('tr');
+    let title = document.createElement('th');
+    let process = document.createElement('th');
+
+    title.innerHTML = "<center>Title</center>";
+    process.innerHTML = "<center>From Process</center>"
+    row.appendChild(title);
+    row.appendChild(process);
+    return row;
+}
+
+
+function getDetailsRow (element) {
+    let row = document.createElement('tr');
+    let title = document.createElement('td');
+    let process = document.createElement('td');
+
+    title.innerHTML = `<center>${element["title"]}</center>`;
+    process.innerHTML = `<center>${element["process"]}</center>`;
+    row.appendChild(title);
+    row.appendChild(process);
+    return row;
+}
+
+
 
 // ============= RecordOptionButtons ==>
 

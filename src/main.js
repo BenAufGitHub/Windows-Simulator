@@ -212,6 +212,10 @@ ipcMain.handle('set-simulation', async (event, filename) => {
   return getRequestNoError(request('set-simulation', filename));
 })
 
+ipcMain.handle('get-sim-info', async (e,a) => {
+  return {"isSuccessful": true, "answer":[]}; //TODO
+})
+
 async function getRequestNoError (req) {
   try {
     return await req;
