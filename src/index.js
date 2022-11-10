@@ -431,6 +431,7 @@ function createTableHeader () {
 
     title.innerHTML = "<center>Title</center>";
     process.innerHTML = "<center>From Process</center>"
+    process.style["wordBreak"] = "break-word";
     row.appendChild(title);
     row.appendChild(process);
     return row;
