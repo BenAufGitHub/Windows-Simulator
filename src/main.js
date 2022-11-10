@@ -170,7 +170,7 @@ function processSpecialEnd(reason) {
 
 ipcMain.handle("get-settings", (event, args) => {
   return settings[args]
-})
+}) 
 
 ipcMain.handle("getWindowResolveInfo", async (event, args) => {
   let data = await fsPromises.readFile('./resources/window_unresolved.json', { encoding: 'utf8' });
@@ -213,15 +213,24 @@ ipcMain.handle('set-simulation', async (event, filename) => {
 })
 
 ipcMain.handle('get-sim-info', async (e,a) => {
-  return {"isSuccessful": true, "answer":[]}; //TODO
+  return getRequestNoError(getDetailsList());
 })
+
+async function getDetailsList () {
+  let simulation = await request('get-simulation', null);
+  if(!simulation?.isSuccessful) throw "No simulation-details to display. " + simulation?.answer?.toString();
+  let raw_data = await fsPromises.readFile(`./resources/start_capture/${simulation.answer}.json`, { encoding: 'utf8' });
+  capture = JSON.parse(raw_data);
+  let mapped = capture.map(e => ({"title":e['name'],"process": e["process"]}));
+  return {isSuccessful: true, answer: mapped};
+}
 
 async function getRequestNoError (req) {
   try {
     return await req;
   }
   catch (e) {
-    return {isSuccessful: false, answer: req.toString()};
+    return {isSuccessful: false, answer: e.toString()};
   }
 }
 

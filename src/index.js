@@ -375,7 +375,7 @@ async function expandDetails () {
 
     let content = await WINDOW_API.get_sim_info();
     if (!content.isSuccessful)
-        return (content.result) ? setSimWarning(`An error occured while loading the details: ${content.answer}`) : 
+        return (content.answer) ? setSimWarning(`An error occured while loading the details: ${content.answer}`) : 
                             setSimWarning(`An internal error occured while loading the details.`);
     showTable(content.answer)
 }
