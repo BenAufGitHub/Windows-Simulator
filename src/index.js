@@ -143,10 +143,17 @@ async function put_selected_simulation () {
 
 async function deleteRecording () {
     let recordingName = record_input.value;
-    hideDeleteOption()
+    hideDeleteOption();
+    hideDetailsButton();
+
+    // delete shown details table if it is associated with this recording 
+    if (recordingName == (await WINDOW_API.get_selected_simulation()).answer)
+        clearDetails();
+
     let result = await WINDOW_API.deleteRecording(recordingName);
     if (!result.isSuccessful)
         return (result.answer) ? setRecordWarning(`Error: ${result.answer}`) : setRecordWarning(`An internal error occured.`);
+
     removeSelectOptions();
     setRecordWarning('');
     setSimWarning('');
@@ -283,9 +290,11 @@ function getNoOptionsPanel() {
 async function selectSimulation (filename) {
     document.getElementById('display-field').setAttribute("disabled", "");
     let {isSuccessful, answer} = await registerSimulation(filename);
+    hideDetailsButton();
+    clearDetails();
     if(!isSuccessful){
         put_selected_simulation()
-        return setSimWarning("Simulation couldn't be selected.");
+        return setSimWarning("Simulation couldn't be selected. " + answer);
     }
     setSimFileInput(filename);
     hideSimWarning();
@@ -336,7 +345,6 @@ function hideDeleteOption () {
 
 async function toggleDetailsOption() {
     let details = document.getElementById('show-details');
-    let settings = document.getElementById('settings-sim');
     hasAttr = details.classList.contains('is-hidden');
     if (!hasAttr)
         return hideDetailsButton();
