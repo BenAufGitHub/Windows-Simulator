@@ -216,8 +216,8 @@ async function getRequestNoError (req) {
   try {
     return await req;
   }
-  catch {
-    return {isSuccessful: false};
+  catch (e) {
+    return {isSuccessful: false, answer: req.toString()};
   }
 }
 
