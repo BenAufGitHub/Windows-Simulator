@@ -260,7 +260,7 @@ class WindowReproducer():
     def minimize_non_active(self, window_mapping):
         wins = WinUtils.get_ordered_wins()
         get_handle = lambda entry: window_mapping[entry][1].handle
-        handles = list(map(get_handle, window_mapping.keys()))
+        handles = list(map(get_handle, filter(lambda e: window_mapping[e], window_mapping.keys())))
         for w in wins:
             if w.handle not in handles:
                 self.minimize_no_err(w)
