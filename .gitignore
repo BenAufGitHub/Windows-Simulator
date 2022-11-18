@@ -8,6 +8,7 @@
 !/resources/screenshots/.gitkeep
 !/resources/recordings/.gitkeep
 !/resources/start_capture/.gitkeep
+!/resources/resolves/.gitkeep
 !/resources/protocolConversion.js
 
 programs/capturer/install/**
