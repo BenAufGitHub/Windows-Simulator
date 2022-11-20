@@ -170,10 +170,10 @@ function processSpecialEnd(reason) {
 
 ipcMain.handle("get-settings", (event, args) => {
   return settings[args]
-}) 
+})
 
-ipcMain.handle("getWindowResolveInfo", async (event, args) => {
-  let data = await fsPromises.readFile('./resources/window_unresolved.json', { encoding: 'utf8' });
+ipcMain.handle("getWindowResolveInfo", async (event, actionID) => {
+  let data = await fsPromises.readFile(`./resources/resolves/${actionID}.json`, { encoding: 'utf8' });
   // TODO might need a safe solution later (try-catch)
   info = JSON.parse(data);
   return info;
@@ -238,20 +238,15 @@ async function getRequestNoError (req) {
 //===========================================================
 
 
-ipcMain.on("windowResolveResults", (event, args) => {
-  saveObj = {"selection": args}
-  fs.writeFileSync("./resources/window_resolved.json", JSON.stringify(saveObj))
-  sendCommandToBridge("resolveFinished", null)
+ipcMain.on("windowResolveResults", (event, answer, actionID) => {
+  saveObj = {"result": answer}
+  fs.writeFileSync(`./resources/resolves/r${actionID}.json`, JSON.stringify(saveObj))
+  sendCommandToBridge("resolveFinished", actionID)
 })
 
-function resolveIdentifyingWindow() {
+async function resolveIdentifyingWindow(actionID) {
   window.restore()
-  open("resolving.html")
-  // TODO
-  // read file
-  // make a new window
-  // communicate with window
-  // send response to py
+  window.loadFile("./src/resolving.html", {"query":{"data": actionID}})
 }
 
 ipcMain.on("load-menu", (event, args) => loadMenu())
@@ -296,9 +291,6 @@ function processAnswerFromBridge(id, errorcode, body) {
 
 function processCommandFromBridge(command) {
   switch (command) {
-    case 'reproducer_resolve_window':
-      resolveIdentifyingWindow()
-      break;
     case 'resume':
       resumeProcess()
       break;
@@ -324,6 +316,9 @@ function processSecondaryCommandFromBridge(command) {
   switch (cmd) {
     case 'special-end':
       processSpecialEnd(arg);
+      break;
+    case 'reproducer_resolve_window':
+      resolveIdentifyingWindow(arg)
       break;
     default:
       console.log(`Command from bridge not available: ${command}`)

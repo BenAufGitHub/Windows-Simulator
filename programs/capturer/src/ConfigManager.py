@@ -23,6 +23,7 @@ def get_standard_settings():
         "recording": None,
         "simulation": None,
         "recordingList": [],
+        "resolveNum": 0,
     }
 
 
@@ -165,3 +166,16 @@ def raise_if_not_found(file):
     directory = "./resources/recordings/"
     if not file in os.listdir(rf'{directory}'):
         raise IOError('File not found')
+    
+
+def assign_resolve_id():
+    obj = load()
+    try:
+        obj["resolveNum"] += 1
+        write(obj)
+        return obj["resolveNum"]
+    except KeyError:
+        obj["resolveNum"] = 0
+        write(obj)
+        return 0
+        

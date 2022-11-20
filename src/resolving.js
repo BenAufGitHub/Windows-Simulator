@@ -1,11 +1,12 @@
 "use strict";
 
 const {ipcRenderer} = require('electron');
+const querystring = require('querystring')
 
 const WINDOW_API = {
-    getInfo: async () => ipcRenderer.invoke("getWindowResolveInfo", null),
+    getInfo: async (actionID) => ipcRenderer.invoke("getWindowResolveInfo", actionID),
     showWindow: async (handle) => ipcRenderer.invoke("request", "showWindow", handle),
-    sendResults: (result) => ipcRenderer.send("windowResolveResults", result),
+    sendResults: (result, actionID) => ipcRenderer.send("windowResolveResults", result, actionID),
     get_selected_simulation: async () => ipcRenderer.invoke("get-simulation", null),
 }
 
@@ -14,20 +15,19 @@ const info = document.getElementById('info');
 const submit = document.getElementById('submit');
 const selectionDiv = document.getElementById('radio-selection');
 
-function processData() {
+function processData(actionID) {
     submit.onclick = () => {}
     let num = document.querySelector('input[name="window-matching"]:checked')?.value;
     if(!num) num = -1;
-    WINDOW_API.sendResults(num)
+    WINDOW_API.sendResults(num, actionID)
 }
 
-function customizeSubmit() {
+function customizeSubmit(actionID) {
     submit.style["marginBottom"] = "20px";
-    submit.onclick = processData;
+    submit.onclick = () => processData(actionID);
 }
 
-async function customizeInfo() {
-    let information = await WINDOW_API.getInfo()
+function customizeInfo(information) {
     displayInformation(information.process_name, information.recorded, information.selection, information.resolve_step_no, information.z_index)
 }
 
@@ -128,11 +128,11 @@ const createShowButton = (handle) => {
     return button;
 }
 
-const customizeSkip = () => {
+const customizeSkip = (actionID) => {
     let skip = document.getElementById('skip');
     skip.style["marginBottom"] = "20px";
     skip.onclick = () => {
-        WINDOW_API.sendResults(-1);
+        WINDOW_API.sendResults(-1, actionID);
     }
 }
 
@@ -155,6 +155,43 @@ function createRadioOption(value, elementNumber) {
 }
 
 
-customizeSubmit();
-customizeInfo();
-customizeSkip();
+function customizeRetry(actionID) {
+    submit.style["marginBottom"] = "20px";
+    submit.onclick = () => WINDOW_API.sendResults(true, actionID);
+}
+
+function customizeSkipEmpty (actionID) {
+    let skip = document.getElementById('skip');
+    skip.style["marginBottom"] = "20px";
+    skip.onclick = () => {
+        WINDOW_API.sendResults(false, actionID);
+    }
+}
+
+
+function extractID () {
+    let query = querystring.parse(global.location.search);
+    let data = query['?data']
+    return data
+}
+
+
+const main = async () => {
+    let actionID = extractID();
+    let info = await WINDOW_API.getInfo(actionID);
+    if(info["query"]==="selection"){
+        customizeSubmit(actionID);
+        customizeInfo(info);
+        customizeSkip(actionID);
+        return;
+    }
+    customizeRetry(actionID);
+    customizeInfo(info);
+    customizeSkipEmpty(actionID);
+}
+
+
+_main:
+{
+    main()
+}

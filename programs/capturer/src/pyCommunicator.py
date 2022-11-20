@@ -15,7 +15,7 @@ process = None
 state_lock = threading.Lock()
 flush_orderly_lock = threading.Lock()
 in_prep_for_simulation = False
-resolving_windows_notify = lambda x: None
+resolve_window = lambda x: None
 
 class ExecutionContainer:
     def __init__(self):
@@ -66,26 +66,27 @@ def start_process(cmd):
     return "DONE"
 
 def start_simulation(process):
-    global in_prep_for_simulation, resolving_windows_notify
+    global in_prep_for_simulation, resolve_window
     in_prep_for_simulation = True
     WindowReproducer.reset_handles()
     qa = ReproducerQA(print_cmd)
-    resolving_windows_notify = lambda: qa.notify_resolve_ready()
+    resolve_window = lambda id: qa.resolveSelection(id)
     threading.Thread(target=lambda: threaded_simulation_start(qa, process)).start()
 
 
 def threaded_simulation_start(quality_assurance, process):
-    global in_prep_for_simulation
-    _resolve_and_ready_up_windows(quality_assurance)
-    process.run()
-    update_state()
-    print_cmd("start")
-    in_prep_for_simulation = False
+    def initiate():
+        global in_prep_for_simulation
+        process.run()
+        update_state()
+        print_cmd("start")
+        in_prep_for_simulation = False
+    _resolve_and_ready_up_windows(quality_assurance, then=initiate)
 
 
-def _resolve_and_ready_up_windows(quality_assurance):
+def _resolve_and_ready_up_windows(quality_assurance, then):
     try:
-        quality_assurance.resolve_and_ready_up_windows()
+        quality_assurance.resolve_and_ready_up_windows(then)
     except Exception as e:
         exc_str = str(e).replace('\r', ' ')
         print_cmd(f'special-end Error: {exc_str}')
@@ -149,12 +150,12 @@ def answer_request(cmd, body):
 
 def processInformation(cmd, body):
     if cmd == "resolveFinished":
-        catchSolutionToWindows()
+        catchSolutionToWindows(body)
         return "DONE"
     return f"{cmd} NOT FOUND"
 
-def catchSolutionToWindows():
-    resolving_windows_notify()
+def catchSolutionToWindows(id):
+    resolve_window(id)
 
 
 # ------------------- Exceptions ---------------------------------------

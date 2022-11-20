@@ -9,8 +9,7 @@ from rt import ClickInfo
 class MetaData:
     def __init__(self):
         self.record_path = "./resources/recordings/"
-        self.window_unassigned_data = "./resources/window_unresolved.json"
-        self.window_assigned_data = "./resources/window_resolved.json"
+        self.window_unassigned_path = "./resources/resolves/"
         self.auto_time = 0.1
         self.start_time = time.time()
 

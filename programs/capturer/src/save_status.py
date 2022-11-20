@@ -191,6 +191,14 @@ class WindowReproducer():
         found_windows = WinUtils.get_ordered_wins()
         return self._group_together(old_windows, found_windows)
 
+    def get_win_collection(self, process):
+        collection = []
+        found_windows = WinUtils.get_ordered_wins()
+        for win in found_windows:
+            if process == WinUtils.get_proc_name_by_hwnd(win.handle).lower():
+                collection.append(win)
+        return collection
+
     def _group_together(self, saved, found):
         groupings = dict()
         for win in saved:
