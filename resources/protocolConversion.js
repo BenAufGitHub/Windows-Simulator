@@ -129,7 +129,6 @@ const getTxtArr = (remainder) => {
 function splitRequestMessage(msg) {
     if(!msg || !ltrim(msg)) throwFormatError(msg, "request")
     let [id, remainder] = _seperateID(ltrim(msg))
-    if(id === 1) return [id, remainder, null]
     let [req, rawBody] = _seperateRequest(remainder)
     let body = getObjectFromRawBody(rawBody)
     return [id, req, body]

@@ -48,7 +48,7 @@ function createWindow () {
 
 const prepareEventListeners = (window) => {
   window.on("restore", (event, args) => {
-    sendCommandToBridge("pause")
+    sendCommandToBridge("pause", null)
   })
 }
 
@@ -109,7 +109,7 @@ app.on('activate', () => {
 // ------------------------- ipcMain listeners -----------------------------------------
 
 ipcMain.on("start", _initProcess)
-ipcMain.on("tell-process", (event, args) => sendCommandToBridge(args))
+ipcMain.on("tell-process", (event, args) => sendCommandToBridge(args, null))
 ipcMain.on("open-err-win", (event, args) => processSpecialEnd("An error occured, head back to the menu."))
 
 // ------------------------ reaction to pyBridge -------------------------------------------
@@ -117,7 +117,7 @@ ipcMain.on("open-err-win", (event, args) => processSpecialEnd("An error occured,
 
 function _initProcess (event, args) {
   if(!["record", "simulate"].includes(args)) throw `Illegal Argument ${args}`;
-    sendCommandToBridge(args)
+    sendCommandToBridge(args, null)
 }
 
 
@@ -380,8 +380,8 @@ async function sendRequestToBridge(id, req, body) {
 }
 
 // can currently command record, simulate, pause, resume, stop, resolveFinished
-function sendCommandToBridge(command) {
-  settings.process?.send(`1 ${command}`)
+function sendCommandToBridge(command, args) {
+  return settings.process?.send(`1  ${command} | ${getFormattedBody(args)}`)
 }
 
 

@@ -53,19 +53,19 @@ process.on("message", (msg) => processMainMsg(msg.toString()))
 async function processMainMsg(msg) {
     let [id, arg1, arg2] = splitRequestMessage(msg)
     if(id===1)
-        return processMainCommand(arg1)
+        return processMainCommand(arg1, arg2)
     processMainRequest(id, arg1, arg2)
 }
 
             // ------------------ Command handling ---------------------------
 
-async function processMainCommand(command) {
+async function processMainCommand(command, args) {
     if (isEventEcho(command)) return
     if (isInvalidCommandRequest(command)) return informOfRequestError();
     if (command === "stop")
         state = "stopped"
     try {
-        let answer = await requestToPy(command)
+        let answer = await requestToPy(command, args)
         if(!isAcceptedRequest(answer)) return
         processSuccessfulRequest(command, answer[2])
     } catch (e){

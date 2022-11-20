@@ -173,10 +173,11 @@ class CommandFailure(Exception):
 # --------------------------- Process bubbling ----------------------------------------
 
 # identifier 1: outgoing command
-def print_cmd(cmd: str):
+def print_cmd(cmd: str, args=None):
     update_state()
     with flush_orderly_lock:
         if cmd in process_actions and cmd != translate_state_to_command(): return
+        if args: return print(f'1 {cmd} {args}')
         print(f'1 {cmd}')
 
 
