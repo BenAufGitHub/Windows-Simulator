@@ -28,12 +28,12 @@ function customizeSubmit(actionID) {
 }
 
 function customizeInfo(information) {
-    displayInformation(information.process_name, information.recorded, information.selection, information.resolve_step_no, information.z_index)
+    displayInformation(information.process_name, information.recorded, information.selection, information.winNo, information.z_index)
 }
 
 async function displayInformation(process, recorded, selection, number, z_index) {
-    info.appendChild(generateTitle(`Matching windows for process <strong>'${process}'<strong> (#${number})<br>`));
-    info.appendChild(await generateRecordingInformation(recorded, z_index));
+    info.appendChild(generateTitle(`Matching windows from recording`));
+    info.appendChild(await generateRecordingInformation(recorded, z_index, process, number));
     createRadiobuttons(selection);
 }
 
@@ -58,19 +58,19 @@ async function get_sim () {
     return "";
 }
 
-async function generateRecordingInformation(recorded, z_index) {
+async function generateRecordingInformation(recorded, z_index, process, number) {
     let div = document.createElement('div');
     div.classList.add('content');
     div.style.border = "2px solid black";
     div.style.marginLeft = "10%";
     div.style.marginRight = "10%";
 
-    div.appendChild(createParagraph(recorded));
+    div.appendChild(createParagraph(recorded, process, number));
     div.appendChild(await loadImage(z_index));
     return div;
 }
 
-function createParagraph(recorded) {
+function createParagraph(recorded, process, number) {
     let p = document.createElement('p');
 
     let header = document.createElement('h6');
@@ -79,6 +79,8 @@ function createParagraph(recorded) {
     header.style["marginTop"] = "5px";
 
     p.appendChild(header);
+    p.innerHTML += `Process: <strong>${process}</strong><br>`;
+    p.innerHTML += `WindowNumber: <strong>${number}</strong><br>`;
     p.innerHTML += `Window title: <strong>${recorded}</strong><br>`;
     p.innerHTML += "Capture from first interaction:<br>";
     p.style["marginBottom"] = "2px";

@@ -120,7 +120,6 @@ class ReproducerQA():
         self.reproducer = WindowReproducer()
         self.print_cmd = command_callback
         self._resolve_cb = None
-        self.resolve_attempt = 1
 
 
 
@@ -261,8 +260,8 @@ class ReproducerQA():
     # ======= send question =====>
 
 
-    def _send_and_await_response(self, query, old_win, selection, process_name, resolve_attempt):
-        info_map = self._prepare_file_info(query, old_win, selection, process_name, resolve_attempt)
+    def _send_and_await_response(self, query, old_win, selection, process_name, winNo):
+        info_map = self._prepare_file_info(query, old_win, selection, process_name, winNo)
         resID = ConfigManager.assign_resolve_id()
         filename = MetaData().window_unassigned_path + str(resID) + ".json"
         with open(filename, 'w') as file:
@@ -270,13 +269,13 @@ class ReproducerQA():
         self.print_cmd("reproducer_resolve_window", args=resID)
 
         
-    def _prepare_file_info(self, query: str, old_win, selection, process_name, resolve_attempt):
+    def _prepare_file_info(self, query: str, old_win, selection, process_name, winNo):
         info_map = {
             "query": query,
             "recorded": old_win["name"],
             "z_index": old_win["z_index"],
             "process_name": process_name,
-            "resolve_step_no": resolve_attempt,
+            "winNo": winNo,
             "selection": []
         }
         
