@@ -40,13 +40,9 @@ async function displayInformation(process, recorded, selection, number, z_index)
 async function loadImage(z_index) {
     let div = document.createElement('div');
     let img = document.createElement('img');
-
+    img.id = "capture-image"
     img.src = "./../resources/screenshots/" + await get_sim() +'/'+ z_index + ".jpg"
     img.alt = "Nothing to see here :("
-    img.style["marginTop"] = "2px";
-    div.style["marginLeft"] = "7px";
-    div.style["marginRight"] = "7px";
-    div.style["marginTop"] = "2px";
     div.appendChild(img)
     return div
 }
@@ -61,9 +57,7 @@ async function get_sim () {
 async function generateRecordingInformation(recorded, z_index, process, number) {
     let div = document.createElement('div');
     div.classList.add('content');
-    div.style.border = "2px solid black";
-    div.style.marginLeft = "10%";
-    div.style.marginRight = "10%";
+    div.id = "rec-information";
 
     div.appendChild(createParagraph(recorded, process, number));
     div.appendChild(await loadImage(z_index));
@@ -141,7 +135,7 @@ const customizeSkip = (actionID) => {
 const createRadioLabel = (id, text) => {
     let label = document.createElement('label');
     label.htmlFor = id;
-    label.innerHTML = text;
+    label.innerHTML = `'${text}'`;
     label.classList.add("radio");
     return label;
 }
@@ -159,11 +153,13 @@ function createRadioOption(value, elementNumber) {
 
 function customizeRetry(actionID) {
     submit.style["marginBottom"] = "20px";
+    submit.innerHTML = "Retry";
     submit.onclick = () => WINDOW_API.sendResults(true, actionID);
 }
 
 function customizeSkipEmpty (actionID) {
     let skip = document.getElementById('skip');
+    skip.innerHTML = "Skip";
     skip.style["marginBottom"] = "20px";
     skip.onclick = () => {
         WINDOW_API.sendResults(false, actionID);
