@@ -41,6 +41,7 @@ function createWindow () {
     }
   });
   mainWindow.webContents.openDevTools();
+  mainWindow.once('ready-to-show', (event) => mainWindow.show())
   prepareEventListeners(mainWindow)
   return mainWindow
 };
