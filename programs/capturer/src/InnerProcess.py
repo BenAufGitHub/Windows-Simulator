@@ -1,13 +1,11 @@
-import ctypes, threading, json, os, sys
-import traceback
+import ctypes, json, os, sys
 from pynput import mouse, keyboard
 from JSONHandler import MetaData
 from save_status import WindowSaver, WindowReproducer, Constants
 import JSONHandler, timing, UnicodeReverse, Unpress
-from threading import Lock, Thread
 from rt import ClickInfo
 import ConfigManager
-import typing
+from Lib import typing, traceback, threading
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
 class InnerProcess:
@@ -297,7 +295,7 @@ class ReproducerQA():
             response = json.loads(file.read())
             answer = int(response["result"]) if type(response["result"]) is int else bool(response["result"])
         self._delete_cache_files(id)
-        Thread(target=lambda:self._resolve_cb(answer)).start()
+        threading.Thread(target=lambda:self._resolve_cb(answer)).start()
         
 
     def _delete_cache_files(self, id):
