@@ -207,7 +207,10 @@ class ReproducerQA():
         if not selection:
             selection = queue
         def continue_selection(result):
-            solution[process].append(cached.index(selection[result]))
+            if result == -1:
+                solution[process].append(-1)
+            else:
+                solution[process].append(cached.index(selection[result]))
             queue.remove(selection[result])
             self._pool_iteration(problem_pools, queue, process, iterator, solution, then, async_behavior=True, loop_index=pos+1)
         self._resolve_cb = continue_selection
@@ -292,7 +295,7 @@ class ReproducerQA():
         answer = None
         with open(filename, 'r') as file:
             response = json.loads(file.read())
-            answer = int(response["result"]) if type(response["result"]) == 'int' else bool(response["result"])
+            answer = int(response["result"]) if type(response["result"]) is int else bool(response["result"])
         self._delete_cache_files(id)
         Thread(target=lambda:self._resolve_cb(answer)).start()
         

@@ -357,9 +357,12 @@ function get_rand_id() {
 // ------------------------------------------------------ requesting -------------------------------------------------
 
 ipcMain.handle("request", async (event, arg1, arg2) => {
-  let data = await request(arg1, arg2)
-  if (!data.isSuccessful) return null
-  return data.answer
+  try {
+    return await request(arg1, arg2)
+  }
+  catch {
+    return {isSuccessful: False, answer: "Internal failure."}
+  }
 })
 
 async function request(req, args) {

@@ -18,7 +18,8 @@ const selectionDiv = document.getElementById('radio-selection');
 function processData(actionID) {
     submit.onclick = () => {}
     let num = document.querySelector('input[name="window-matching"]:checked')?.value;
-    if(!num) num = -1;
+    num = +num
+    if(!num && num !== 0) num = -1;
     WINDOW_API.sendResults(num, actionID)
 }
 
@@ -119,7 +120,12 @@ const createShowButton = (handle) => {
     button.innerHTML = "show";
     
     button.onclick = () => {
-        WINDOW_API.showWindow(handle).then((msg)=>console.log(msg), (error) => console.log(`Error occured: ${error}`));
+        WINDOW_API.showWindow(handle).then((data)=> {
+            if(!data.isSuccessful)
+                return console.log(`Error occured: ${data.answer}`);
+            console.log(data.answer)
+        },
+        (error) => console.log(`Error occured: ${error}`));
     }
     return button;
 }
