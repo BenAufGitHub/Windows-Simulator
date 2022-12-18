@@ -5,11 +5,6 @@ const WINDOW_API = {
     getSettings: async (args) => await ipcRenderer.invoke("get-settings", args),
 }
 
-const changeTitle = async () => {
-    const title = document.querySelector("title")
-    title.innerHTML = await WINDOW_API.getSettings("pause-state")
-}
-
 const sendFromButton = (command) => {
     disableButtons()
     WINDOW_API.send(command)
@@ -20,7 +15,6 @@ const disableButtons = () => {
     stopBtn.setAttribute("disabled", true)
 }
 
-changeTitle()
 const resumeBtn = document.getElementById("resume");
 const stopBtn = document.getElementById("stop");
 

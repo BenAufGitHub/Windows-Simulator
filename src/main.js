@@ -137,7 +137,7 @@ function resumeProcess () {
   settings.selectedWindow = 'recording'
   settings.processState = "going"
   open('recording.html')
-  window.setSize(600, 450)
+  window.setSize(400, 250)
 }
 
 
@@ -158,7 +158,7 @@ function pauseProcess() {
   settings.processState = "idle"
   open("pause.html")
   window.restore()
-  window.setSize(600, 450)
+  window.setSize(400, 250)
 }
 
 
@@ -248,7 +248,7 @@ ipcMain.on("windowResolveResults", (event, answer, actionID) => {
   saveObj = {"result": answer}
   fs.writeFileSync(`./resources/resolves/r${actionID}.json`, JSON.stringify(saveObj))
   sendCommandToBridge("resolveFinished", actionID)
-  window.setSize(600, 450)
+  window.setSize(400, 250)
   window.center()
 })
 
