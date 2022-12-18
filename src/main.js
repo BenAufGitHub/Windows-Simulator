@@ -128,7 +128,7 @@ function startProcess () {
   settings.processState = "going"
   settings.selectedWindow = "recording"
   open("recording.html");
-  window.setSize(600, 450)
+  window.setSize(400, 250)
 }
 
 function resumeProcess () {
