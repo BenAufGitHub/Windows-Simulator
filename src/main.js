@@ -128,6 +128,7 @@ function startProcess () {
   settings.processState = "going"
   settings.selectedWindow = "recording"
   open("recording.html");
+  window.setSize(600, 450)
 }
 
 function resumeProcess () {
@@ -136,6 +137,7 @@ function resumeProcess () {
   settings.selectedWindow = 'recording'
   settings.processState = "going"
   open('recording.html')
+  window.setSize(600, 450)
 }
 
 
@@ -146,6 +148,7 @@ function stopProcess() {
   settings.state = 'menu'
   open("index.html")
   window.restore()
+  window.setSize(600, 450)
 }
 
 
@@ -155,6 +158,7 @@ function pauseProcess() {
   settings.processState = "idle"
   open("pause.html")
   window.restore()
+  window.setSize(600, 450)
 }
 
 
@@ -163,8 +167,9 @@ function processSpecialEnd(reason) {
   settings.selectedWindow = 'hint'
   settings.processState = null
   settings.latestInfo = reason
-  open("hint.html")
+  open("hint.html", null, null)
   window.restore()
+  window.setSize(600, 450)
 }
 
 
@@ -243,10 +248,14 @@ ipcMain.on("windowResolveResults", (event, answer, actionID) => {
   saveObj = {"result": answer}
   fs.writeFileSync(`./resources/resolves/r${actionID}.json`, JSON.stringify(saveObj))
   sendCommandToBridge("resolveFinished", actionID)
+  window.setSize(600, 450)
+  window.center()
 })
 
 async function resolveIdentifyingWindow(actionID) {
   window.restore()
+  window.setSize(830, 950, true)
+  window.center()
   window.loadFile("./src/resolving.html", {"query":{"data": actionID}})
 }
 
@@ -255,7 +264,7 @@ ipcMain.on("load-menu", (event, args) => loadMenu())
 const loadMenu = () => {
   settings.selectedWindow = 'index'
   settings.state = 'menu'
-  open("index.html")
+  open("index.html", 600, 450)
 }
 
 
