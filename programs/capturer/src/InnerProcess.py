@@ -209,7 +209,7 @@ class ReproducerQA():
                 solution[process].append(-1)
             else:
                 solution[process].append(cached.index(selection[result]))
-            queue.remove(selection[result])
+                queue.remove(selection[result])
             self._pool_iteration(problem_pools, queue, process, iterator, solution, then, async_behavior=True, loop_index=pos+1)
         self._resolve_cb = continue_selection
         self._send_and_await_response("selection", saved[pos], selection, process, pos+1)
