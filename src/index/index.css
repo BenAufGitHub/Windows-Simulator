@@ -178,3 +178,13 @@ table tr td:nth-child(2), table tr th:nth-child(2) {
   word-break: break-all;
 }
 
+#button-to-settings {
+  float: right;
+  margin-right: 15px;
+  font-size: 16px;
+  color: black;
+}
+
+#settings-bar {
+  margin: 0px;
+}

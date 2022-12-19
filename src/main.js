@@ -14,7 +14,7 @@ const settings = {
   processState: null,         // going / idle
   selectedWindow: 'index',    // index / recording / pause
   process: null,              // the pyBridge
-  latestInfo: null            // will be displayed on hint.html
+  latestInfo: null            // will be displayed on .\\hint\\hint.html
 }
 
 
@@ -67,7 +67,7 @@ const openURL = (url) => {
 
 
 const createFirstWindow = () => {
-  open("index.html")
+  open(".\\index\\index.html")
 }
 
 
@@ -127,7 +127,7 @@ function startProcess () {
   settings.state = 'record'
   settings.processState = "going"
   settings.selectedWindow = "recording"
-  open("recording.html");
+  open(".\\recording\\recording.html");
   window.setSize(400, 250)
 }
 
@@ -136,7 +136,7 @@ function resumeProcess () {
   if(settings.selectedWindow === 'recording') return;
   settings.selectedWindow = 'recording'
   settings.processState = "going"
-  open('recording.html')
+  open('.\\recording\\recording.html')
   window.setSize(400, 250)
 }
 
@@ -146,7 +146,7 @@ function stopProcess() {
   settings.selectedWindow = 'index'
   settings.processState = null
   settings.state = 'menu'
-  open("index.html")
+  open(".\\index\\index.html")
   window.restore()
   window.setSize(600, 450)
 }
@@ -156,7 +156,7 @@ function pauseProcess() {
   if(settings.selectedWindow === 'pause') return;
   settings.selectedWindow = 'pause'
   settings.processState = "idle"
-  open("pause.html")
+  open(".\\pause\\pause.html")
   window.restore()
   window.setSize(400, 250)
 }
@@ -167,7 +167,7 @@ function processSpecialEnd(reason) {
   settings.selectedWindow = 'hint'
   settings.processState = null
   settings.latestInfo = reason
-  open("hint.html", null, null)
+  open(".\\hint\\hint.html", null, null)
   window.restore()
   window.setSize(600, 450)
 }
@@ -256,7 +256,7 @@ async function resolveIdentifyingWindow(actionID) {
   window.restore()
   window.setSize(830, 950, true)
   window.center()
-  window.loadFile("./src/resolving.html", {"query":{"data": actionID}})
+  window.loadFile("./src/resolving/resolving.html", {"query":{"data": actionID}})
 }
 
 ipcMain.on("load-menu", (event, args) => loadMenu())
@@ -264,7 +264,7 @@ ipcMain.on("load-menu", (event, args) => loadMenu())
 const loadMenu = () => {
   settings.selectedWindow = 'index'
   settings.state = 'menu'
-  open("index.html", 600, 450)
+  open(".\\index\\index.html", 600, 450)
 }
 
 
