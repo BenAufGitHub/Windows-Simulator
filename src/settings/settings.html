@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        </style>
+        <title>Settings - Win-Simulator</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"
+        />
+        <link rel="stylesheet" href="settings.css">
+        <script defer src="settings.js"></script>
+    </head>
+    <body>
+        <div id="window-check-div" class="cdiv">
+            <label for="toggle-check">Checking/Matching windows</label>
+            <label class="switch spacing-left">
+                <input id="toggle-check" type="checkbox">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <hr/>
+        <div id="screenshots-div" class="cdiv">
+            <label for="toggle-screen">Take screenshots of windows</label>
+            <label class="switch spacing-left">
+                <input id="toggle-screen" type="checkbox">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <hr/>
+        <div id="saves-div" class="cdiv">
+            <button id="del-saves" class="button is-danger is-small same-padding is-outlined">Delete all Saves</button>
+        </div>
+        <hr/>
+        <div id="cache-div" class="cdiv">
+            <button id="del-cache" class="button is-danger is-small same-padding is-outlined">Delete cache</button>
+        </div>
+        <hr/>
+         <div id="back-div" class="cdiv">
+            <button id="save-back" class="button is-primary is-medium">Save & Back</button>
+         </div>
+    </body>
+</html>

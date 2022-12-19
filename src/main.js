@@ -110,8 +110,9 @@ app.on('activate', () => {
 // ------------------------- ipcMain listeners -----------------------------------------
 
 ipcMain.on("start", _initProcess)
-ipcMain.on("tell-process", (event, args) => sendCommandToBridge(args, null))
-ipcMain.on("open-err-win", (event, args) => processSpecialEnd("An error occured, head back to the menu."))
+ipcMain.on("tell-process", (event, args) => sendCommandToBridge(args, null));
+ipcMain.on("open-err-win", (event, args) => processSpecialEnd("An error occured, head back to the menu."));
+ipcMain.on("change-win", (event, args) => open(`.\\${args}\\${args}.html`))
 
 // ------------------------ reaction to pyBridge -------------------------------------------
 

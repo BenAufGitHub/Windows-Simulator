@@ -70,6 +70,7 @@ const addClickEvents = () => {
     
     document.getElementById('settings-sim').onclick = toggleDetailsOption;
     document.getElementById('show-details').onclick = expandDetails;
+    document.getElementById('button-to-settings').onclick = () => ipcRenderer.send("change-win", "settings");
 }
 
 
