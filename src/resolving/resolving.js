@@ -42,7 +42,7 @@ async function loadImage(z_index) {
     let div = document.createElement('div');
     let img = document.createElement('img');
     img.id = "capture-image"
-    img.src = "./../resources/screenshots/" + await get_sim() +'/'+ z_index + ".jpg"
+    img.src = "./../../resources/screenshots/" + await get_sim() +'/'+ z_index + ".jpg"
     img.alt = "Nothing to see here :("
     div.appendChild(img)
     return div
