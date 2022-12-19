@@ -1,3 +1,11 @@
+html {
+    background-color: #872657;
+}
+
+hr {
+    border:1px solid plum;
+}
+
 .cdiv {
     display: flex;
     justify-content: center;

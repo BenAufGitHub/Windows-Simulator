@@ -5,6 +5,7 @@ const fsPromises = require("fs/promises")
 let {FormatError, splitAnswerMessage, splitRequestMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
 const path = require('path');
 let window = null;
+let settingsWin = null;
 
 const promiseMap = new Map()
 let idStack = []
@@ -101,6 +102,20 @@ app.on('activate', () => {
 });
 
 
+function showSettings() {
+  settingsWin = new BrowserWindow({ width:350, height: 550, parent: window, modal: true, show: false, webPreferences: {
+    openDevTools: true,
+    nodeIntegration: true,
+    contextIsolation: false,
+    enableRemoteModule: true,
+  } })
+  settingsWin.loadFile(`.\\src\\settings\\settings.html`)
+  settingsWin.once('ready-to-show', () => {
+    settingsWin.show()
+  })
+}
+
+
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 // require('@electron/remote/main').initialize()
@@ -113,6 +128,8 @@ ipcMain.on("start", _initProcess)
 ipcMain.on("tell-process", (event, args) => sendCommandToBridge(args, null));
 ipcMain.on("open-err-win", (event, args) => processSpecialEnd("An error occured, head back to the menu."));
 ipcMain.on("change-win", (event, args) => open(`.\\${args}\\${args}.html`))
+ipcMain.on("show-settings", (event, args) => showSettings())
+ipcMain.on("kill-settings", (event, args) => settingsWin?.destroy())
 
 // ------------------------ reaction to pyBridge -------------------------------------------
 
