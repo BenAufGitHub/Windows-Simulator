@@ -249,6 +249,11 @@ ipcMain.handle('get-sim-info', async (e,a) => {
   return getRequestNoError(getDetailsList());
 })
 
+ipcMain.handle('get-app-settings', async (e,a) => {
+  return settings.appConfigs
+})
+
+
 async function getDetailsList () {
   let simulation = await request('get-simulation', null);
   if(!simulation?.isSuccessful) throw "No simulation-details to display. " + simulation?.answer?.toString();
