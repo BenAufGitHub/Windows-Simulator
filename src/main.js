@@ -127,7 +127,7 @@ ipcMain.on("init-with-configs", (event, lang) => {
   if(!(["english", "german"]).includes(lang))
     lang = "english"
   confManager.createConfigs(lang)
-  settings.appConfigs = confManager.loadConfigs()
+  createFirstWindow()
 })
 
 
