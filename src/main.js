@@ -3,6 +3,8 @@ const { fork } = require("child_process")
 const fs = require("fs")
 const fsPromises = require("fs/promises")
 let {FormatError, splitAnswerMessage, splitRequestMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
+const confManager = require('../src/manageConfigs.js')
+
 const path = require('path');
 let window = null;
 let settingsWin = null;
@@ -15,7 +17,8 @@ const settings = {
   processState: null,         // going / idle
   selectedWindow: 'index',    // index / recording / pause
   process: null,              // the pyBridge
-  latestInfo: null            // will be displayed on .\\hint\\hint.html
+  latestInfo: null,           // will be displayed on .\\hint\\hint.html
+  appConfigs: null,
 }
 
 
@@ -35,7 +38,7 @@ function createWindow () {
     width: 600,
     height: 450,
     webPreferences: {
-      openDevTools: true,
+      openDevTools: false,
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
@@ -68,6 +71,9 @@ const openURL = (url) => {
 
 
 const createFirstWindow = () => {
+  if(!fs.existsSync('./resources/appConfigs.ini'))
+    return open(".\\welcome\\welcome.html")
+  settings.appConfigs = confManager.loadConfigs()
   open(".\\index\\index.html")
 }
 
@@ -115,12 +121,15 @@ function showSettings() {
   })
 }
 
+// ------------------------ Configs ------------------------------
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
-// require('@electron/remote/main').initialize()
+ipcMain.on("init-with-configs", (event, lang) => {
+  if(!(["english", "german"]).includes(lang))
+    lang = "english"
+  confManager.createConfigs(lang)
+  settings.appConfigs = confManager.loadConfigs()
+})
 
-// In the main process.
 
 // ------------------------- ipcMain listeners -----------------------------------------
 
@@ -425,4 +434,5 @@ main:
   configureSetup();
   startPythonBridge();
   configurePythonBridge();
+
 }
