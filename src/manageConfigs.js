@@ -20,3 +20,16 @@ exports.createConfigs = (lang) => {
 exports.loadConfigs = () => {
     return ini.parse(fs.readFileSync(config_path, 'utf-8'))
 }
+
+
+exports.changeSettings = (lang, screnshots, ctrlWins) => {
+    data = {
+        customizable: {
+            language: lang,
+            takeScreenshots: screnshots,
+            controlWindows: ctrlWins
+        }
+    }
+    fs.writeFileSync(config_path, ini.stringify(data))
+    return data;
+}

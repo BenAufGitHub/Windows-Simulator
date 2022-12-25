@@ -121,6 +121,12 @@ function showSettings() {
   })
 }
 
+
+function saveSettings(language, screenshots, checkWins) {
+  settings.appConfigs = confManager.changeSettings(language, screenshots, checkWins);
+}
+
+
 // ------------------------ Configs ------------------------------
 
 ipcMain.on("init-with-configs", (event, lang) => {
@@ -139,6 +145,7 @@ ipcMain.on("open-err-win", (event, args) => processSpecialEnd("An error occured,
 ipcMain.on("change-win", (event, args) => open(`.\\${args}\\${args}.html`))
 ipcMain.on("show-settings", (event, args) => showSettings())
 ipcMain.on("kill-settings", (event, args) => settingsWin?.destroy())
+ipcMain.on("save-settings", (event, ...args) => saveSettings(...args))
 
 // ------------------------ reaction to pyBridge -------------------------------------------
 

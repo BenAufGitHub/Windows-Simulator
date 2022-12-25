@@ -2,8 +2,17 @@
 
 const {ipcRenderer} = require('electron');
 
+function saveSettings(lang, screenshots, checkWins) {
+    ipcRenderer.send('save-settings', lang, screenshots, checkWins)
+}
+
+
+function closeSettings () {
+    ipcRenderer.send('kill-settings', null);
+}
+
 function main () {
-    document.getElementById('save-back').onclick = () => ipcRenderer.send("kill-settings", null);
+    document.getElementById('save-back').onclick = saveAndBack;
     controlInputs();
 }
 
@@ -17,6 +26,29 @@ function preToggleInputs (configs) {
     document.getElementById('lang-in').checked = (configs["customizable"]["language"] == 'german')
     document.getElementById('toggle-screen').checked = configs["customizable"]["takeScreenshots"]
     document.getElementById('toggle-check').checked = configs["customizable"]["controlWindows"]
+}
+
+
+const getSelectedLang = () => {
+    if(document.getElementById('lang-in').checked)
+        return 'german';
+    return 'english';
+}
+
+const isToggleScreen = () => {
+    return document.getElementById('toggle-screen').checked;
+}
+
+const isToggleCheck = () => {
+    return document.getElementById('toggle-check').checked;
+}
+
+function saveAndBack () {
+    let lang = getSelectedLang();
+    let screenshots = isToggleScreen();
+    let checkWins = isToggleCheck();
+    saveSettings(lang, screenshots, checkWins);
+    closeSettings();
 }
 
 main:
