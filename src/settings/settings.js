@@ -13,6 +13,7 @@ function closeSettings () {
 
 function main () {
     document.getElementById('save-back').onclick = saveAndBack;
+    setupButtonCMDS();
     controlInputs();
 }
 
@@ -49,6 +50,29 @@ function saveAndBack () {
     let checkWins = isToggleCheck();
     saveSettings(lang, screenshots, checkWins);
     closeSettings();
+}
+
+function setupButtonCMDS () {
+    document.getElementById('del-saves').onclick = () => deleteSaves();
+    document.getElementById('del-cache').onclick = () => deleteCache();
+}
+
+/* state:*/
+function toggleButtons(activate) {
+    document.getElementById('del-saves').disabled = !activate;
+    document.getElementById('del-cache').disabled = !activate;
+}
+
+async function deleteSaves () {
+    toggleButtons(false);
+    let answer = await ipcRenderer.invoke('delete-all-saves', null);
+    toggleButtons(true);
+}
+
+async function deleteCache () {
+    toggleButtons(false);
+    let answer = await ipcRenderer.invoke('delete-cache', null);
+    toggleButtons(true);
 }
 
 main:

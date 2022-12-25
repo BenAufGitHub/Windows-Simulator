@@ -256,6 +256,18 @@ ipcMain.handle('get-sim-info', async (e,a) => {
   return getRequestNoError(getDetailsList());
 })
 
+ipcMain.handle('delete-cache', (e, a) => {
+  try {
+    deleteCache();
+  } catch (e) {}
+})
+
+ipcMain.handle('delete-all-saves', (e,a) => {
+  try {
+    deleteAllSaves();
+  } catch (e) {}
+})
+
 ipcMain.handle('get-app-settings', async (e,a) => {
   return settings.appConfigs
 })
@@ -439,6 +451,39 @@ process.on("exit", (code) => {
   }
   func()
 })
+
+
+// -------------------------------------- file deletion ---------------------------------------------
+
+
+function deleteCache() {
+  const dirPath = './resources/resolves/';
+  deleteAllJSON(dirPath);
+}
+
+function deleteAllJSON(dirPath) {
+  let dirFiles = fs.readdirSync(dirPath);
+  dirFiles.forEach(element => {
+    if(element.includes('.json'))
+      fs.rmSync(path.join(dirPath, element));
+  });
+}
+
+
+function deleteAllSaves() {
+  deleteAllJSON('./resources/recordings/');
+  deleteAllJSON('./resources/start_capture/');
+  deleteAllFolders('./resources/screenshots/');
+}
+
+function deleteAllFolders(dirPath) {
+  let dirFiles = fs.readdirSync(dirPath);
+  dirFiles.forEach(element => {
+    let fullPath = path.join(dirPath, element);
+    if(fs.lstatSync(fullPath).isDirectory())
+      fs.rmSync(fullPath, { recursive: true });
+  });
+}
 
 
 main:
