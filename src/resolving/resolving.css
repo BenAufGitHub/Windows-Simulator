@@ -14,6 +14,7 @@ body {
 #capture-image {
     max-height : 400px;
     max-width: 800px;
+    width: min(800px, 40vw);
     margin-top : 2px;
     margin-left : 7px;
     margin-right : 7px;
@@ -21,7 +22,7 @@ body {
 }
 
 #rec-information {
-    width: max(520px, 45%);
+    display: inline-block;
     margin: auto;
     border : 2px solid black;
     padding-left : 30px;
