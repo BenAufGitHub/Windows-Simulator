@@ -16,12 +16,13 @@ class MetaData:
 
 class JSONStorage:
 
-    def __init__(self):
+    def __init__(self, _takeScreenshots='true'):
         mouse_clicks, mouse_scrolls, mouse_moves, key_presses, commands = [], [], [], [], []
         self.containers = ["mouse_clicks", "mouse_scrolls", "mouse_moves", "key_presses", "commands"]
         self.data = [mouse_clicks, mouse_scrolls, mouse_moves, key_presses, commands]
         self.manual_releases = []
         self.controller = Controller()
+        self._scr = _takeScreenshots == 'true'
 
     def add_mouse_click(self, button: str, time: float, pressed: bool, point, record_path): 
         click_instance = {"action": "click", "name": button, "time": time, "args": [pressed, point[0], point[1]]}
@@ -35,6 +36,7 @@ class JSONStorage:
         windex = WindowSaver.get_window_number(WinUtils.get_top_from_point(point[0], point[1]).handle)
         if windex >= 0 and not ClickInfo().clicked_contains(windex):
             ClickInfo().add_clicked_windex(windex)
+            if not self._scr: return
             Thread(target=lambda: WindowSaver().save_screenshot(windex, record_path)).start()
         click_instance["windex"] = windex
         self.data[0].append(click_instance)

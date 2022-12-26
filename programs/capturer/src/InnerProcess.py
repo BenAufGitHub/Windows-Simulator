@@ -473,7 +473,7 @@ def exec_keyboard_instruction(instruction: dict, controller):
 
 
 class Recorder(InnerProcess):
-    def __init__(self):
+    def __init__(self, takeScreenshots='true'):
         super().__init__()
         WindowSaver.reset_handle()
         self.save_current_win_status()
@@ -481,7 +481,7 @@ class Recorder(InnerProcess):
         self.init_screenshots()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
-        self.storage = JSONHandler.JSONStorage()
+        self.storage = JSONHandler.JSONStorage(_takeScreenshots=takeScreenshots)
         self.in_handler = InputHandler(self)
         self.round_to = 3
 

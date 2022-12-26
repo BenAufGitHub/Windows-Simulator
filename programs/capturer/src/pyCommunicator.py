@@ -28,7 +28,7 @@ exec_vars = ExecutionContainer()
 def execute(cmd, body):
     throw_if_not_accepted(cmd)
     if cmd in starter_commands:
-        return start_process(cmd)
+        return start_process(cmd, body)
     if cmd in process_actions:
         return mutate_process(cmd)
     if cmd in information:
@@ -51,9 +51,9 @@ def throw_if_not_accepted(cmd):
 
 # -------------------- Execution ---------------------------------------
 
-def start_process(cmd):
+def start_process(cmd, body):
     global process
-    process = InnerProcess.Simulator() if (cmd == 'simulate') else InnerProcess.Recorder()
+    process = InnerProcess.Simulator() if (cmd == 'simulate') else InnerProcess.Recorder(body)
     process.print_cmd = print_cmd
     process.print_info = print_info
 
