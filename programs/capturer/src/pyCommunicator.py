@@ -8,7 +8,8 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-requests = ["exit", "spit", "getWinNames", 'showWindow', "set-recording", "get-recording", "get-record-list", "get-simulation", "get-simulation-list", "set-simulation", "delete-recording"]
+requests = ["exit", "spit", "getWinNames", 'showWindow', "set-recording",
+"get-recording", "get-record-list", "get-simulation", "get-simulation-list", "set-simulation", "delete-recording", "clear-settings"]
 information = ["resolveFinished"]
 
 process = None
@@ -146,6 +147,8 @@ def answer_request(cmd, body):
         return ConfigManager.set_simulation(body)
     if cmd == 'delete-recording':
         return ConfigManager.delete_recording(body)
+    if cmd == 'clear-settings':
+        return ConfigManager.clear()
     
 
 def processInformation(cmd, body):

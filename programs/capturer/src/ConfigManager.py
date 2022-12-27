@@ -38,6 +38,14 @@ def init_if_new():
     init_config_file()
 
 
+def clear():
+    obj = load()
+    cleared = get_standard_settings()
+    cleared["resolveNum"] = obj["resolveNum"]
+    write(cleared)
+    return 'DONE'
+
+
 def load():
     init_if_new()
     data = None
