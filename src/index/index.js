@@ -66,11 +66,22 @@ const addClickEvents = () => {
     document.getElementById('approve-new').onclick = evaluateNewRecording;
     document.getElementById('settings-rec').onclick = toggleDeleteOption;
     record_input.onfocus = hideDeleteOption;
+    addRecordInputEnterEvent();
     document.getElementById('delete-recording').onclick = deleteRecording;
     
     document.getElementById('settings-sim').onclick = toggleDetailsOption;
     document.getElementById('show-details').onclick = expandDetails;
     document.getElementById('button-to-settings').onclick = () => ipcRenderer.send("show-settings", null);
+}
+
+
+function addRecordInputEnterEvent () {
+    record_input.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            if(record_input.disabled) return;
+            evaluateNewRecording();
+        }
+   });
 }
 
 
