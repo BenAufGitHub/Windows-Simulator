@@ -75,6 +75,11 @@ async function deleteCache () {
     toggleButtons(true);
 }
 
+window.onbeforeunload = () => {
+    closeSettings();
+}
+
+
 main:
 {
     main()
