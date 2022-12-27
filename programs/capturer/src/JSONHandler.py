@@ -207,23 +207,25 @@ def mouse_move(controller, x, y):
 
 
 # Return: functions and args that match the json instruction.
-def get_function_from_mouse_object(obj: dict, controller, simulator):
+def get_function_from_mouse_object(obj: dict, controller, simulator, _ignoreMatching=False):
     action = obj["action"]
     if action == "click":
-        return get_mouse_click_func(obj, controller, simulator)
+        return get_mouse_click_func(obj, controller, simulator, _ignoreMatching=_ignoreMatching)
     elif action == "move":
         return mouse_move, [controller, obj["args"][0], obj["args"][1]]
     elif action == "scroll":
         return mouse_scroll, [controller, obj["args"][0], obj["args"][1]]
 
 
-def get_mouse_click_func(obj, controller, simulator):
+def get_mouse_click_func(obj, controller, simulator, _ignoreMatching=False):
     # if window was ignored or not found while resolving, no click will be done
+    args = [controller, obj["args"][1], obj["args"][2], obj["name"]]
+    if _ignoreMatching: return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
+
     if obj["windex"]>= 0 and not WindowReproducer.has_handle(obj["windex"]):
             return lambda: None, []
     func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "Error: Wrong window position detected.")
     Thread(target=func).start()
-    args = [controller, obj["args"][1], obj["args"][2], obj["name"]]
     return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
 
 

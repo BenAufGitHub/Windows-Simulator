@@ -157,9 +157,11 @@ ipcMain.on("save-settings", (event, ...args) => saveSettings(...args))
 
 function _initProcess (event, args) {
   if(!["record", "simulate"].includes(args)) throw `Illegal Argument ${args}`;
+  let arg1 = settings.appConfigs['customizable']['controlWindows'].toString();
+  let arg2 = settings.appConfigs['customizable']['takeScreenshots'].toString();
   if(args=="simulate")
-    return sendCommandToBridge(args, null)
-  sendCommandToBridge(args, settings.appConfigs['customizable']['takeScreenshots'].toString())
+    return sendCommandToBridge("simulate", [arg1, arg2]);
+  sendCommandToBridge("record", [arg1, arg2]);
 }
 
 

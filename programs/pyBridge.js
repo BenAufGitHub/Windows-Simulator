@@ -258,7 +258,7 @@ function updateState(command) {
 
 function processSuccessfulRequest(command, answer) {
     // process state answers are not important, only accepted or rejected
-    if(command === "record")
+    if(start_cmds.includes[command] || answer === 'STARTING')
         return sendCommandUpwards("start", "main")
     if(process_cmds.includes(command))
         return sendCommandUpwards(command, "main")

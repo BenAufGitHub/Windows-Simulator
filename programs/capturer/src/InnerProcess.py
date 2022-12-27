@@ -20,6 +20,7 @@ class InnerProcess:
         self.data = self.get_data()
         self.timer = None
         self._req_lock = threading.RLock()
+        self.ctrlW = True
         config_monitor()
 
     def add_thread(self, thread):
@@ -64,7 +65,7 @@ class InnerProcess:
     def pause(self, flush=False, _stop_pause=False):
         self.state = 'pause'
         self.timer.register_pause()
-        if not _stop_pause:
+        if not _stop_pause and self.ctrlW:
             WindowSaver().save_windows_for_pause()
         self.on_pause(flush, _stop_pause)
         if flush: self.print_cmd(self.state)
@@ -74,7 +75,8 @@ class InnerProcess:
         pass
 
     def resume(self, flush=False):
-        WindowReproducer().reproduce_windows_after_pause()
+        if self.ctrlW:
+            WindowReproducer().reproduce_windows_after_pause()
         self.state = 'running'
         self.timer.register_resume()
         self.on_resume(flush)
@@ -313,14 +315,15 @@ class ReproducerQA():
 
 class Simulator(InnerProcess):
     
-    def __init__(self):
+    def __init__(self, controlWindows='true'):
         super().__init__()
         self.simulate_later = None
         self.timer = timing.TaskAwaitingTimeKeeper()
         # wait until simulation begins
         self.timer.register_pause()
         self.keyboard_controller = keyboard.Controller()
-        self.mouse_controller = mouse.Controller() 
+        self.mouse_controller = mouse.Controller()
+        self.ctrlW = controlWindows == 'true'
 
     def _put_path(self):
         sim = ConfigManager.get_simulation()
@@ -386,7 +389,7 @@ class Simulator(InnerProcess):
         if "command" in instruction:
             exec_cmd_instruction(instruction)
         elif "action" in instruction:
-            exec_mouse_instruction(instruction, self.mouse_controller, self)
+            exec_mouse_instruction(instruction, self.mouse_controller, self, _ignoreMatching=not self.ctrlW)
         else:
             exec_keyboard_instruction(instruction, self.keyboard_controller)
 
@@ -458,8 +461,8 @@ def exec_cmd_instruction(instruction: dict):
         Unpress.release_all()
 
 
-def exec_mouse_instruction(instruction: dict, controller, simulator):
-    func, args = JSONHandler.get_function_from_mouse_object(instruction, controller, simulator)
+def exec_mouse_instruction(instruction: dict, controller, simulator, _ignoreMatching=False):
+    func, args = JSONHandler.get_function_from_mouse_object(instruction, controller, simulator, _ignoreMatching)
     func(*args)
 
 
@@ -473,7 +476,7 @@ def exec_keyboard_instruction(instruction: dict, controller):
 
 
 class Recorder(InnerProcess):
-    def __init__(self, takeScreenshots='true'):
+    def __init__(self, ctrlW='False', takeScreenshots='true'):
         super().__init__()
         WindowSaver.reset_handle()
         self.save_current_win_status()
@@ -484,6 +487,7 @@ class Recorder(InnerProcess):
         self.storage = JSONHandler.JSONStorage(_takeScreenshots=takeScreenshots)
         self.in_handler = InputHandler(self)
         self.round_to = 3
+        self.ctrlW = ctrlW == 'true'
 
     def save_current_win_status(self):
         file = ConfigManager.get_recording()
