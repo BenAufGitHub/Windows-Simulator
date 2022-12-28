@@ -40,5 +40,22 @@
     "recording": {
         "title": "Recording... - Win-Simulator",
         "pause": "Pause"
+    },
+    "resolving": {
+        "title": "Match recorded windows - Win-Simulator",
+        "pick-info": "Please enter the corresponding window.",
+        "skip": "Leave out",
+        "submit": "Submit",
+        "info-title": "Matching windows from recording",
+        "image-alt": "Nothing to see here :(",
+        "p-header": "Recording information:",
+        "p-process": "Process: ",
+        "p-win-num": "WindowNumber: ",
+        "p-title": "Window title: ",
+        "p-capture": "Capture from first interaction:",
+        "found-amount": "found:",
+        "show": "show",
+        "retry": "Retry",
+        "skip-empty": "Skip"
     }
 }

@@ -40,5 +40,22 @@
     "recording": {
         "title": "Aufnehmen... - Win-Simulationen",
         "pause": "Pausieren"
+    },
+    "resolving": {
+        "title": "Aufgezeichnete Fenster zuordnen - Win-Simulationen",
+        "pick-info": "Bitte wähle das zutreffende Fenster.",
+        "skip": "Auslassen",
+        "submit": "Bestätigen",
+        "info-title": "Aufgezeichnete Fenster zuordnen",
+        "image-alt": "Hier ist nichts zu sehen :(",
+        "p-header": "Aufnahme-Infos:",
+        "p-process": "Prozess: ",
+        "p-win-num": "Fenster-Nummer: ",
+        "p-title": "Fenster-Titel: ",
+        "p-capture": "Screenshot aus der ersten Interaktion:",
+        "found-amount": "gefunden:",
+        "show": "zeigen",
+        "retry": "Wiederholen",
+        "skip-empty": "Überspringen"
     }
 }

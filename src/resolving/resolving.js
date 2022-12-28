@@ -14,6 +14,7 @@ const input = document.getElementById('num-input');
 const info = document.getElementById('info');
 const submit = document.getElementById('submit');
 const selectionDiv = document.getElementById('radio-selection');
+let langPack = null;
 
 function processData(actionID) {
     submit.onclick = () => {}
@@ -33,7 +34,7 @@ function customizeInfo(information) {
 }
 
 async function displayInformation(process, recorded, selection, number, z_index) {
-    info.appendChild(generateTitle(`Matching windows from recording`));
+    info.appendChild(await generateTitle());
     info.appendChild(await generateRecordingInformation(recorded, z_index, process, number));
     createRadiobuttons(selection);
 }
@@ -43,7 +44,7 @@ async function loadImage(z_index) {
     let img = document.createElement('img');
     img.id = "capture-image"
     img.src = "./../../resources/screenshots/" + await get_sim() +'/'+ z_index + ".jpg"
-    img.alt = "Nothing to see here :("
+    img.alt = await getText("image-alt");
     div.appendChild(img)
     return div
 }
@@ -60,41 +61,41 @@ async function generateRecordingInformation(recorded, z_index, process, number) 
     div.classList.add('content');
     div.id = "rec-information";
 
-    div.appendChild(createParagraph(recorded, process, number));
+    div.appendChild(await createParagraph(recorded, process, number));
     div.appendChild(await loadImage(z_index));
     return div;
 }
 
-function createParagraph(recorded, process, number) {
+async function createParagraph(recorded, process, number) {
     let p = document.createElement('p');
 
     let header = document.createElement('h6');
-    header.innerHTML = "Recording information:";
+    header.innerHTML = await getText('p-header');
     header.style.textDecoration = "underline";
     header.style["marginTop"] = "5px";
 
     p.appendChild(header);
-    p.innerHTML += `Process: <strong>${process}</strong><br>`;
-    p.innerHTML += `WindowNumber: <strong>${number}</strong><br>`;
-    p.innerHTML += `Window title: <strong>${recorded}</strong><br>`;
-    p.innerHTML += "Capture from first interaction:<br>";
+    p.innerHTML += `${await getText('p-process')}<strong>${process}</strong><br>`;
+    p.innerHTML += `${await getText('p-win-num')}<strong>${number}</strong><br>`;
+    p.innerHTML += `${await getText('p-title')}<strong>${recorded}</strong><br>`;
+    p.innerHTML += `${await getText('p-capture')}<br>`;
     p.style["marginBottom"] = "2px";
     return p;
 }
 
-function generateTitle(text) {
+async function generateTitle() {
     let title = document.createElement('h3');
     title.classList.add('title');
     title.style.marginTop = "10px";
-    title.innerHTML = text;
+    title.innerHTML = await getText("info-title");
     return title;
 }
 
-function createRadiobuttons(selection) {
+async function createRadiobuttons(selection) {
     let p = document.getElementById('pick-info');
-    p.innerHTML = p.innerHTML += ` ${selection.length} found:`
+    p.innerHTML = p.innerHTML += ` ${selection.length} ${await getText('found-amount')}`
     let form = document.getElementById("form")
-    selection.forEach((element, i) => {
+    selection.forEach(async (element, i) => {
         let div = document.createElement('div');
         div.classList.add('column');
 
@@ -103,12 +104,12 @@ function createRadiobuttons(selection) {
             radio.setAttribute("checked", "checked");
         div.appendChild(radio);
         div.appendChild(createRadioLabel(radio.id, element[0]));
-        div.appendChild(createShowButton(element[1]));
+        div.appendChild(await createShowButton(element[1]));
         form.appendChild(div);
     })
 }
 
-const createShowButton = (handle) => {
+const createShowButton = async (handle) => {
     let button = document.createElement('button');
     button.type = 'button';
     button.style["marginLeft"] = "10px";
@@ -117,7 +118,7 @@ const createShowButton = (handle) => {
     button.classList.add('is-link');
     button.classList.add('is-small');
     button.classList.add('is-outlined');
-    button.innerHTML = "show";
+    button.innerHTML = await getText('show');
     
     button.onclick = () => {
         WINDOW_API.showWindow(handle).then((data)=> {
@@ -157,15 +158,15 @@ function createRadioOption(value, elementNumber) {
 }
 
 
-function customizeRetry(actionID) {
+async function customizeRetry(actionID) {
     submit.style["marginBottom"] = "20px";
-    submit.innerHTML = "Retry";
+    submit.innerHTML = await getText('retry');
     submit.onclick = () => WINDOW_API.sendResults(true, actionID);
 }
 
-function customizeSkipEmpty (actionID) {
+async function customizeSkipEmpty (actionID) {
     let skip = document.getElementById('skip');
-    skip.innerHTML = "Skip";
+    skip.innerHTML = await getText('skip-empty');
     skip.style["marginBottom"] = "20px";
     skip.onclick = () => {
         WINDOW_API.sendResults(false, actionID);
@@ -181,6 +182,7 @@ function extractID () {
 
 
 const main = async () => {
+    await addInnerHTML();
     let actionID = extractID();
     let info = await WINDOW_API.getInfo(actionID);
     if(info["query"]==="selection"){
@@ -195,7 +197,29 @@ const main = async () => {
 }
 
 
+const addText = async (id) => {
+    document.getElementById(id).innerHTML = await getText(id);
+}
+
+const getText = async (id) => {
+    return (await getLangPack())[id];
+}
+
+const getLangPack = async () => {
+    if(!langPack)
+        langPack = await ipcRenderer.invoke('get-lang-pack', null);
+    return langPack["resolving"];
+}
+
+async function addInnerHTML () {
+    await addText('title');
+    await addText('pick-info');
+    await addText('skip');
+    await addText('submit');
+}
+
+
 _main:
 {
-    main()
+    main();
 }
