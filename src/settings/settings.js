@@ -32,8 +32,8 @@ function preToggleInputs (configs) {
 
 const getSelectedLang = () => {
     if(document.getElementById('lang-in').checked)
-        return 'german';
-    return 'english';
+        return 'de';
+    return 'en';
 }
 
 const isToggleScreen = () => {

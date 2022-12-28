@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Win-Simulator</title>
+    <title id="title"></title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"
@@ -18,14 +18,14 @@
     <br />
 
     <div id="start-buttons" class="center-horizontally" style="margin-top: 10px;">
-      <button id="record" class="button is-primary equal-pad" style="margin: 1px min(5px, 1.11%);">Record it!</button>
-      <button id="simulate" class="button is-warning equal-pad" style="margin: 1px min(5px, 1.11%);">Play it!</button>
+      <button id="record" class="button is-primary equal-pad" style="margin: 1px min(5px, 1.11%);"></button>
+      <button id="simulate" class="button is-warning equal-pad" style="margin: 1px min(5px, 1.11%);"></button>
     </div>
 
     <hr />
  
     <div id="save-menu" class="center-horizontally">
-      <label for="save-input" class="inline-label">Save-Slot: </label>
+      <label id="save-slot-label" for="save-input" class="inline-label"></label>
       <span class="single-line">
         <span id="input-field" class="inner-save-menu inliner" style="z-index: 2;">
           <input disabled id="save-input" type="text" style="border-color: hsl(171, 100%, 42%)" size="18"/>
@@ -33,21 +33,21 @@
           <button id="expand-saves" onclick="">&#x2B07;</button>
         </span>
         <button id="settings-rec" class="settings">&#9881;&#65039;</button>
-        <button id="delete-recording" class="floating-left-bottom button is-danger is-tiny is-hidden" hidden>DELETE</button>
+        <button id="delete-recording" class="floating-left-bottom button is-danger is-tiny is-hidden" hidden></button>
       </span>
     </div>
     <p id="warning-recording" class="warning-text" hidden></p>
     <hr />
 
     <div id="simulation-menu" class="center-horizontally">
-      <label for="display-field" class="inline-label">Simulation: </label>
+      <label id="sim-select-label" for="display-field" class="inline-label">Simulation: </label>
       <span class="single-line">
         <span id="display-field" class="inner-save-menu inliner" style="z-index: 1;">
           <input disabled id="save-display" type="text" size="18" style="border-color: hsl(48, 100%, 67%);"/>
           <button id="expand-sims" onclick="">&#x2B07;</button>
         </span>
         <button id="settings-sim" class="settings">&#9881;&#65039;</button>
-        <button id="show-details" class="floating-left-bottom button is-warning is-tiny is-hidden">Details</button>
+        <button id="show-details" class="floating-left-bottom button is-warning is-tiny is-hidden"></button>
       </span>
     </div>
     <p id="warning-simulation" class="warning-text" hidden></p>

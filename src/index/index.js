@@ -7,11 +7,10 @@ const expand = document.getElementById("expand-saves");
 let record_input = document.getElementById("save-input");
 
 
-const standardRecordText = "Select recording";
-standardSimulationText = "Select Simulation";
-
-
 // ============================= functionality ===================================
+
+
+let lang_pack = null;
 
 
 const WINDOW_API = {
@@ -29,7 +28,20 @@ const WINDOW_API = {
     get_sim_list: async () => ipcRenderer.invoke('get-simulation-list', null),
     get_sim_info: async () => ipcRenderer.invoke('get-sim-info', null),
     setSimulation: async (filename) => ipcRenderer.invoke('set-simulation', filename),
+
+    getLangPack: async () => ipcRenderer.invoke('get-lang-pack', null)
 }
+
+
+async function getText(key)  {
+    if(!lang_pack)
+        lang_pack = (await WINDOW_API.getLangPack())["index"];
+    return lang_pack[key]
+}
+
+
+const standardRecordText = async () => getText('std-rec-text');
+const standardSimulationText = async () => getText('std-sim-text');
 
 
 const isRecSelected = async () => {
@@ -43,7 +55,7 @@ const startRecording = async () => {
     let inputOff = record_input.hasAttribute("disabled");
     if( await isRecSelected() && inputOff )
         return WINDOW_API.start("record");
-    setRecordWarning("Select a recording slot first.")
+    setRecordWarning(await getText('rec-warning-1')) 
     record.removeAttribute("disabled");
 }
 
@@ -53,7 +65,7 @@ const startSimulate = async () => {
     let selectedSim = await WINDOW_API.get_selected_simulation();
     if( selectedSim.answer && selectedSim.isSuccessful)
         return WINDOW_API.start("simulate")
-    setSimWarning("Select a simulation first.")
+    setSimWarning(await getText('sim-warning-1'))
     simulate.removeAttribute("disabled");
 }
 
@@ -111,22 +123,22 @@ async function registerRecording(filename) {
 }
 
 
-function evaluateNewRecording() {
+async function evaluateNewRecording() {
     result = record_input.value;
-    if(warn_if_not_valid(result)) return;
+    if(await warn_if_not_valid(result)) return;
     hideRecordWarning();
     selectRecording(result.trim());
 }
 
-function warn_if_not_valid(save) {
+async function warn_if_not_valid(save) {
     save = save.trim();
     if(save.length <4 || save.length>20){
-        setRecordWarning("Save must contain between 4 and 20 characters.");
+        setRecordWarning(await getText("rec-warning-2"));
         return true;
     }
     regex = /^[0-9a-zA-Z-_ ]+$/g
     if(!save.match(regex)){
-        setRecordWarning("Save must only contain A-Z, a-z, 0-9, '-', '_' and spaces.");
+        setRecordWarning(await getText("rec-warning-3"));
         return true
     }
     return false
@@ -141,7 +153,7 @@ async function put_selected_recording () {
         toggleRecWarning(answer == 'Careful')
     }
     else
-        setRecordFileInput(standardRecordText)
+        setRecordFileInput(await standardRecordText())
 }
 
 async function put_selected_simulation () {
@@ -149,7 +161,7 @@ async function put_selected_simulation () {
     if(answerObj.isSuccessful && answerObj.answer)
         setSimFileInput(answerObj.answer)
     else
-        setSimFileInput(standardSimulationText)
+        setSimFileInput(await standardSimulationText())
 }
 
 
@@ -164,7 +176,7 @@ async function deleteRecording () {
 
     let result = await WINDOW_API.deleteRecording(recordingName);
     if (!result.isSuccessful)
-        return (result.answer) ? setRecordWarning(`Error: ${result.answer}`) : setRecordWarning(`An internal error occured.`);
+        return (result.answer) ? setRecordWarning(`${await getText("rec-warning-4")}: ${result.answer}`) : setRecordWarning(await getText("rec-warning-5"));
 
     removeSelectOptions();
     setRecordWarning('');
@@ -188,7 +200,7 @@ window.addEventListener('mouseup', function(e){
 const expandRecordFiles = async () => {
     hideRecordWarning();
     let filenames = await getRecordFiles();
-    filenames.unshift("--------&#60; new &#62;--------");
+    filenames.unshift(`--------&#60; ${await getText("new-rec")} &#62;--------`); // new-rec
     let optionButtions = createButtons(filenames, resolveChooseRecordFile, "hover-rec");
     container = createContainer("record");
     addRecordExpansionToDocument(container, optionButtions, "input-field");
@@ -211,7 +223,7 @@ async function selectRecording (filename) {
     let {isSuccessful, answer} = await registerRecording(filename);
     if(!isSuccessful){
         put_selected_recording()
-        return setRecordWarning("Recording couldn't be selected.");
+        return setRecordWarning(await getText("rec-warning-6"));
     }
     setRecordFileInput(filename);
     toggleRecWarning(answer == 'Careful');
@@ -221,7 +233,7 @@ async function selectRecording (filename) {
 
 async function toggleRecWarning(needsWarning){
     if(needsWarning)
-        setRecordWarning("Careful: This save would overwrite an existing instance.");
+        setRecordWarning(await getText("rec-warning-7"));
     else
         hideRecordWarning();
 }
@@ -280,7 +292,7 @@ function hideCheckmark () {
 const expandSimFiles = async () => {
     hideSimWarning();
     let filenames = await getSimFiles();
-    let options = (filenames.length) ? createButtons(filenames, resolveChooseSimFile, "hover-sim") : [getNoOptionsPanel()];
+    let options = (filenames.length) ? createButtons(filenames, resolveChooseSimFile, "hover-sim") : [await getNoOptionsPanel()];
     container = createContainer("simulate");
     addRecordExpansionToDocument(container, options, "display-field");
     container.focus();
@@ -292,10 +304,11 @@ const getSimFiles = async () => {
     return data.answer;
 }
 
-function getNoOptionsPanel() {
+async function getNoOptionsPanel() {
     let div = document.createElement('div');
     div.classList.add('empty-field');
-    div.innerHTML = 'Nothing to see here :/';
+    let text = await getText('no-options');
+    div.innerHTML = text;
     return div;
 }
 
@@ -306,7 +319,7 @@ async function selectSimulation (filename) {
     clearDetails();
     if(!isSuccessful){
         put_selected_simulation()
-        return setSimWarning("Simulation couldn't be selected. " + answer);
+        return setSimWarning((await getText("sim-warning-2")) + answer);
     }
     setSimFileInput(filename);
     hideSimWarning();
@@ -383,25 +396,25 @@ async function showDetailsButton () {
 async function expandDetails () {
     toggleDetailsOption();
     let sim = await WINDOW_API.get_selected_simulation()
-    if (!sim?.answer) return setSimWarning('No details to display.')
+    if (!sim?.answer) return setSimWarning(await getText('no-details'))
 
     let content = await WINDOW_API.get_sim_info();
     if (!content.isSuccessful)
-        return (content.answer) ? setSimWarning(`An error occured while loading the details: ${content.answer}`) : 
-                            setSimWarning(`An internal error occured while loading the details.`);
+        return (content.answer) ? setSimWarning(`${await getText('sim-warning-3')}${content.answer}`) :
+                            setSimWarning(await getText('sim-warning-4'));
     showTable(content.answer)
 }
 
-function showTable (list) {
+async function showTable (list) {
     clearDetails();
     if(!list.length)
         list.push({"title":"-", "process":"-"})
     let div = document.createElement('div');
     let h4 = document.createElement('h4');
-    let table = createDetailsTable(list);
+    let table = await createDetailsTable(list);
 
     div.id = 'details-table';
-    h4.innerHTML = "Included Windows for Simulation"
+    h4.innerHTML = await getText('h4');
     h4.style['text-decoration'] = "underline";
 
     div.appendChild(h4);
@@ -415,10 +428,10 @@ const clearDetails = () => {
 }
 
 
-function createDetailsTable (content) {
+async function createDetailsTable (content) {
     let table = createTable();
     let tbody = document.createElement('tbody')
-    let header = createTableHeader();
+    let header = await createTableHeader();
     tbody.appendChild(header);
     content.forEach((e) => tbody.appendChild(getDetailsRow(e)), content);
     table.appendChild(tbody);
@@ -436,13 +449,13 @@ function createTable () {
 }
 
 
-function createTableHeader () {
+async function createTableHeader () {
     let row = document.createElement('tr');
     let title = document.createElement('th');
     let process = document.createElement('th');
 
-    title.innerHTML = "<center>Title</center>";
-    process.innerHTML = "<center>From Process</center>"
+    title.innerHTML = `<center>${await getText('table-title')}</center>`;
+    process.innerHTML = `<center>${await getText('table-process')}</center>`
     process.style["wordBreak"] = "break-word";
     row.appendChild(title);
     row.appendChild(process);
@@ -500,10 +513,21 @@ function createContainer (purpose) {
 }
 
 
+async function add_innerHTML () {
+    document.getElementById('title').innerHTML = await getText('title');
+    document.getElementById('record').innerHTML = await getText('record');
+    document.getElementById('simulate').innerHTML = await getText('simulate');
+    document.getElementById('save-slot-label').innerHTML = await getText('save-select-label');
+    document.getElementById('delete-recording').innerHTML = await getText('delete');
+    document.getElementById('sim-select-label').innerHTML = await getText('sim-select-label');
+    document.getElementById('show-details').innerHTML = await getText('details');
+}
+
 
 main:
 {
     addClickEvents();
     put_selected_recording();
     put_selected_simulation();
+    add_innerHTML();
 }

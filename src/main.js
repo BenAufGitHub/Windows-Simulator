@@ -135,10 +135,10 @@ function saveSettings(language, screenshots, checkWins) {
 // ------------------------ Configs ------------------------------
 
 ipcMain.on("init-with-configs", (event, lang) => {
-  if(!(["english", "german"]).includes(lang))
-    lang = "english"
-  confManager.createConfigs(lang)
-  createFirstWindow()
+  if(!(["en", "de"]).includes(lang))
+    lang = "en";
+  confManager.createConfigs(lang);
+  createFirstWindow();
 })
 
 
@@ -279,6 +279,13 @@ ipcMain.handle('delete-all-saves', (e,a) => {
 
 ipcMain.handle('get-app-settings', async (e,a) => {
   return settings.appConfigs
+})
+
+ipcMain.handle('get-lang-pack', async (e, lang) => {
+  if(!lang)
+    lang = settings.appConfigs['customizable']['language']
+    let raw_data = fs.readFileSync(`./resources/language/${lang}.json`)
+    return JSON.parse(raw_data)
 })
 
 

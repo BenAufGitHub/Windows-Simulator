@@ -36,8 +36,8 @@ function processResults (lang, source) {
 }
 
 function addClickEvents () {
-    english.onclick = () => processResults("english", english);
-    german.onclick = () => processResults("german", german);
+    english.onclick = () => processResults("en", english);
+    german.onclick = () => processResults("de", german);
 }
 
 function main () {
