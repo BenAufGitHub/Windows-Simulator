@@ -10,6 +10,7 @@
 !/resources/start_capture/.gitkeep
 !/resources/resolves/.gitkeep
 !/resources/protocolConversion.js
+!/resources/language/**
 
 programs/capturer/install/**
 programs/capturer/logs/**

@@ -1,0 +1,30 @@
+{
+    "index": {
+        "title": "Win-Simulationen",
+        "record": "Nehme auf!",
+        "simulate": "Spiele es ab!",
+        "save-select-label": "Platzhalter: ",
+        "delete": "LÖSCHEN",
+        "sim-select-label": "Simulation: ",
+        "details": "Details",
+        "sim-warning-1": "Wähle zuerst eine Simulation aus.",
+        "sim-warning-2": "Simulation konnte nicht ausgewählt werden. ",
+        "sim-warning-3": "Während des Ladens der Details ist ein Fehler aufgetreten: ",
+        "sim-warning-4": "Ein interner Fehler ist während des Detailaufrufs aufgetreten.",
+        "rec-warning-1": "Wähle zuerst einen Platzhalter zum Speichern der Aufnahme.",
+        "rec-warning-2": "Name muss 4-20 Zeichen lang sein.",
+        "rec-warning-3": "Name darf ausschließlich A-Z, a-z, 0-9, '-', '_' und Leertasten enthalten.",
+        "rec-warning-4": "Fehler",
+        "rec-warning-5": "Ein interner Fehler ist aufgetreten.",
+        "rec-warning-6": "Aufnahme konnte nicht ausgewählt werden.",
+        "rec-warning-7": "Warnung: Aufnahme würde bereits gespeicherte Aufnahme überschreiben.",
+        "no-options": "Nichts zu sehen :/",
+        "no-details": "Keine Details zum Anzeigen.",
+        "h4": "In der Simulation benutzte Fenster",
+        "table-title": "Titel",
+        "table-process": "vom Prozess",
+        "new-rec": "Neu",
+        "std-rec-text": "Wähle Aufnahme",
+        "std-sim-text": "Wähle Simulation"
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "index": {
+        "title": "Win-Simulator",
+        "record": "Record it!",
+        "simulate": "Play it!",
+        "save-select-label": "Save-Slot: ",
+        "delete": "DELETE",
+        "sim-select-label": "Simulation: ",
+        "details": "Details",
+        "sim-warning-1": "Select a simulation first.",
+        "sim-warning-2": "Simulation couldn't be selected. ",
+        "sim-warning-3": "An error occured while loading the details: ",
+        "sim-warning-4": "An internal error occured while loading the details.",
+        "rec-warning-1": "Select a recording slot first.",
+        "rec-warning-2": "Save must contain between 4 and 20 characters.",
+        "rec-warning-3": "Save must only contain A-Z, a-z, 0-9, '-', '_' and spaces.",
+        "rec-warning-4": "Error",
+        "rec-warning-5": "An internal error occured.",
+        "rec-warning-6": "Recording couldn't be selected.",
+        "rec-warning-7": "Careful: This save would overwrite an existing instance.",
+        "no-options": "Nothing to see here :/",
+        "no-details": "No details to display.",
+        "h4": "Included Windows for Simulation",
+        "table-title": "Title",
+        "table-process": "From Process",
+        "new-rec": "new",
+        "std-rec-text": "Select Recording",
+        "std-sim-text": "Select Simulation"
+    }
+}
