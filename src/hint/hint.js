@@ -13,8 +13,15 @@ async function fillParagraph() {
     p.innerHTML = `<center>${reason}</center>`;
 }
 
+async function addInnerHTML () {
+    lang_pack = await ipcRenderer.invoke('get-lang-pack', null);
+    document.getElementById("title").innerHTML = lang_pack["hint"]["title"];
+    document.getElementById('ok').innerHTML = lang_pack["hint"]["continue"];
+}
+
 start:
 {
-    fillParagraph()
-    continueButton.onclick = () => WINDOW_API.loadMenu()
+    fillParagraph();
+    continueButton.onclick = () => WINDOW_API.loadMenu();
+    addInnerHTML();
 }
