@@ -57,5 +57,13 @@
         "show": "show",
         "retry": "Retry",
         "skip-empty": "Skip"
+    },
+    "settings": {
+        "title": "Settings - Win-Simulator",
+        "check-label": "Checking/Matching windows",
+        "scr-label": "Take screenshots of windows",
+        "del-saves": "Delete all Saves",
+        "del-cache": "Delete cache",
+        "save-back": "Save & Back"
     }
-}
+}   

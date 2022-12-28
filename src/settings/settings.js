@@ -15,6 +15,7 @@ function main () {
     document.getElementById('save-back').onclick = saveAndBack;
     setupButtonCMDS();
     controlInputs();
+    addInnerHTML();
 }
 
 async function controlInputs () {
@@ -73,6 +74,20 @@ async function deleteCache () {
     toggleButtons(false);
     let answer = await ipcRenderer.invoke('delete-cache', null);
     toggleButtons(true);
+}
+
+function setText(id, lPack) {
+    document.getElementById(id).innerHTML = lPack["settings"][id];
+}
+
+async function addInnerHTML () {
+    let langPack = await ipcRenderer.invoke('get-lang-pack', null);
+    setText("title", langPack);
+    setText("check-label", langPack);
+    setText("scr-label", langPack);
+    setText("del-saves", langPack);
+    setText("del-cache", langPack);
+    setText("save-back", langPack);
 }
 
 window.onbeforeunload = () => {

@@ -57,5 +57,13 @@
         "show": "zeigen",
         "retry": "Wiederholen",
         "skip-empty": "Überspringen"
+    },
+    "settings": {
+        "title": "Einstellungen - Win-Simulationen",
+        "check-label": "Fenster zuordnen & kontrollieren",
+        "scr-label": "Screenshots von Fenstern machen",
+        "del-saves": "Alle Aufnahmen löschen",
+        "del-cache": "Cache löschen",
+        "save-back": "Speichern & zurück"
     }
 }

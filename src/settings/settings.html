@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Settings - Win-Simulator</title>
+        <title id="title"></title>
         <link
             rel="stylesheet"
             href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"
@@ -11,7 +11,7 @@
     </head>
     <body>
         <div id="window-check-div" class="cdiv">
-            <label style="color: white;" for="toggle-check">Checking/Matching windows</label>
+            <label id="check-label" style="color: white;" for="toggle-check"></label>
             <label class="switch spacing-left">
                 <input id="toggle-check" type="checkbox" name="check1">
                 <span class="slider round"></span>
@@ -19,7 +19,7 @@
         </div>
         <hr/>
         <div id="screenshots-div" class="cdiv">
-            <label style="color: white;" for="toggle-screen">Take screenshots of windows</label>
+            <label id="scr-label" style="color: white;" for="toggle-screen"></label>
             <label class="switch spacing-left">
                 <input id="toggle-screen" type="checkbox" name="check2">
                 <span class="slider round"></span>
@@ -35,15 +35,15 @@
         </div>
         <hr/>
         <div id="saves-div" class="cdiv">
-            <button id="del-saves" class="button is-warning is-small same-padding is-outlined">Delete all Saves</button>
+            <button id="del-saves" class="button is-warning is-small same-padding is-outlined"></button>
         </div>
         <hr/>
         <div id="cache-div" class="cdiv">
-            <button id="del-cache" class="button is-warning is-small same-padding is-outlined">Delete cache</button>
+            <button id="del-cache" class="button is-warning is-small same-padding is-outlined"></button>
         </div>
         <hr/>
          <div id="back-div" class="cdiv">
-            <button id="save-back" class="button is-primary is-medium">Save & Back</button>
+            <button id="save-back" class="button is-primary is-medium"></button>
          </div>
     </body>
 </html>
