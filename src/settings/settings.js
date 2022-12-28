@@ -24,7 +24,7 @@ async function controlInputs () {
 
 
 function preToggleInputs (configs) {
-    document.getElementById('lang-in').checked = (configs["customizable"]["language"] == 'german')
+    document.getElementById('lang-in').checked = (configs["customizable"]["language"] == 'de')
     document.getElementById('toggle-screen').checked = configs["customizable"]["takeScreenshots"]
     document.getElementById('toggle-check').checked = configs["customizable"]["controlWindows"]
 }
