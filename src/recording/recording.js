@@ -19,3 +19,12 @@ btn.onclick = () => {
 
     setTimeout(reportError, 5000);
 }
+
+
+async function addInnerHTML () {
+    let lang_pack = await ipcRenderer.invoke('get-lang-pack', null);
+    document.getElementById('title').innerHTML = lang_pack["recording"]["title"];
+    document.getElementById('pause').innerHTML = lang_pack["recording"]["pause"];
+}
+
+addInnerHTML();

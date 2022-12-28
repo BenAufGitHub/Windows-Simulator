@@ -36,5 +36,9 @@
         "instructions": "Drücke \"F2\" zum fortfahren",
         "resume": "Fortsetzen",
         "stop": "Beenden"
-    }   
+    },
+    "recording": {
+        "title": "Aufnehmen... - Win-Simulationen",
+        "pause": "Pausieren"
+    }
 }

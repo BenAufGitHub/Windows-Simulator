@@ -36,5 +36,9 @@
         "instructions": "Press \"F2\" to resume",
         "resume": "Resume",
         "stop": "Finish"
-    }   
+    },
+    "recording": {
+        "title": "Recording... - Win-Simulator",
+        "pause": "Pause"
+    }
 }
