@@ -26,5 +26,9 @@
         "new-rec": "Neu",
         "std-rec-text": "Wähle Aufnahme",
         "std-sim-text": "Wähle Simulation"
-    }
+    },
+    "hint": {
+        "title": "Etwas ist schiefgegangen... - Win-Simulationen",
+        "continue": "Weiter"
+    }  
 }

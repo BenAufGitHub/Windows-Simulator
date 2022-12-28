@@ -26,5 +26,9 @@
         "new-rec": "new",
         "std-rec-text": "Select Recording",
         "std-sim-text": "Select Simulation"
-    }
+    },
+    "hint": {
+        "title": "Something unexpected happened... - Win-Simulator",
+        "continue": "Continue"
+    }    
 }
