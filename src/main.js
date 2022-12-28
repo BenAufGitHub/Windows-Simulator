@@ -17,7 +17,6 @@ const settings = {
   processState: null,         // going / idle
   selectedWindow: 'index',    // index / recording / pause
   process: null,              // the pyBridge
-  latestInfo: null,           // will be displayed on .\\hint\\hint.html
   appConfigs: null,
 }
 
@@ -209,8 +208,7 @@ function processSpecialEnd(reason) {
   if(settings.selectedWindow === 'hint') return;
   settings.selectedWindow = 'hint'
   settings.processState = null
-  settings.latestInfo = reason
-  open(".\\hint\\hint.html", null, null)
+  window.loadFile(".\\src\\hint\\hint.html", {"query":{"data": reason}});
   window.restore()
   window.setSize(600, 450)
 }

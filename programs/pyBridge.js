@@ -193,6 +193,7 @@ function initIpcPython () {
     child.stderr.on("data", (data) => {
         console.log("An error occured in Python Child:")
         console.log(data.toString())
+        sendCommandUpwards("special-end 1", "py")
     })
 }
 
@@ -214,7 +215,7 @@ function processPyMsg(msg) {
         }
         processPyAnswer(id, arg1, arg2)
     } catch (e) {
-        if(!(e instanceof FormatError)) throw e
+        if(!(e instanceof FormatError)) return sendCommandUpwards("special-end 2", "bridge")
         let id = tryGetID(msg)
         if(id==-1) return
         if(id<2) return console.log(`Faulty py-msg, can't convert: ${msg}`)

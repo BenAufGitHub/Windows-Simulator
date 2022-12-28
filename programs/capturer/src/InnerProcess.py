@@ -642,7 +642,7 @@ class InputHandler:
             callback()
         except Exception:
             sys.stderr.write(traceback.format_exc())
-            end_on_warning = lambda: JSONHandler.stop_exec(True, self.process, "An error occured while receiving input.")
+            end_on_warning = lambda: JSONHandler.stop_exec(True, self.process, "3")
             threading.Thread(target=end_on_warning, daemon=True).start()
 
 

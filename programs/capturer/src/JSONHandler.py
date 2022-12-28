@@ -224,7 +224,7 @@ def get_mouse_click_func(obj, controller, simulator, _ignoreMatching=False):
 
     if obj["windex"]>= 0 and not WindowReproducer.has_handle(obj["windex"]):
             return lambda: None, []
-    func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "Error: Wrong window position detected.")
+    func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "4")
     Thread(target=func).start()
     return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
 

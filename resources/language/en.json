@@ -65,5 +65,12 @@
         "del-saves": "Delete all Saves",
         "del-cache": "Delete cache",
         "save-back": "Save & Back"
+    },
+    "errors": {
+        "0": "Error: ",
+        "1": "An error occured. Code #1",
+        "2": "An error occured. Code #2",
+        "3": "An error occured while receiving input.",
+        "4": "Error: Wrong window position detected."
     }
 }   

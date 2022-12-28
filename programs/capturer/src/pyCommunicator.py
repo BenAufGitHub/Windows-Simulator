@@ -90,7 +90,7 @@ def _resolve_and_ready_up_windows(quality_assurance, then):
         quality_assurance.resolve_and_ready_up_windows(then)
     except Exception as e:
         exc_str = str(e).replace('\r', ' ')
-        print_cmd(f'special-end Error: {exc_str}')
+        print_cmd(f'special-end {exc_str}')
         revert_simulation_start()
         raise e
 
