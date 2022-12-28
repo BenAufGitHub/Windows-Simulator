@@ -30,5 +30,11 @@
     "hint": {
         "title": "Etwas ist schiefgegangen... - Win-Simulationen",
         "continue": "Weiter"
-    }  
+    },
+    "pause": {
+        "title": "Pausiert... - Win-Simulationen",
+        "instructions": "Drücke \"F2\" zum fortfahren",
+        "resume": "Fortsetzen",
+        "stop": "Beenden"
+    }   
 }
