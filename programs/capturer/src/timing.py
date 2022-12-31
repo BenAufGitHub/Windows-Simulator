@@ -80,6 +80,7 @@ class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
     def sleep_until_instruction(self, amount):
         try:
             return self._sleep_until_instruction(amount)
+        except SystemExit: pass
         except Exception as e:
             get_exc = traceback.format_exc()
             sys.stderr.write(get_exc)

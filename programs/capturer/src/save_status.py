@@ -278,6 +278,7 @@ class WindowReproducer():
         try:
             if win.is_minimized(): return
             win.minimize()
+        except SystemExit: pass
         except Exception as e:
             sys.stderr.write(traceback.format_exc())
             sys.stderr.flush()

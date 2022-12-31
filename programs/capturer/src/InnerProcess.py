@@ -197,6 +197,15 @@ class ReproducerQA():
         return self._select_later(problem_pools, queue, process, iterator, solution, then, pos)
 
     
+    def resolve_wrapper(self, arg):
+        try:
+            self._resolve_cb(arg)
+        except SystemExit: pass
+        except Exception:
+            sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
+            self.print_cmd("special-end 5")
+
+
     # ===== resolving goes async ===>
 
     
@@ -297,7 +306,7 @@ class ReproducerQA():
             response = json.loads(file.read())
             answer = int(response["result"]) if type(response["result"]) is int else bool(response["result"])
         self._delete_cache_files(id)
-        threading.Thread(target=lambda:self._resolve_cb(answer)).start()
+        threading.Thread(target=lambda:self.resolve_wrapper(answer)).start()
         
 
     def _delete_cache_files(self, id):
@@ -356,7 +365,7 @@ class Simulator(InnerProcess):
         self.timer.register_resume()
         self.state = "running"
         self.ready = True
-        self.init_simulation(self.simulation_wrapper)
+        self.init_simulation(lambda: self.fail_safe(self.simulation_wrapper))
 
 
     # override
@@ -372,7 +381,8 @@ class Simulator(InnerProcess):
         if not self.simulate_later: return
         func = self.simulate_later
         self.simulate_later = None
-        self.init_simulation(lambda: self.simulation_wrapper(callback=func))
+        failable = lambda: self.simulation_wrapper(callback=func)
+        self.init_simulation(lambda: self.fail_safe(failable))
 
 
     def complete_before_end(self, flush):
@@ -405,6 +415,17 @@ class Simulator(InnerProcess):
         t.start()
 
 
+    def fail_safe(self, cb):
+        try:
+            return cb()
+        except SystemExit:
+            pass
+        except Exception:
+            sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
+            print("1 special-end 6", flush=True)
+            threading.Thread(target=lambda: self.request("stop", flush=False)).start()
+
+
     # the simulation wrapper takes the first simulation command and if it receives a comand back, it goes on with that
     # problem solved: when application is paused, the method terminates, but it is recalled on resume, which means no infinite loops waiting for a resumption (reduces power consumption a lot)
     # advantage: before, the events were chained, which led to a recursion-depth-error
@@ -420,7 +441,8 @@ class Simulator(InnerProcess):
         if index == len(self.storage) or self.state=='stop':
             self.request('stop', flush=True)
         elif self.state=='pause':
-            self.simulate_later = lambda: self.simulate_events(index=index)
+            func = lambda: self.simulate_events(index)
+            self.simulate_later = lambda: self.fail_safe(func)
         else:
             return self._simulate_no_outer_pause(index)
     
@@ -430,9 +452,10 @@ class Simulator(InnerProcess):
         is_done = self.timer.sleep_until_instruction(max(out_time, 0))
         if is_done:
             self._get_instruction(index)()
-            return lambda: self.simulate_events(index=index+1)
+            return lambda: self.simulate_events(index+1)
         # pause inside of timer module, lambda method will be picked up later on resume
-        self.simulate_later = lambda: self._get_async_timer_callback(index)
+        func = lambda: self._get_async_timer_callback(index)
+        self.simulate_later = lambda: self.fail_safe(func)
 
 
     def _get_exec_time(self, index):
@@ -448,8 +471,8 @@ class Simulator(InnerProcess):
         is_done = self.timer.sleep_async()
         if is_done:
             self._get_instruction(unfinished_index)()
-            return lambda: self.simulate_events(index=unfinished_index+1)
-        self.simulate_later = lambda: self._get_async_timer_callback(unfinished_index)
+            return lambda: self.simulate_events(unfinished_index+1)
+        return lambda: self._get_async_timer_callback(unfinished_index)
 
 
 # <=============================== end ============================================
@@ -484,7 +507,7 @@ class Recorder(InnerProcess):
         self.init_screenshots()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
-        self.storage = JSONHandler.JSONStorage(_takeScreenshots=takeScreenshots)
+        self.storage = JSONHandler.JSONStorage(self, _takeScreenshots=takeScreenshots)
         self.in_handler = InputHandler(self)
         self.round_to = 3
         self.ctrlW = ctrlW == 'true'
@@ -640,8 +663,9 @@ class InputHandler:
     def _fail_safe(self, callback):
         try:
             callback()
+        except SystemExit: pass
         except Exception:
-            sys.stderr.write(traceback.format_exc())
+            sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
             end_on_warning = lambda: JSONHandler.stop_exec(True, self.process, "3")
             threading.Thread(target=end_on_warning, daemon=True).start()
 
@@ -656,7 +680,9 @@ class KillableThread(threading.Thread):
     def run(self):
         # target function of the thread class
         try:
-            self.callback()
+            func = self.callback
+            func()
+        except SystemExit: pass
         except:
             exc = traceback.format_exc()
             sys.stderr.write(exc)

@@ -88,11 +88,10 @@ def threaded_simulation_start(quality_assurance, process):
 def _resolve_and_ready_up_windows(quality_assurance, then):
     try:
         quality_assurance.resolve_and_ready_up_windows(then)
-    except Exception as e:
-        exc_str = str(e).replace('\r', ' ')
-        print_cmd(f'special-end {exc_str}')
+    except Exception:
+        sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
+        print_cmd(f'special-end 5')
         revert_simulation_start()
-        raise e
 
 
 def revert_simulation_start():

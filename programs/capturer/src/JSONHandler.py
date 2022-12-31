@@ -1,6 +1,6 @@
 from pynput.mouse import Controller, Button
 from pynput.keyboard import Key
-import json, time
+import json, time, sys, traceback
 from save_status import WindowSaver, WinUtils, WindowReproducer
 from threading import Thread
 import win32api, win32con
@@ -16,28 +16,42 @@ class MetaData:
 
 class JSONStorage:
 
-    def __init__(self, _takeScreenshots='true'):
+    def __init__(self, process, _takeScreenshots='true'):
         mouse_clicks, mouse_scrolls, mouse_moves, key_presses, commands = [], [], [], [], []
         self.containers = ["mouse_clicks", "mouse_scrolls", "mouse_moves", "key_presses", "commands"]
         self.data = [mouse_clicks, mouse_scrolls, mouse_moves, key_presses, commands]
         self.manual_releases = []
         self.controller = Controller()
         self._scr = _takeScreenshots == 'true'
+        self.process = process
 
-    def add_mouse_click(self, button: str, time: float, pressed: bool, point, record_path): 
+    
+    def fail_safe(self, callback):
+        try:
+            callback()
+        except SystemExit: pass
+        except:
+            Thread(target=lambda: stop_exec(True, self.process, 3), daemon=True).start()
+            sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
+
+
+    def add_mouse_click(self, button: str, time: float, pressed: bool, point, record_path, _safe=False):
         click_instance = {"action": "click", "name": button, "time": time, "args": [pressed, point[0], point[1]]}
         if pressed:
-            Thread(target=lambda: self.append_with_windex(point, click_instance, record_path)).start()
+            func = lambda: self.append_with_windex(point, click_instance, record_path)
+            Thread(target=lambda: self.fail_safe(func)).start()
         else:
             click_instance["windex"] = -2
             self.data[0].append(click_instance)
+
 
     def append_with_windex(self, point, click_instance, record_path):
         windex = WindowSaver.get_window_number(WinUtils.get_top_from_point(point[0], point[1]).handle)
         if windex >= 0 and not ClickInfo().clicked_contains(windex):
             ClickInfo().add_clicked_windex(windex)
             if not self._scr: return
-            Thread(target=lambda: WindowSaver().save_screenshot(windex, record_path)).start()
+            func = lambda: WindowSaver().save_screenshot(windex, record_path)
+            Thread(target=lambda: self.fail_safe(func)).start()
         click_instance["windex"] = windex
         self.data[0].append(click_instance)
 
@@ -83,7 +97,7 @@ def trim_shift(storage: JSONStorage):
     data = storage.data[3]
     for i in range(len(data) - 1, -1, -1):
         if data[i]["name"] == "shift":
-            data.pop(i);
+            data.pop(i)
         else:
             return
 

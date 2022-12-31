@@ -192,7 +192,11 @@ function initIpcPython () {
 
     child.stderr.on("data", (data) => {
         console.log("An error occured in Python Child:")
-        console.log(data.toString())
+        msg = data.toString();
+        if(msg.indexOf('ONLY-DISPLAY') == 0) {
+            return console.log(msg.replace('ONLY-DISPLAY', ''))
+        }
+        console.log(msg)
         sendCommandUpwards("special-end 1", "py")
     })
 }
