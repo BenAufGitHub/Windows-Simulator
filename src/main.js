@@ -209,6 +209,7 @@ function processSpecialEnd(reason) {
   settings.selectedWindow = 'hint'
   settings.processState = null
   window.loadFile(".\\src\\hint\\hint.html", {"query":{"data": reason}});
+  window.minimize()
   window.restore()
   window.setSize(600, 450)
 }
