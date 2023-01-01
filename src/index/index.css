@@ -185,6 +185,17 @@ table tr td:nth-child(2), table tr th:nth-child(2) {
   color: black;
 }
 
+#button-to-info {
+  line-height: 0px;
+  float: right;
+  margin-right: 10px;
+  font-size: 18px;
+  height: 28px;
+  width: 32px;
+  overflow: hidden;
+  color: black;
+}
+
 #settings-bar {
   margin: 0px;
 }
