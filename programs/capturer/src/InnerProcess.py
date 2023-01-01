@@ -28,8 +28,10 @@ class InnerProcess:
 
     def stop_threads(self):
         for t in self.threads:
-            t.stop()
-            t.join()
+            try:
+                t.stop()
+                t.join()
+            except RuntimeError: pass
 
     # flush: whether accepted requests should be spread with print_cmd(cmd) - done so if request comes from Innerprocess itself
     # return: bool whether accepted or not
