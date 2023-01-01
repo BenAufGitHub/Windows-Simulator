@@ -2,9 +2,13 @@ from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_i
 import win32gui, win32con
 import win32api, ctypes
 import win32process
-import json, time, sys, traceback
+import json, time, sys, traceback, _ctypes
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
+
+class WindowNotExistant(Exception):
+    pass
 
 class Constants:
     def __init__(self):
@@ -49,11 +53,16 @@ class WindowSaver:
         WindowSaver._window_dict[handle] = number
 
 
-    def save_current_win_status(self, path):
-        wins = WinUtils.get_ordered_wins()
-        for index, win in enumerate(wins):
-            WindowSaver.set_window_number(win.handle, index)
-        self._enter_windows_into_file(wins, path)
+    def save_current_win_status(self, path) -> bool:
+        try:
+            wins = WinUtils.get_ordered_wins()
+            for index, win in enumerate(wins):
+                WindowSaver.set_window_number(win.handle, index)
+            self._enter_windows_into_file(wins, path)
+            return True
+        except _ctypes.COMError as e:
+            if e.hresult == -2147220991: return False
+            raise e
 
 
 
@@ -176,12 +185,6 @@ class WindowReproducer():
     def set_window_handle(number, handle):
         WindowReproducer._window_dict[number] = handle
     
-    def reproduce_window_states(self):
-        self._minimize_all_windows()
-        with open(Constants().get_savename(), "r") as file:
-            windows = json.loads(file.readline())
-            found_windows = WinUtils.get_ordered_wins()
-            self._replicate_window_pool(windows, found_windows)
 
     def get_unresolved_pools(self, path):
         # list entries: [list process_name_saved, list process_name_available]
@@ -229,30 +232,6 @@ class WindowReproducer():
 
     def replicate_map(self, mapping):
         self._replicate_full_map(mapping)
-
-
-    def _replicate_window_pool(self, windows, found_windows):
-        window_mapping = dict()
-        while(windows):
-            win0 = windows.pop()
-            process0 = win0["process"].lower()
-            # find window with same process name, hoping the '*' works as spread fine
-            recorded_wins_from_process = [win0, *(self._pop_wins_from_process(process0, windows))]
-            available_wins_from_process = self._pop_available_from_pool(process0, found_windows)
-            self._match(recorded_wins_from_process, available_wins_from_process, window_mapping)
-        self._replicate_full_map(window_mapping)
-    
-
-    def _match(self, recorded_wins, available_wins, window_mapping):
-        print("Matching windows from process: " + recorded_wins[0]["process"])
-        for win in recorded_wins:
-            if not available_wins: return
-            print(f"Looking for '{win['name']}' with available matches:")
-            for i, win2 in enumerate(available_wins):
-                print(f"{i}: {win2.window_text()}")
-            str_num = input("Enter the number of the window you want to match: ")
-            num = int(str_num)
-            window_mapping[win["z_index"]] = (win, available_wins.pop(num))
         
 
     def _replicate_full_map(self, window_mapping):
@@ -280,7 +259,7 @@ class WindowReproducer():
             win.minimize()
         except SystemExit: pass
         except Exception as e:
-            sys.stderr.write(traceback.format_exc())
+            sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
             sys.stderr.flush()
 
 
@@ -316,11 +295,14 @@ class WindowReproducer():
         WindowReproducer.set_window_handle(win["z_index"], active_win.handle)
         WindowReproducer._hwnd_values.append(active_win.handle)
         # if process has been eliminated during this process
-        if active_win.element_info.process_id == None: return
-        if win["max"]:
-            return self._reproduceMaximized(active_win)
-        self.win_to_normalised_rect(active_win, win["coordinates"][0], win["coordinates"][1], win["dimensions"][0], win["dimensions"][1])
-
+        if active_win.element_info.process_id == None: raise WindowNotExistant()
+        try:
+            if win["max"]: 
+                return self._reproduceMaximized(active_win)
+            self.win_to_normalised_rect(active_win, win["coordinates"][0], win["coordinates"][1], win["dimensions"][0], win["dimensions"][1])
+        except _ctypes.COMError as e:
+            if e.hresult != -2147220991: raise e
+            raise WindowNotExistant()
 
     def _reproduceMaximized(self, active_win):
         active_win.minimize()
@@ -359,17 +341,21 @@ class WindowReproducer():
             print("0 No cached windows to reproduce found while reproducing after pause.", flush=True)
             return
         winlist = WindowSaver.get_cached_wins()
-        self._minimize_all_windows()
-        for i, wininfo in enumerate(reversed(winlist)):
-            if i + wininfo["z"] != len(winlist)-1:
-                print("0 Aborting Window-Reproduction: list not z-ordered", flush=True)
-                return
-            self._replecate_win_after_pause(wininfo)
+        try:
+            self._minimize_all_windows()
+            for i, wininfo in enumerate(reversed(winlist)):
+                if i + wininfo["z"] != len(winlist)-1:
+                    print("0 Aborting Window-Reproduction: list not z-ordered", flush=True)
+                    return
+                self._replecate_win_after_pause(wininfo)
+        except _ctypes.COMError as e:
+            if e.hresult != -2147220991: raise e
+            raise WindowNotExistant()
         WindowSaver.clear_cache_for_pause()
 
 
     def _replecate_win_after_pause(self, wininfo):
-        if wininfo["ref"].element_info.process_id == None: return
+        if wininfo["ref"].element_info.process_id == None: raise WindowNotExistant()
         if wininfo["max"]:
             return self._reproduceMaximized(wininfo["ref"])
         self.win_to_normalised_rect(wininfo["ref"], wininfo["x"], wininfo["y"], wininfo["width"], wininfo["height"])

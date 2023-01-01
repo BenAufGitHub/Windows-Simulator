@@ -4,6 +4,7 @@ import win32gui, win32con
 import win32api
 import win32process
 import time
+import _ctypes
 
 session_hwnd = dict()
 session_names = dict()
@@ -60,11 +61,17 @@ def get_proc_name_by_hwnd(hwnd):
     return win32process.GetModuleFileNameEx(handle, 0)
 
 
-def show_window(hwnd):
-    info = uia_element_info.UIAElementInfo(handle_or_elem=hwnd)
-    wrapper = controls.hwndwrapper.HwndWrapper(info)
-    x, y = win32api.GetCursorPos()
-    win_to_normalised_rect(wrapper, hwnd, x, y)
+# return: True if successful 
+def show_window(hwnd) -> bool:
+    try:
+        info = uia_element_info.UIAElementInfo(handle_or_elem=hwnd)
+        wrapper = controls.hwndwrapper.HwndWrapper(info)
+        x, y = win32api.GetCursorPos()
+        win_to_normalised_rect(wrapper, hwnd, x, y)
+        return True
+    except _ctypes.COMError as e:
+        if e.hresult == -2147220991: return False # window won't be shown no error raised
+        raise e
 
 
 def win_to_normalised_rect(wrapper, hwnd, left, top):

@@ -1,7 +1,7 @@
 import sys, functools, traceback, threading
 import InnerProcess, request_helper, request_lib, ConfigManager
-from save_status import WindowReproducer
-from InnerProcess import ReproducerQA
+from save_status import WindowReproducer, WindowSaver
+from InnerProcess import ReproducerQA, Constants
 print = functools.partial(print, flush=True)
 
 starter_commands = ["simulate", "record"]
@@ -12,6 +12,7 @@ requests = ["exit", "spit", "getWinNames", 'showWindow', "set-recording",
 "get-recording", "get-record-list", "get-simulation", "get-simulation-list", "set-simulation", "delete-recording", "clear-settings"]
 information = ["resolveFinished"]
 
+SUCCESSFUL = True
 process = None
 state_lock = threading.Lock()
 flush_orderly_lock = threading.Lock()
@@ -43,7 +44,7 @@ def throw_if_not_accepted(cmd):
     if (cmd in starter_commands or cmd in process_actions) and in_prep_for_simulation:
         raise CommandNotAccepted(f"'{cmd}' not possible while in preparation for simulation")
     if cmd in starter_commands and get_state() != 'idle':
-       raise CommandNotAccepted("A process is already running")
+        raise CommandNotAccepted("A process is already running")
     if cmd in process_actions and (get_state() == 'idle' or not process):
         raise CommandNotAccepted(f"No process running to execute {cmd} / process not found")
     if cmd in process_actions and cmd == process.state:
@@ -61,10 +62,21 @@ def start_process(cmd, body):
     if cmd == "simulate" and body[0] == 'true':
         start_simulation(process)
         return "DONE"
+    elif cmd == "record" and process.prepare_start() != SUCCESSFUL:
+        process = None
+        return "FAILED"
 
     process.run()
     update_state()
     return "STARTING"
+
+
+def save_current_win_status(self):
+        file = ConfigManager.get_recording()
+        if not file: raise Exception('No recording specified.')
+        path = f"{Constants().get_savename()}{file}.json"
+        WindowSaver().save_current_win_status(path)
+
 
 def start_simulation(process):
     global in_prep_for_simulation, resolve_window
@@ -82,12 +94,16 @@ def threaded_simulation_start(quality_assurance, process):
         update_state()
         print_cmd("start")
         in_prep_for_simulation = False
-    _resolve_and_ready_up_windows(quality_assurance, then=initiate)
+    def cancel():
+        global in_prep_for_simulation, process
+        in_prep_for_simulation = False
+        process = None
+    _resolve_and_ready_up_windows(quality_assurance, then=initiate, failed=cancel)
 
 
-def _resolve_and_ready_up_windows(quality_assurance, then):
+def _resolve_and_ready_up_windows(quality_assurance, then, failed):
     try:
-        quality_assurance.resolve_and_ready_up_windows(then)
+        quality_assurance.resolve_and_ready_up_windows(then, failed)
     except Exception:
         sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
         print_cmd(f'special-end 5')
@@ -130,7 +146,8 @@ def answer_request(cmd, body):
     if cmd == 'getWinNames':
         return list(request_lib.get_filtered_window_collection())
     if cmd == 'showWindow':
-        request_lib.show_window(body)
+        if not request_lib.show_window(body):
+            raise CommandFailure('Window not existing')
         return "DONE"
     if cmd == 'set-recording':
         return ConfigManager.set_recording(body)

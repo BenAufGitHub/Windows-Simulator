@@ -73,6 +73,8 @@
         "3": "Ein Fehler ist während der Eingabe-Speicherung aufgetreten.",
         "4": "Fehler: Falsche Fenster Positionen erkannt.",
         "5": "Ein Fehler ist während der Fenster-Zuordnung aufgetreten.",
-        "6": "Während der Simulation ist ein Fehler aufgetreten."
+        "6": "Während der Simulation ist ein Fehler aufgetreten.",
+        "7": "Die Aufnahme konnte nicht korrekt vorbereitet werden.",
+        "8": "Ein verwendetes Fenster reagiert unerwartet nicht."
     }
 }

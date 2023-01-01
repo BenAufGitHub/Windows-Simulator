@@ -73,6 +73,8 @@
         "3": "An error occured while receiving input.",
         "4": "Error: Wrong window position detected.",
         "5": "An error occured during resolving windows.",
-        "6": "An error occured during the simulation."
+        "6": "An error occured during the simulation.",
+        "7": "The recording could not be prepared correctly.",
+        "8": "A used window was closed unexpectedly."
     }
 }   
