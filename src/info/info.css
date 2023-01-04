@@ -1,0 +1,17 @@
+body, html {
+    margin: 10px;
+    background-color: #872657;
+    color: whitesmoke;
+}
+
+.my-title {
+    color: rgb(51, 145, 134);
+}
+
+#back {
+    width: 100%;
+    background-color: #ac3973;
+    color: whitesmoke;
+    border-width: 1px;
+    border-color: grey;
+}

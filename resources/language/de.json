@@ -76,5 +76,27 @@
         "6": "Während der Simulation ist ein Fehler aufgetreten.",
         "7": "Die Aufnahme konnte nicht korrekt vorbereitet werden.",
         "8": "Ein verwendetes Fenster reagiert unerwartet nicht."
+    },
+    "info": {
+        "title": "Anleitung - Win-Simulationen",
+        "headline": "Alles, was beim Benutzen beachtet werden sollte.",
+        "handling-title": "Steuerung",
+        "handling-1": "Alles wird mit <strong style='color: whitesmoke;'>'F2'</strong> kontrolliert!!",
+        "handling-2": "Die Benutzung ist sehr wichtig, denn sie:",
+        "handling-3": "A: pausiert Aufzeichnung und Simulation und",
+        "handling-4": "B: fährt sie auch wieder fort.",
+        "handling-5": "Nach dem pausieren erscheint ein Fenster, das kann manchmal einen Moment dauern.",
+        "notes-title": "Unbedingt lesen: Wie man es richtig macht...",
+        "notes-p": ["1. Die meisten dieser Regeln gewärhleisten eine Konstanz zwischen Aufnahme und Simulation.", "2. Drücke während Aufnahmen nicht auf das App-Bild, nutze 'F2'.",
+    "3. Vermeide generell die Taskbar und mache wichtige Fenster bereits vor der Aufnahme auf dem Desktop sichtbar.",
+    "4. Mit einigen Systemfenstern kann das Programm eventuell nicht interagieren.", "5. Tippe während der Aufnahme keine Passwörter ein.",
+    "6. Falls benötigt, stelle Admin-Rechte für das Programm sicher.", "7. Stelle falls benötigt eine Internetverbindung sicher.", 
+    "8. Wegen Kompressionen ist die Simulation ungeeignet für besonders schnell aufeinanderfolgende Eingaben, wie etwa bei Videospielen.",
+    "9. Beachte das Ladezeiten variieren können. Plane deshalb besonders bei Online-Aufzeichnungen eine kurze Pause nach Eingaben ein, um sicherzugehen, dass die Ladezeit auch in der Simulation überbrückt wird."],
+        "about-title": "Über:",
+        "general-info": ["geschrieben von Ben Mette.", "Probleme können unter bmette.api@gmail.com behandelt werden.",
+        "Was soll das Programm erreichen: Die Simulation versucht, die Umgebung von der Aufnahme wiederherzustellen, der Benutzer muss sich darum nicht mehr sorgen.",
+        "Wie funktioniert es: Das Programm merkt sich Fenster koordinaten vor dem Start, dann werden sie beim Simulieren dort platziert. Dieses Feature kann deaktiviert werden.",
+        "Es kann vorkommen, dass die Simulation manche Fenster aus der Aufnahme nicht identifizieren kann, daher wird manchmal um eine manuelle Eingabe gebeten."]
     }
 }

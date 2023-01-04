@@ -76,5 +76,27 @@
         "6": "An error occured during the simulation.",
         "7": "The recording could not be prepared correctly.",
         "8": "A used window was closed unexpectedly."
+    },
+    "info": {
+        "title": "How to use the programm - Win-Simulator",
+        "headline": "Everything to keep in mind while using this programm.",
+        "handling-title": "Handling",
+        "handling-1": "Everything is controlled by 'F2'!!",
+        "handling-2": "Using it is important. Pressing it will:",
+        "handling-3": "A: pause a recording or simulation and",
+        "handling-4": "B: resumes them again.",
+        "handling-5": "A window appears after pausing, it may take a moment tho.",
+        "notes-title": "MUST READ: How to get it done...",
+        "notes-p": ["1. Most rules below are to ensure consistency between recording and simulation.", "2. Don't press the App-Icon during recording, use 'F2'",
+    "3. Don't generally use the taskbar, make the important windows visible in preperation for the recording.",
+    "4. Some system windows may not be controllable with this program.", "5. Don't enter any passwords while recording.",
+    "6. If necessary, admin-rights should be secured for the program.", "7. Secure an internet connection if required.", 
+    "8. Due to compression, the simulations are not elligle for high-speed tasks such as video games, tho it is elligble for most normal tasks.",
+    "9. Keep in mind that loading times may vary. Especially with online tasks, do short breaks between inputs to ensure that the loading time will also be overcome in the simulation."],
+        "about-title": "About:",
+        "general-info": ["Authored by Ben Mette.", "Problems can be submitted under bmette.api@gmail.com.",
+        "What does the programm try to achieve: The simulation will try to replicate the conditions from the recording, while you don't have to worry about all this stuff.",
+        "How does it work: The programm saves the positioning of windows before the start, then replicates them in the simulation. This feature can also be deactivated.",
+        "Sometimes the simulation can't find the windows from the recording, so there has to be a manual resolvement."]
     }
 }   
