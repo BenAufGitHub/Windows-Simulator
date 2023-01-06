@@ -1,10 +1,13 @@
 import time, sys
 from Lib import traceback
-from Lib.threading import Thread
+
 
 _print_pause_stats = False
 
 
+'''
+Tracks time from beginning of execution. If a pause is registered, the pause-time  mathematically not accounted for.
+'''
 class SimpleTimeKeeper:
     def __init__(self):
         self.start = time.time()
@@ -30,6 +33,13 @@ class SimpleTimeKeeper:
         return last_exec_time - (self.total_pause + self.start)
 
 
+'''
+    More complex Timer that inherits base functionality of SimpleTimeKeeper.
+    Apart from keeping track of time, it can interrupt the current thread for a certain amount of time (to time an event), while still acounting for pauses while waiting.
+    If the waiting isn't done after the initial time.sleep, it returns False,
+        meaning the caller function is responsible to reactivating the TimeKeeper by calling sleepAsync() after resuming.
+    !!! registerResume() and registerPause() must be invoked by another Thread, as the time-keeper waits synchonously with time.sleep !!!
+'''
 class TaskAwaitingTimeKeeper(SimpleTimeKeeper):
 
     def __init__(self):
