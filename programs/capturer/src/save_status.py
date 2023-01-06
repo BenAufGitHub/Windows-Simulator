@@ -2,7 +2,10 @@ from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_i
 import win32gui, win32con
 import win32api, ctypes
 import win32process
-import json, time, sys, traceback, _ctypes
+
+import json, time, sys, _ctypes
+import Lib.traceback as traceback
+
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 

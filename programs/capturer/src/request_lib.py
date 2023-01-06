@@ -1,8 +1,6 @@
 from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_info
-import pywinauto
-import win32gui, win32con
-import win32api
-import win32process
+import win32gui, win32con, win32api, win32process
+
 import time
 import _ctypes
 

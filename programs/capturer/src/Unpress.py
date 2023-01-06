@@ -1,6 +1,7 @@
 from pynput.keyboard import Key
 from pynput.mouse import Button
 from pynput import keyboard, mouse
+
 import Logger, logging
 import win32api
 

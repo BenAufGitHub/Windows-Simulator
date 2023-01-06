@@ -1,5 +1,6 @@
-import time, traceback, sys
-from threading import Thread
+import time, sys
+from Lib import traceback
+from Lib.threading import Thread
 
 _print_pause_stats = False
 

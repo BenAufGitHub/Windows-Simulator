@@ -1,7 +1,11 @@
-import sys, functools, traceback, threading
+import sys
+from Lib import functools, traceback, threading
+
 import InnerProcess, request_helper, request_lib, ConfigManager
 from save_status import WindowReproducer, WindowSaver
 from InnerProcess import ReproducerQA, Constants
+
+
 print = functools.partial(print, flush=True)
 
 starter_commands = ["simulate", "record"]

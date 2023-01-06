@@ -1,10 +1,15 @@
+import json, time, sys
+import Lib.traceback as traceback
+from Lib.threading import Thread
+import win32api, win32con
+
+from save_status import WindowSaver, WinUtils, WindowReproducer
+from rt import ClickInfo
+
 from pynput.mouse import Controller, Button
 from pynput.keyboard import Key
-import json, time, sys, traceback
-from save_status import WindowSaver, WinUtils, WindowReproducer
-from threading import Thread
-import win32api, win32con
-from rt import ClickInfo
+
+
 
 class MetaData:
     def __init__(self):
