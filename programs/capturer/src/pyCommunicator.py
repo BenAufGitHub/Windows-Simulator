@@ -1,9 +1,10 @@
 import sys
 from Lib import functools, traceback, threading
 
-import InnerProcess, request_helper, request_lib, ConfigManager
+import InnerProcess, request_helper, request_lib
 from save_status import WindowReproducer, WindowSaver
 from InnerProcess import ReproducerQA, Constants
+from utils import ConfigManager
 
 
 print = functools.partial(print, flush=True)

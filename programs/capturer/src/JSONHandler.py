@@ -4,7 +4,7 @@ from Lib.threading import Thread
 import win32api, win32con
 
 from save_status import WindowSaver, WinUtils, WindowReproducer
-from rt import ClickInfo
+from utils.rt import ClickInfo
 
 from pynput.mouse import Controller, Button
 from pynput.keyboard import Key

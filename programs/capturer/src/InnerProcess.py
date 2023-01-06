@@ -1,11 +1,14 @@
 import ctypes, json, os, sys, _ctypes
+from Lib import typing, traceback, threading
+
 from pynput import mouse, keyboard
+
 from JSONHandler import MetaData
 from save_status import WindowSaver, WindowReproducer, Constants, WindowNotExistant
-import JSONHandler, timing, UnicodeReverse, Unpress
-from rt import ClickInfo
-import ConfigManager
-from Lib import typing, traceback, threading
+import JSONHandler
+from utils import  UnicodeReverse, Unpress, ConfigManager, timing
+from utils.rt import ClickInfo
+
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
 class InnerProcess:
