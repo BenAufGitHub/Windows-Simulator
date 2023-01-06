@@ -7,7 +7,7 @@ from JSONHandler import MetaData
 from save_status import WindowSaver, WindowReproducer, Constants, WindowNotExistant
 import JSONHandler
 from utils import  UnicodeReverse, Unpress, ConfigManager, timing
-from utils.rt import ClickInfo
+from utils.rt import ClickInfo, KillableThread
 
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
@@ -702,38 +702,3 @@ class InputHandler:
             sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
             end_on_warning = lambda: JSONHandler.stop_exec(True, self.process, "3")
             threading.Thread(target=end_on_warning, daemon=True).start()
-
-
-
-# class taken from https://www.geeksforgeeks.org/python-different-ways-to-kill-a-thread/
-class KillableThread(threading.Thread):
-    def __init__(self, callback):
-        threading.Thread.__init__(self)
-        self.callback = callback
-             
-    def run(self):
-        # target function of the thread class
-        try:
-            func = self.callback
-            func()
-        except SystemExit: pass
-        except:
-            exc = traceback.format_exc()
-            sys.stderr.write(exc)
-            sys.stderr.flush()
-          
-    def get_id(self):
-        # returns id of the respective thread
-        if hasattr(self, '_thread_id'):
-            return self._thread_id
-        for id, thread in threading._active.items():
-            if thread is self:
-                return id
-  
-    def stop(self):
-        thread_id = self.get_id()
-        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id,
-              ctypes.py_object(SystemExit))
-        if res > 1:
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
-            print('0 Stop-Exception raise failure')
