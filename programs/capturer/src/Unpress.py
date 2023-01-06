@@ -51,10 +51,3 @@ def _release_modifiers():
     c = keyboard.Controller()
     for key in keys:
         c.release(Key[key])
-
-
-if __name__ == "__main__":
-    Logger.config_logging()
-    logging.info("Releasing")
-    logging.warning("Program did not run as expected, modifier keys will be released.")
-    _release_modifiers()
