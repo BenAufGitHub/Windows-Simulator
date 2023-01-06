@@ -38,6 +38,10 @@ def init_if_new():
     init_config_file()
 
 
+
+# ====== base functions ======>
+
+
 def clear():
     obj = load()
     cleared = get_standard_settings()
@@ -53,16 +57,13 @@ def load():
         data = pickle.load(f)
     return data
 
+
 def write(obj):
     with open(filename(), 'wb') as f: 
         pickle.dump(obj, f)
 
-# <==== setupt =====
 
-def save_file_exists(name):
-    directory = "./resources/recordings/"
-    filename = f"{name}.json"
-    return filename in os.listdir(rf'{directory}')
+# ======= get recording =======>
 
 
 def get_recording():
@@ -71,6 +72,27 @@ def get_recording():
         return None
     f = obj["recording"]
     return f[0: f.find(".json")]
+
+
+def get_record_list():
+    obj = load()
+    return add_imported_records(obj["recordingList"])
+
+
+def add_imported_records(saved: list) -> list:
+    result = list()
+    result.extend(saved)
+    directory = "./resources/recordings/"
+    for filename in os.listdir(rf'{directory}'):
+        if filename.find('.json') == -1:
+            continue
+        if not filename.replace('.json', '') in result:
+            result.append(filename.replace('.json', ''))
+    return result
+
+
+# ====== set recording ========>
+
 
 def set_recording(name):
     obj=load()
@@ -90,9 +112,13 @@ def append_recording(obj, name):
     write(obj)
 
 
-def get_record_list():
-    obj = load()
-    return add_imported_records(obj["recordingList"])
+def save_file_exists(name) -> bool:
+    directory = "./resources/recordings/"
+    filename = f"{name}.json"
+    return filename in os.listdir(rf'{directory}')
+
+
+# ====== delete recording =======>
 
 
 def delete_recording(filename):
@@ -122,13 +148,14 @@ def removeRecordingFiles(folder_name, file):
     shutil.rmtree(scpath() + folder_name, ignore_errors=True)
 
 
-
 def ignoreNotFound(io_function):
     try:
         return io_function()
     except FileNotFoundError:
         pass
 
+
+# ====== get simulation =======>
 
 
 def get_simulation_list():
@@ -141,25 +168,16 @@ def get_simulation_list():
     return result
     
 
-
-def add_imported_records(saved: list) -> list:
-    result = list()
-    result.extend(saved)
-    directory = "./resources/recordings/"
-    for filename in os.listdir(rf'{directory}'):
-        if filename.find('.json') == -1:
-            continue
-        if not filename.replace('.json', '') in result:
-            result.append(filename.replace('.json', ''))
-    return result
-
-
 def get_simulation():
     obj = load()
     if not obj["simulation"]:
         return None
     f = obj["simulation"]
     return f[0: f.find(".json")]
+
+
+# ====== set simulation ======>
+
 
 def set_simulation(name):
     obj = load()
@@ -175,6 +193,9 @@ def raise_if_not_found(file):
     if not file in os.listdir(rf'{directory}'):
         raise IOError('File not found')
     
+
+# ====== make ID =======>
+
 
 def assign_resolve_id():
     obj = load()
