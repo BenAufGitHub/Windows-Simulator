@@ -1,3 +1,5 @@
+# This file is for converting unicode (and ctrl-combinations) to letters and backwards.
+
 def convert_from_unicode(name: str) -> str:
     if is_ctrl_unicode(name):
         code = get_unicode_order_from_char(name)
