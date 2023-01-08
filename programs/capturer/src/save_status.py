@@ -329,10 +329,10 @@ class WindowReproducer():
         self._quick_wait(win.is_normal)
 
 
-    def _quick_wait(self, callback):
+    def _quick_wait(self, callback, seconds=0.3):
         t0 = time.time()
         while True:
-            if callback() or time.time()-t0 > 0.1:
+            if callback() or time.time()-t0 > seconds:
                 break
 
 
