@@ -358,7 +358,9 @@ class WindowReproducer():
 
 
     def _replecate_win_after_pause(self, wininfo):
-        if wininfo["ref"].element_info.process_id == None: raise WindowNotExistant()
+        pid = wininfo["ref"].element_info.process_id
+        if not WinUtils.is_normal_win(wininfo["ref"]): return
+        if not pid: raise WindowNotExistant()
         if wininfo["max"]:
             return self._reproduceMaximized(wininfo["ref"])
         self.win_to_normalised_rect(wininfo["ref"], wininfo["x"], wininfo["y"], wininfo["width"], wininfo["height"])
@@ -398,6 +400,7 @@ class WinUtils:
         # if type(win) != 'pywinauto.controls.uiawrapper.UIAWrapper': return
         try:
             proc = WinUtils.get_proc_name_by_hwnd(win.handle)
+            if not proc: return False
             if proc.find("electron.exe") != -1: return False
             return win.get_show_state() != None
         except uia_defines.NoPatternInterfaceError:
@@ -407,6 +410,7 @@ class WinUtils:
     @staticmethod
     def get_proc_name_by_hwnd(hwnd):
         pid = win32process.GetWindowThreadProcessId(hwnd)
+        if not pid[0] or not pid[1]: return
         handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid[1])
         full_name = win32process.GetModuleFileNameEx(handle, 0)
         return WinUtils.filter_exec_title(full_name)

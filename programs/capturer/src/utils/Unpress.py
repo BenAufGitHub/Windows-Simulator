@@ -15,11 +15,12 @@ def key_press_warnings(controller):
 
 
 # puts the cached information onto the given controller object
-def rememeber_pressed(controller):
+def rememeber_pressed(controller, _left=True):
     with controller.modifiers as mods:
         controller.cached_mods = mods
     controller.right_pressed = win32api.GetKeyState(0x02)<0
-    #left press might be accidentally used by clicking electron's icon, so it won't be listed here
+    if _left:
+        controller.left_pressed = win32api.GetKeyState(0x01)<0
 
 
 def press_remembered(controller):
@@ -28,6 +29,8 @@ def press_remembered(controller):
         controller.press(modifier)
     if controller.right_pressed:
         mouse.Controller().press(Button.right)
+    if controller.left_pressed:
+        mouse.Controller().press(Button.left)
     controller.right_pressed = False
     controller.cached_mods = []
 

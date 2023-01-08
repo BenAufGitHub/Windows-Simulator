@@ -387,14 +387,21 @@ class Simulator(InnerProcess):
         self.init_simulation(lambda: self.fail_safe(self.simulation_wrapper))
 
 
+    def keep_mouse_pos(self, instruction_dict):
+        if not "args" in instruction_dict: return
+        self._mouse_pos = instruction_dict["args"][-2], instruction_dict["args"][-1]
+
+
     # override
     def on_pause(self, flush, stop_pause):
         if stop_pause: return
-        Unpress.rememeber_pressed(self.keyboard_controller)
+        Unpress.rememeber_pressed(self.keyboard_controller, _left=True)
         Unpress.release_all()
 
     # override
     def on_resume(self, flush):
+        if self._mouse_pos:
+            self.mouse_controller.position = self._mouse_pos
         Unpress.press_remembered(self.keyboard_controller)
 
         if not self.simulate_later: return
@@ -504,6 +511,7 @@ def exec_cmd_instruction(instruction: dict):
 
 
 def exec_mouse_instruction(instruction: dict, controller, simulator, _ignoreMatching=False):
+    simulator.keep_mouse_pos(instruction)
     func, args = JSONHandler.get_function_from_mouse_object(instruction, controller, simulator, _ignoreMatching)
     func(*args)
 
