@@ -2,15 +2,12 @@ from pynput.keyboard import Key
 from pynput.mouse import Button
 from pynput import keyboard, mouse
 
-import Logger, logging
 import win32api
 
 
 def key_press_warnings(controller):
     with controller.modifiers as modifiers:
         for modifier in modifiers:
-            print(f"Modifier still pressed: {modifier}") # TODO remove if logging is active again
-            logging.warn(f"Modifier still pressed: {modifier}")
             controller.release(modifier)
 
 
