@@ -1,4 +1,4 @@
-from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_info
+from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_info, handleprops
 import win32gui, win32con
 import win32api, ctypes
 import win32process
@@ -116,6 +116,8 @@ class WindowSaver:
 
     def save_windows_for_pause(self):
         WindowSaver._cached_window_positions_for_pause = self._get_current_windows()
+        for item in WindowSaver._cached_window_positions_for_pause:
+            item["has_title"] = len(item["ref"].window_text()) > 0
 
     @staticmethod
     def get_cached_wins():
@@ -359,11 +361,18 @@ class WindowReproducer():
 
     def _replecate_win_after_pause(self, wininfo):
         pid = wininfo["ref"].element_info.process_id
+        self._alert_closed(wininfo["ref"], wininfo["has_title"])
         if not WinUtils.is_normal_win(wininfo["ref"]): return
         if not pid: raise WindowNotExistant()
         if wininfo["max"]:
             return self._reproduceMaximized(wininfo["ref"])
         self.win_to_normalised_rect(wininfo["ref"], wininfo["x"], wininfo["y"], wininfo["width"], wininfo["height"])
+
+    
+    def _alert_closed(self, win, has_title):
+        # if there is no window text, it is assumed it is not a normal window, as previously there have been bugs because of it,
+        if not handleprops.iswindow(win.handle) and has_title:
+            raise WindowNotExistant()
 
 
 # ====================================== UTILS =======================================
