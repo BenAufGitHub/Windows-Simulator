@@ -3,7 +3,7 @@ rt == RunTime
 This files purpose is to keep singleton classes that contain information about the runtime or other runtime specific classes.
 '''
 
-import ctypes, sys
+import ctypes, sys, time
 from Lib import threading, traceback
 
 
@@ -29,7 +29,14 @@ class ClickInfo():
 
     def clicked_contains(self, windex: int) -> bool:
         return windex in self._clicked_wins
-    
+
+
+class MetaData:
+    def __init__(self):
+        self.record_path = "./resources/recordings/"
+        self.window_unassigned_path = "./resources/resolves/"
+        self.auto_time = 0.1
+        self.start_time = time.time()
 
 
 # class taken from https://www.geeksforgeeks.org/python-different-ways-to-kill-a-thread/
