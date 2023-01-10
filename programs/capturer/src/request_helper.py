@@ -1,8 +1,6 @@
-# get windows
-# get pid
-# get closest window in process
 import math
 from utils.Errors import *
+
 
 def split_request(request: str):
     id, remainder = _seperate_id(request)
