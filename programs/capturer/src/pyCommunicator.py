@@ -2,9 +2,9 @@ import sys
 from Lib import functools, traceback, threading
 
 import InnerProcess, request_helper, request_lib
-from save_status import WindowReproducer, WindowSaver
-from InnerProcess import ReproducerQA, Constants
+from save_status import WindowSaver, PathConstants, ReproductionResolver
 from utils import ConfigManager
+from utils.Errors import *
 
 
 print = functools.partial(print, flush=True)
@@ -79,20 +79,19 @@ def start_process(cmd, body):
 def save_current_win_status(self):
         file = ConfigManager.get_recording()
         if not file: raise Exception('No recording specified.')
-        path = f"{Constants().get_savename()}{file}.json"
+        path = f"{PathConstants().get_savename()}{file}.json"
         WindowSaver().save_current_win_status(path)
 
 
 def start_simulation(process):
     global in_prep_for_simulation, resolve_window
     in_prep_for_simulation = True
-    WindowReproducer.reset_handles()
-    qa = ReproducerQA(print_cmd)
-    resolve_window = lambda id: qa.resolveSelection(id)
-    threading.Thread(target=lambda: threaded_simulation_start(qa, process)).start()
+    resolver = ReproductionResolver(print_cmd)
+    resolve_window = lambda id: resolver.process_response(id)
+    threading.Thread(target=lambda: threaded_simulation_start(resolver, process)).start()
 
 
-def threaded_simulation_start(quality_assurance, process):
+def threaded_simulation_start(resolver, process):
     def initiate():
         global in_prep_for_simulation
         process.run()
@@ -103,12 +102,12 @@ def threaded_simulation_start(quality_assurance, process):
         global in_prep_for_simulation, process
         in_prep_for_simulation = False
         process = None
-    _resolve_and_ready_up_windows(quality_assurance, then=initiate, failed=cancel)
+    _resolve_and_ready_up_windows(resolver, then=initiate, failed=cancel)
 
 
-def _resolve_and_ready_up_windows(quality_assurance, then, failed):
+def _resolve_and_ready_up_windows(resolver: ReproductionResolver, then, failed):
     try:
-        quality_assurance.resolve_and_ready_up_windows(then, failed)
+        resolver.resolve_and_ready_up_windows(then, failed)
     except Exception:
         sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
         print_cmd(f'special-end 5')
@@ -180,19 +179,6 @@ def processInformation(cmd, body):
 
 def catchSolutionToWindows(id):
     resolve_window(id)
-
-
-# ------------------- Exceptions ---------------------------------------
-
-
-class InputStop(Exception):
-    pass
-
-class CommandNotAccepted(Exception):
-    pass
-
-class CommandFailure(Exception):
-    pass
 
 
 # --------------------------- Process bubbling ----------------------------------------

@@ -1,11 +1,15 @@
-from pywinauto import Desktop, uia_defines, findwindows, controls, uia_element_info
+from pywinauto import Desktop, uia_defines, controls, uia_element_info
 import win32gui, win32con, win32api, win32process
 
+from Lib.sysconfig import sys
 import time
 import _ctypes
 
 session_hwnd = dict()
 session_names = dict()
+
+
+
 
 def find_window(window_title, process_name):
     windows = Desktop(backend="uia").windows()

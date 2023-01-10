@@ -2,9 +2,7 @@
 # get pid
 # get closest window in process
 import math
-
-class InvalidRequest(Exception):
-    pass
+from utils.Errors import *
 
 def split_request(request: str):
     id, remainder = _seperate_id(request)

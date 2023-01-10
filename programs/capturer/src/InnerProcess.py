@@ -3,8 +3,7 @@ from Lib import typing, traceback, threading
 
 from pynput import mouse, keyboard
 
-from JSONHandler import MetaData
-from save_status import WindowSaver, WindowReproducer, Constants, WindowNotExistant
+from save_status import WindowSaver, PathConstants, WindowNotExistant, PauseDirector
 import JSONHandler
 from utils import  UnicodeReverse, Unpress, ConfigManager, timing
 from utils.rt import ClickInfo, KillableThread
@@ -72,7 +71,7 @@ class InnerProcess:
             self.state = 'pause'
             self.timer.register_pause()
             if not _stop_pause and self.ctrlW:
-                WindowSaver().save_windows_for_pause()
+                PauseDirector().save_windows_for_pause()
             self.on_pause(flush, _stop_pause)
             if flush: self.print_cmd(self.state)
         except _ctypes.COMError as e: 
@@ -88,7 +87,7 @@ class InnerProcess:
     def resume(self, flush=False):
         try:
             if self.ctrlW:
-                WindowReproducer().reproduce_windows_after_pause()
+                PauseDirector().reproduce_windows_after_pause()
             self.state = 'running'
             self.timer.register_resume()
             self.on_resume(flush)
@@ -125,216 +124,6 @@ def config_monitor():
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
 
-
-# ------------------------------------- Reproducer --------------------------------------------------
-
-# ensures that the window is in the same state as it was when the window was recorded, thus Reproducer-Quality-Ensurance
-class ReproducerQA():
-    
-    def __init__(self, command_callback):
-        self.reproducer = WindowReproducer()
-        self.print_cmd = command_callback
-        self._resolve_cb = None
-
-
-
-    # path of currently entered simulation    
-    def _get_path(self):
-        file = ConfigManager.get_simulation()
-        if not file: raise Exception('No simulation file specified.')
-        return f"{Constants().get_savename()}{file}.json"
-        
-    
-
-    # ==== resolve all pools =====>
-
-    
-    # called at beginning of simulation
-    def resolve_and_ready_up_windows(self, then: typing.Callable[..., typing.Any], failed: typing.Callable[..., typing.Any]) -> None:
-        path = self._get_path()
-        problem_pools = self.reproducer.get_unresolved_pools(path)
-        iterator = iter(problem_pools)
-        solution = dict()
-        self._resolve_and_ready_up_windows(problem_pools, iterator, solution, then, failed)
-
-    
-    # keeps a chain of callback (being resolving pools)
-    # if it ends without being finished (StopIteration executed), is has been entered as an async method that is recalled later, when front-end returns answer
-    def _resolve_and_ready_up_windows(self, problem_pools, iterator, solution, then: typing.Callable[..., typing.Any], failed: typing.Callable[..., typing.Any]):
-        try: 
-            while True:
-                process = next(iterator)
-                continue_pools = self._resolve_pool(problem_pools, process, iterator, solution, then, failed)
-                if not continue_pools: break
-        except StopIteration:
-            mapping = self.reproducer.get_resolved_map(problem_pools, solution)
-            try:
-                self.reproducer.replicate_map(mapping)
-            except WindowNotExistant:
-                print(f"1 special-end 8", flush=True)
-                return failed()
-            return then()
-
-        
-    # ===== pool resolving ====>
-    
-        
-    def _resolve_pool(self, problem_pools, process, iterator, solution, then: typing.Callable[..., typing.Any], failed):
-        active_wins = problem_pools[process][1]
-        queue = active_wins.copy()
-        solution[process] = []
-        return self._pool_iteration(problem_pools, queue, process, iterator, solution, then, failed)
-
-    
-    def _pool_iteration(self, problem_pools, queue, process, iterator, solution, then: typing.Callable[..., typing.Any], failed, async_behavior=False, loop_index=0):
-        callback = lambda: self._resolve_window(problem_pools, queue, process, iterator, solution, then, failed, loop_index)
-        while callback:
-            callback = callback()
-        saved_wins = problem_pools[process][0]
-        pool_end = len(solution[process]) == len(saved_wins)
-        if async_behavior and pool_end:
-            return self._resolve_and_ready_up_windows(problem_pools, iterator, solution, then, failed)
-        return pool_end
-    
-    
-    def _resolve_window(self, problem_pools, queue, process, iterator, solution, then: typing.Callable[..., typing.Any], failed, pos):
-        saved = problem_pools[process][0]
-        cached = problem_pools[process][1]
-        if pos >= len(saved): return
-        if not len(queue):
-            return self._retry_later(problem_pools, queue, process, iterator, solution, then, failed, pos)
-        
-        selection = self._get_narrowed_selection(saved[pos], queue)
-        if not selection:
-            selection = queue
-
-        if len(selection) == 1:
-            solution[process].append(cached.index(selection[0]))
-            queue.remove(selection[0])
-            return lambda: self._resolve_window(problem_pools, queue, process, iterator, solution, then, failed, pos+1)
-        
-        return self._select_later(problem_pools, queue, process, iterator, solution, then, failed, pos)
-
-    
-    def resolve_wrapper(self, arg):
-        try:
-            self._resolve_cb(arg)
-        except SystemExit: pass
-        except Exception:
-            sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
-            self.print_cmd("special-end 5")
-
-
-    # ===== resolving goes async ===>
-
-    
-    def _select_later(self, problem_pools, queue, process, iterator, solution, then, failed, pos):
-        saved = problem_pools[process][0]
-        cached =  problem_pools[process][1]
-        selection = self._get_narrowed_selection(saved[pos], queue)
-        if not selection:
-            selection = queue
-        def continue_selection(result):
-            if result == -1:
-                solution[process].append(-1)
-            else:
-                solution[process].append(cached.index(selection[result]))
-                queue.remove(selection[result])
-            self._pool_iteration(problem_pools, queue, process, iterator, solution, then, failed, async_behavior=True, loop_index=pos+1)
-        self._resolve_cb = continue_selection
-        self._send_and_await_response("selection", saved[pos], selection, process, pos+1)
-
-    
-    def _retry_later(self, problem_pools, queue, process, iterator, solution, then, failed, pos):
-        saved = problem_pools[process][0]
-        def call_later(retry: bool):
-            if not retry:
-                solution[process].append(-1)
-                return self._pool_iteration(problem_pools, queue, process, iterator, solution, then, failed, async_behavior=True, loop_index=pos+1)
-            self._refresh_pool(problem_pools[process][1], queue, process)
-            self._pool_iteration(problem_pools, queue, process, iterator, solution, then, failed, async_behavior=True, loop_index=pos)
-        self._resolve_cb = call_later 
-        self._send_and_await_response("empty", saved[pos], [], process, pos+1)
-
-    
-    # ==== pool matching utils ==>
-        
-
-    def _refresh_pool(self, old_collection, queue, process):
-        new_collection = self.reproducer.get_win_collection(process)
-        old_hwnds = list(map(lambda w: w.handle, old_collection))
-        for win in new_collection:
-            if win.handle not in old_hwnds:
-                old_collection.append(win)
-                queue.append(win)
-
-                
-    def _get_narrowed_selection(self, rec, queue):
-        if self._title_match(rec["name"], queue):
-            return self._filter_only_matching_windows(rec["name"], queue)
-        return []
-
-    
-    def _filter_only_matching_windows(self, name, selection):
-        return list(filter(lambda x: x.window_text().encode("ascii", "ignore").decode() == name, selection))
-
-    
-    def _title_match(self, title, selection):
-        for win in selection:
-            # ignores troublesome characters same way as the titles from the recording
-            current_title = win.window_text().encode("ascii", "ignore").decode()
-            if current_title == title:
-                return True
-        return False
-
-    
-    # ======= send question =====>
-
-
-    def _send_and_await_response(self, query, old_win, selection, process_name, winNo):
-        info_map = self._prepare_file_info(query, old_win, selection, process_name, winNo)
-        resID = ConfigManager.assign_resolve_id()
-        filename = MetaData().window_unassigned_path + str(resID) + ".json"
-        with open(filename, 'w') as file:
-            file.write(json.dumps(info_map))
-        self.print_cmd("reproducer_resolve_window", args=resID)
-
-        
-    def _prepare_file_info(self, query: str, old_win, selection, process_name, winNo):
-        info_map = {
-            "query": query,
-            "recorded": old_win["name"],
-            "z_index": old_win["z_index"],
-            "process_name": process_name,
-            "winNo": winNo,
-            "selection": []
-        }
-        
-        for index, win in enumerate(selection):
-            info_map["selection"].append([win.window_text(), win.handle])
-        return info_map
-
-    
-    # =========== catch answer ====> 
-
-
-    def resolveSelection(self, id: int):
-        filename = MetaData().window_unassigned_path + "r" + str(id) +".json"
-        answer = None
-        with open(filename, 'r') as file:
-            response = json.loads(file.read())
-            answer = int(response["result"]) if type(response["result"]) is int else bool(response["result"])
-        self._delete_cache_files(id)
-        threading.Thread(target=lambda:self.resolve_wrapper(answer)).start()
-        
-
-    def _delete_cache_files(self, id):
-        file = MetaData().window_unassigned_path + "r" + str(id) + ".json"
-        if os.path.exists(file):
-            os.remove(file)
-        file = MetaData().window_unassigned_path + str(id) + ".json"
-        if os.path.exists(file):
-            os.remove(file)
             
 
 # ------------------------------------- Simulation -------------------------------------------------------
@@ -557,7 +346,7 @@ class Recorder(InnerProcess):
     def save_current_win_status(self) -> bool:
         file = ConfigManager.get_recording()
         if not file: raise Exception('No recording specified.')
-        path = f"{Constants().get_savename()}{file}.json"
+        path = f"{PathConstants().get_savename()}{file}.json"
         return WindowSaver().save_current_win_status(path)
         
     def init_screenshots(self):
@@ -574,7 +363,7 @@ class Recorder(InnerProcess):
             os.remove(path+f)
 
     def _get_scr_path(self):
-        outer_dir = Constants().get_screenshot_name()
+        outer_dir = PathConstants().get_screenshot_name()
         return outer_dir + ConfigManager.get_recording() + '/'
 
     def listen_to_input(self):
@@ -593,7 +382,7 @@ class Recorder(InnerProcess):
 
 
     def _load_capture(self) -> list:
-        with open(f"{Constants().get_savename()}{ConfigManager.get_recording()}.json", "r") as file:
+        with open(f"{PathConstants().get_savename()}{ConfigManager.get_recording()}.json", "r") as file:
             return json.loads(file.read())
 
     # all inactive windows during the recording get deleted
@@ -601,7 +390,7 @@ class Recorder(InnerProcess):
         active_indecies = ClickInfo().get_clicked_windecies_list()
         data = self._load_capture()
         data = list(filter(lambda d: d["z_index"] in active_indecies, data))
-        with open(f"{Constants().get_savename()}{ConfigManager.get_recording()}.json", "w") as file:
+        with open(f"{PathConstants().get_savename()}{ConfigManager.get_recording()}.json", "w") as file:
             file.write(json.dumps(data))
 
 

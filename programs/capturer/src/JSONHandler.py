@@ -3,20 +3,13 @@ import Lib.traceback as traceback
 from Lib.threading import Thread
 import win32api, win32con
 
-from save_status import WindowSaver, WinUtils, WindowReproducer
-from utils.rt import ClickInfo
+from save_status import WindowSaver, SimHandleOperator
+from utils.rt import ClickInfo, MetaData
+import utils.WinUtils as WinUtils
 
 from pynput.mouse import Controller, Button
 from pynput.keyboard import Key
 
-
-
-class MetaData:
-    def __init__(self):
-        self.record_path = "./resources/recordings/"
-        self.window_unassigned_path = "./resources/resolves/"
-        self.auto_time = 0.1
-        self.start_time = time.time()
 
 
 class JSONStorage:
@@ -241,8 +234,8 @@ def get_mouse_click_func(obj, controller, simulator, _ignoreMatching=False):
     args = [controller, obj["args"][1], obj["args"][2], obj["name"]]
     if _ignoreMatching: return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
 
-    if obj["windex"]>= 0 and not WindowReproducer.has_handle(obj["windex"]):
-            return lambda: None, []
+    if obj["windex"]>= 0 and not SimHandleOperator.has(obj["windex"]):
+        return lambda: None, []
     func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "4")
     Thread(target=func).start()
     return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
@@ -260,7 +253,7 @@ def stop_exec(bool, process, reason):
 
 def is_click_matching_window(original_windex, x, y):
     found_handle = WinUtils.get_top_from_point(x, y).handle
-    return WindowReproducer().is_hwnd_match(original_windex, found_handle)
+    return SimHandleOperator().is_handle_match(original_windex, found_handle)
 
 def key_press(controller, key):
     controller.press(key)
