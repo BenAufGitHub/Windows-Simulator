@@ -1,9 +1,9 @@
 import sys
 from Lib import functools, traceback, threading
 
-import InnerProcess, request_helper, request_lib
+import InnerProcess, request_helper
 from save_status import WindowSaver, PathConstants, ReproductionResolver
-from utils import ConfigManager
+from utils import ConfigManager, WinUtils
 from utils.Errors import *
 
 
@@ -13,7 +13,7 @@ starter_commands = ["simulate", "record"]
 state = "idle"
 possible_states = ["running", "paused", "idle"]
 process_actions = ["pause", "resume", "stop"]
-requests = ["exit", "spit", "getWinNames", 'showWindow', "set-recording",
+requests = ["exit", "spit", 'showWindow', "set-recording",
 "get-recording", "get-record-list", "get-simulation", "get-simulation-list", "set-simulation", "delete-recording", "clear-settings"]
 information = ["resolveFinished"]
 
@@ -147,10 +147,8 @@ def answer_request(cmd, body):
     if cmd == 'spit':
         print_info(body)
         return 'DONE'
-    if cmd == 'getWinNames':
-        return list(request_lib.get_filtered_window_collection())
     if cmd == 'showWindow':
-        if not request_lib.show_window(body):
+        if not WinUtils.show_window_at_curser(body):
             raise CommandFailure('Window not existing')
         return "DONE"
     if cmd == 'set-recording':

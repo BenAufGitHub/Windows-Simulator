@@ -1,6 +1,6 @@
-from pywinauto import Desktop, uia_defines, controls
+from pywinauto import Desktop, uia_defines, controls, uia_element_info
 import win32gui, win32con
-import win32api, ctypes
+import win32api, ctypes, _ctypes
 import win32process
 
 import time
@@ -149,3 +149,19 @@ def show_win_as_rect(win, left, top, width, height):
     win32gui.ShowWindow(win.handle, win32con.SW_NORMAL)
     wrapper.move_window(x=left, y=top, width=width, height=height, repaint=True)
     quick_wait_ui(win.is_normal)
+
+
+# return: True if successful
+@staticmethod
+def show_window_at_curser(hwnd) -> bool:
+    try:
+        info = uia_element_info.UIAElementInfo(handle_or_elem=hwnd)
+        wrapper = controls.hwndwrapper.HwndWrapper(info)
+        x, y = win32api.GetCursorPos()
+        width = wrapper.rectangle().width()
+        height = wrapper.rectangle().height()
+        show_win_as_rect(wrapper, x, y, width, height)
+        return True
+    except _ctypes.COMError as e:
+        if e.hresult == -2147220991: return False # window won't be shown no error raised
+        raise e
