@@ -6,11 +6,19 @@ from pynput import mouse, keyboard
 from save_status import WindowSaver, PathConstants, WindowNotExistant, PauseDirector
 import JSONHandler
 from utils import  UnicodeReverse, Unpress, ConfigManager, timing
-from utils.rt import ClickInfo, KillableThread
+from utils.rt import ClickInfo, KillableThread, MetaData
+
+
+
+# very important method, influences how windows scale is perceived
+def config_monitor():
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)
+
 
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
 class InnerProcess:
+
 
     def __init__(self):
         self.print_info = print
@@ -25,8 +33,10 @@ class InnerProcess:
         self.ctrlW = True
         config_monitor()
 
+
     def add_thread(self, thread):
         self.threads.append(thread)
+
 
     def stop_threads(self):
         for t in self.threads:
@@ -34,6 +44,8 @@ class InnerProcess:
                 t.stop()
                 t.join()
             except RuntimeError: pass
+
+
 
     # flush: whether accepted requests should be spread with print_cmd(cmd) - done so if request comes from Innerprocess itself
     # return: bool whether accepted or not
@@ -66,6 +78,7 @@ class InnerProcess:
             return True
         return False
 
+
     def pause(self, flush=False, _stop_pause=False):
         try:
             self.state = 'pause'
@@ -78,11 +91,11 @@ class InnerProcess:
             if e.hresult != -2147220991: raise e
             self.request('stop', False)
             self.print_cmd("special-end 8")
-
-                
+         
     # empty, override it with subclass
     def on_pause(self, flush, stop_pause):
         pass
+
 
     def resume(self, flush=False):
         try:
@@ -100,6 +113,7 @@ class InnerProcess:
     def on_resume(self, flush):
         pass
 
+
     def end(self, flush=False):
         self.state = 'stop'
         self.stop_threads()
@@ -115,13 +129,7 @@ class InnerProcess:
         pass
 
     def get_data(self):
-        return JSONHandler.MetaData()
-
-
-
-# very important method, influences how windows scale is perceived
-def config_monitor():
-    ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        return MetaData()
 
 
             
@@ -417,7 +425,7 @@ class Recorder(InnerProcess):
 
 class InputHandler:
 
-    def __init__(self, process):
+    def __init__(self, process: Recorder):
         self.process = process
         self.storage = process.storage
         self.input_lock = threading.Lock()
