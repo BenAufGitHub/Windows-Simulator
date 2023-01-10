@@ -17,6 +17,7 @@ requests = ["exit", "spit", 'showWindow', "set-recording",
 "get-recording", "get-record-list", "get-simulation", "get-simulation-list", "set-simulation", "delete-recording", "clear-settings"]
 information = ["resolveFinished"]
 
+
 SUCCESSFUL = True
 process = None
 state_lock = threading.Lock()
@@ -24,12 +25,8 @@ flush_orderly_lock = threading.Lock()
 in_prep_for_simulation = False
 resolve_window = lambda x: None
 
-class ExecutionContainer:
-    def __init__(self):
-        self.open_window = None
-exec_vars = ExecutionContainer()
 
-# ----------------------------------- Executing bubbling --------------------------------
+# ----------------------------------- Execution distribution --------------------------------
 
 
 def execute(cmd, body):
@@ -56,6 +53,21 @@ def throw_if_not_accepted(cmd):
         raise CommandNotAccepted(f"Request to {cmd} already fulfilled")
 
 
+
+def update_state():
+    global state, process
+    with state_lock:
+        if process == None or process.state == 'stop':
+            state = 'idle'
+            process = None
+        else:
+            state = "paused" if process.state == "pause" else "running"
+
+def get_state():
+    with state_lock:
+        return state    
+
+
 # -------------------- Execution ---------------------------------------
 
 def start_process(cmd, body):
@@ -74,13 +86,6 @@ def start_process(cmd, body):
     process.run()
     update_state()
     return "STARTING"
-
-
-def save_current_win_status(self):
-        file = ConfigManager.get_recording()
-        if not file: raise Exception('No recording specified.')
-        path = f"{PathConstants().get_savename()}{file}.json"
-        WindowSaver().save_current_win_status(path)
 
 
 def start_simulation(process):
@@ -121,6 +126,7 @@ def revert_simulation_start():
     in_prep_for_simulation = False
 
 
+
 def mutate_process(cmd):
     if not process: raise CommandFailure("Process not found")
     if not process.request(cmd):
@@ -128,18 +134,7 @@ def mutate_process(cmd):
     update_state()
     return "DONE"
 
-def update_state():
-    global state, process
-    with state_lock:
-        if process == None or process.state == 'stop':
-            state = 'idle'
-            process = None
-        else:
-            state = "paused" if process.state == "pause" else "running"
-
-def get_state():
-    with state_lock:
-        return state             
+         
 
 def answer_request(cmd, body):
     if cmd == "exit":
@@ -180,6 +175,7 @@ def catchSolutionToWindows(id):
 
 
 # --------------------------- Process bubbling ----------------------------------------
+
 
 # identifier 1: outgoing command
 def print_cmd(cmd: str, args=None):
@@ -222,8 +218,8 @@ def translate_state_to_command():
 
 
 
-
 # ------------------------ input verification + management ------------
+
 
 def read_in():
     try:
@@ -237,8 +233,8 @@ def read_in():
 def processIn(input):
     try:
         id, cmd, body = request_helper.split_request(input)
-        if id < 2: raise request_helper.InvalidRequest("ID must be greater than 1")
-    except request_helper.InvalidRequest as exc:
+        if id < 2: raise InvalidRequest("ID must be greater than 1")
+    except InvalidRequest as exc:
         input = input.strip("\n")
         return print_info(f"Not a valid input: {input}, reason: {str(exc)}")
     try:
