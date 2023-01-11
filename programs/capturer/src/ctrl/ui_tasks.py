@@ -1,7 +1,7 @@
 from Lib.threading import Thread
 import win32api, win32con
 
-from save_status import SimHandleOperator
+from desktop.utils import SimHandleOperator
 import utils.win_utils as win_utils
 from utils.rt import stop_exec
 

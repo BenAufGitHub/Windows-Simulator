@@ -2,7 +2,7 @@ from Lib import functools, traceback, threading
 from Lib.sysconfig import sys
 
 import core_process, request_helper
-from save_status import ReproductionResolver
+from desktop.resolving import ReproductionResolver
 from utils import config_manager, win_utils
 from utils.app_errors import *
 
