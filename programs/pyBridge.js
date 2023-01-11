@@ -3,7 +3,7 @@ let {FormatError, splitRequestMessage, splitAnswerMessage, getFormattedBody, try
 const path = require("path");
 
 const pyCall = "./programs/python3.10/python"
-const pyMain = './programs/capturer/src/pyCommunicator.py'
+const pyMain = './programs/capturer/src/py_communicator.py'
 
 // subprogramm coordination in terms of command and state management
 let child = null;

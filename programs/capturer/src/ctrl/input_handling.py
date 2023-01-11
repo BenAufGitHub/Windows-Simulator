@@ -5,7 +5,7 @@ from Lib.sysconfig import sys
 
 from save_status import WindowSaver
 from utils.rt import ClickInfo, MetaData, stop_exec
-import utils.WinUtils as WinUtils
+import utils.win_utils as win_utils
 
 from pynput.mouse import Controller
 from pynput.keyboard import Key
@@ -44,7 +44,7 @@ class InputProcessor:
 
 
     def append_with_windex(self, point, click_instance, record_path):
-        windex = WindowSaver.get_window_number(WinUtils.get_top_from_point(point[0], point[1]).handle)
+        windex = WindowSaver.get_window_number(win_utils.get_top_from_point(point[0], point[1]).handle)
         if windex >= 0 and not ClickInfo().clicked_contains(windex):
             ClickInfo().add_clicked_windex(windex)
             if not self._scr: return

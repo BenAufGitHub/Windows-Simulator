@@ -4,10 +4,10 @@ import json, _ctypes, ctypes, os
 from Lib import traceback, typing, threading
 from Lib.sysconfig import sys
 
-from utils import ConfigManager
+from utils import config_manager
 from utils.rt import MetaData
-from utils import WinUtils
-from utils.Errors import *
+from utils import win_utils
+from utils.app_errors import *
 
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -58,7 +58,7 @@ class WindowSaver:
 
     def save_current_win_status(self, path) -> bool:
         try:
-            wins = WinUtils.get_ordered_wins()
+            wins = win_utils.get_ordered_wins()
             for index, win in enumerate(wins):
                 WindowSaver.set_window_number(win.handle, index)
             self._enter_windows_into_file(wins, path)
@@ -82,7 +82,7 @@ class WindowSaver:
 
     def _get_win_properties_as_dict(self, win, z_index):
         win_name = win.window_text().encode("ascii", "ignore").decode()
-        process_name = WinUtils.get_proc_name_by_hwnd(win.handle)
+        process_name = win_utils.get_proc_name_by_hwnd(win.handle)
 
         if win.is_maximized():
             return {"name": win_name, "process": process_name, "max": True, "z_index": z_index}
@@ -134,7 +134,7 @@ class PauseDirector:
 
     def _get_current_windows(self):
         winlist = list()
-        windows = WinUtils.get_ordered_wins()
+        windows = win_utils.get_ordered_wins()
         for zindex, win in enumerate(windows):
             wininfo = self._get_positional_properties(win, zindex)
             winlist.append(wininfo)
@@ -171,7 +171,7 @@ class PauseDirector:
 
     
     def _repr_wins(self, winlist):
-        WinUtils.minimize_all_windows()
+        win_utils.minimize_all_windows()
         for wininfo in reversed(winlist):
             self._replecate_win_after_pause(wininfo)
 
@@ -180,12 +180,12 @@ class PauseDirector:
         pid = wininfo["ref"].element_info.process_id
         self._alert_closed(wininfo["ref"], wininfo["has_title"])
 
-        if not WinUtils.is_normal_win(wininfo["ref"]): return
+        if not win_utils.is_normal_win(wininfo["ref"]): return
         if not pid: raise WindowNotExistant()
 
         if wininfo["max"]:
-            return WinUtils.maximize_win(wininfo["ref"])
-        WinUtils.show_win_as_rect(wininfo["ref"], wininfo["x"], wininfo["y"], wininfo["width"], wininfo["height"])
+            return win_utils.maximize_win(wininfo["ref"])
+        win_utils.show_win_as_rect(wininfo["ref"], wininfo["x"], wininfo["y"], wininfo["width"], wininfo["height"])
 
     
     def _alert_closed(self, win, has_title):
@@ -244,9 +244,9 @@ class WindowCollections:
     @staticmethod
     def get_all_from_process(process):
         collection = set()
-        found_windows = WinUtils.get_ordered_wins()
+        found_windows = win_utils.get_ordered_wins()
         for win in found_windows:
-            if process == WinUtils.get_proc_name_by_hwnd(win.handle).lower():
+            if process == win_utils.get_proc_name_by_hwnd(win.handle).lower():
                 collection.add(win)
         return collection
 
@@ -259,7 +259,7 @@ class WindowCollections:
     def collect_pools(path):
         with open(path, "r") as file:
             old_windows = json.loads(file.readline())
-        found_windows = WinUtils.get_ordered_wins()
+        found_windows = win_utils.get_ordered_wins()
         return WindowCollections._group_together(old_windows, found_windows)
 
 
@@ -267,7 +267,7 @@ class WindowCollections:
     def _group_together(saved, found):
         groups = WindowCollections._prepare_saved(saved)
         for win in found:
-            process = WinUtils.get_proc_name_by_hwnd(win.handle).lower()
+            process = win_utils.get_proc_name_by_hwnd(win.handle).lower()
             if process in groups:
                 groups[process][1].append(win)
         return groups
@@ -339,13 +339,13 @@ class Reproducer:
     
     @staticmethod
     def minimize_non_active(guide: ReproducerGuide):
-        wins = WinUtils.get_ordered_wins()
+        wins = win_utils.get_ordered_wins()
         get_handle = lambda id: guide.get_matched(id).handle
         matched = filter(lambda id: guide.get_matched(id), guide.get_ids())
         handles = list(map(get_handle, matched))
         for w in wins:
             if w.handle not in handles:
-                WinUtils.minimize_no_err(w)
+                win_utils.minimize_no_err(w)
      
 
     @staticmethod
@@ -355,8 +355,8 @@ class Reproducer:
         if active_win.element_info.process_id == None: raise WindowNotExistant()
         try:
             if win["max"]: 
-                return WinUtils.maximize_win(active_win)
-            WinUtils.show_win_as_rect(active_win, win["coordinates"][0], win["coordinates"][1], win["dimensions"][0], win["dimensions"][1])
+                return win_utils.maximize_win(active_win)
+            win_utils.show_win_as_rect(active_win, win["coordinates"][0], win["coordinates"][1], win["dimensions"][0], win["dimensions"][1])
         except _ctypes.COMError as e:
             if e.hresult != -2147220991: raise e
             raise WindowNotExistant()
@@ -376,7 +376,7 @@ class BaseReproductionResolver():
 
     # path of currently entered simulation    
     def _get_path(self):
-        file = ConfigManager.get_simulation()
+        file = config_manager.get_simulation()
         if not file: raise Exception('No simulation file specified.')
         return f"{PathConstants().get_savename()}{file}.json"
         
@@ -567,7 +567,7 @@ class ReproductionResolver(BaseReproductionResolver):
 
     def send_file(self, query, old_win, selection, process_name, winNo):
         info_map = self._prepare_file_info(query, old_win, selection, process_name, winNo)
-        resID = ConfigManager.assign_resolve_id()
+        resID = config_manager.assign_resolve_id()
         filename = MetaData().window_unassigned_path + str(resID) + ".json"
         with open(filename, 'w') as file:
             file.write(json.dumps(info_map))

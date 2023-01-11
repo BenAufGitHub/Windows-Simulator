@@ -2,7 +2,7 @@ from Lib.threading import Thread
 import win32api, win32con
 
 from save_status import SimHandleOperator
-import utils.WinUtils as WinUtils
+import utils.win_utils as win_utils
 from utils.rt import stop_exec
 
 from pynput.mouse import Button
@@ -87,5 +87,5 @@ def get_mouse_click_func(obj, controller, simulator, _ignoreMatching=False):
 
 
 def is_click_matching_window(original_windex, x, y):
-    found_handle = WinUtils.get_top_from_point(x, y).handle
+    found_handle = win_utils.get_top_from_point(x, y).handle
     return SimHandleOperator().is_handle_match(original_windex, found_handle)

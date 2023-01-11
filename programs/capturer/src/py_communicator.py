@@ -1,10 +1,10 @@
 from Lib import functools, traceback, threading
 from Lib.sysconfig import sys
 
-import InnerProcess, request_helper
+import core_process, request_helper
 from save_status import ReproductionResolver
-from utils import ConfigManager, WinUtils
-from utils.Errors import *
+from utils import config_manager, win_utils
+from utils.app_errors import *
 
 
 print = functools.partial(print, flush=True)
@@ -72,7 +72,7 @@ def get_state():
 
 def start_process(cmd, body):
     global process
-    process = InnerProcess.Simulator(body[0]) if (cmd == 'simulate') else InnerProcess.Recorder(body[0], body[1])
+    process = core_process.Simulator(body[0]) if (cmd == 'simulate') else core_process.Recorder(body[0], body[1])
     process.print_cmd = print_cmd
     process.print_info = print_info
 
@@ -143,25 +143,25 @@ def answer_request(cmd, body):
         print_info(body)
         return 'DONE'
     if cmd == 'showWindow':
-        if not WinUtils.show_window_at_curser(body):
+        if not win_utils.show_window_at_curser(body):
             raise CommandFailure('Window not existing')
         return "DONE"
     if cmd == 'set-recording':
-        return ConfigManager.set_recording(body)
+        return config_manager.set_recording(body)
     if cmd == 'get-recording':
-        return ConfigManager.get_recording()
+        return config_manager.get_recording()
     if cmd == 'get-record-list':
-        return ConfigManager.get_record_list()
+        return config_manager.get_record_list()
     if cmd == 'get-simulation':
-        return ConfigManager.get_simulation()
+        return config_manager.get_simulation()
     if cmd == 'get-simulation-list':
-        return ConfigManager.get_simulation_list()
+        return config_manager.get_simulation_list()
     if cmd == 'set-simulation':
-        return ConfigManager.set_simulation(body)
+        return config_manager.set_simulation(body)
     if cmd == 'delete-recording':
-        return ConfigManager.delete_recording(body)
+        return config_manager.delete_recording(body)
     if cmd == 'clear-settings':
-        return ConfigManager.clear()
+        return config_manager.clear()
     
 
 def processInformation(cmd, body):

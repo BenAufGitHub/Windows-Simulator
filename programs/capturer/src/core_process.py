@@ -5,8 +5,8 @@ from Lib.sysconfig import sys
 from pynput import mouse, keyboard
 
 from save_status import WindowSaver, PathConstants, WindowNotExistant, PauseDirector
-from ctrl import InputHandling, ui_tasks
-from utils import  UnicodeReverse, Unpress, ConfigManager, timing
+from ctrl import input_handling, ui_tasks
+from utils import  unicode_reverse, unpressing, config_manager, timing
 from utils.rt import ClickInfo, KillableThread, MetaData, stop_exec
 
 
@@ -18,7 +18,7 @@ def config_monitor():
 
 
 # structure for both Recording amd Simulation, prevents duplicate and buggy code
-class InnerProcess:
+class core_process:
 
 
     def __init__(self):
@@ -48,7 +48,7 @@ class InnerProcess:
 
 
 
-    # flush: whether accepted requests should be spread with print_cmd(cmd) - done so if request comes from Innerprocess itself
+    # flush: whether accepted requests should be spread with print_cmd(cmd) - done so if request comes from core_process itself
     # return: bool whether accepted or not
     def request(self, arg: str, flush=False, _stop_pause=False):
         with self._req_lock:
@@ -139,7 +139,7 @@ class InnerProcess:
 
 
 
-class Simulator(InnerProcess):
+class Simulator(core_process):
     
     def __init__(self, controlWindows='true'):
         super().__init__()
@@ -152,7 +152,7 @@ class Simulator(InnerProcess):
         self.ctrlW = controlWindows == 'true'
 
     def _put_path(self):
-        sim = ConfigManager.get_simulation()
+        sim = config_manager.get_simulation()
         if sim: return f"{self.data.record_path}{sim}.json"
         return None
 
@@ -193,14 +193,14 @@ class Simulator(InnerProcess):
     # override
     def on_pause(self, flush, stop_pause):
         if stop_pause: return
-        Unpress.rememeber_pressed(self.keyboard_controller, _left=True)
-        Unpress.release_all()
+        unpressing.rememeber_pressed(self.keyboard_controller, _left=True)
+        unpressing.release_all()
 
     # override
     def on_resume(self, flush):
         if self._mouse_pos:
             self.mouse_controller.position = self._mouse_pos
-        Unpress.press_remembered(self.keyboard_controller)
+        unpressing.press_remembered(self.keyboard_controller)
 
         if not self.simulate_later: return
         func = self.simulate_later
@@ -210,8 +210,8 @@ class Simulator(InnerProcess):
 
 
     def complete_before_end(self, flush):
-        Unpress.key_press_warnings(self.keyboard_controller)
-        Unpress.release_all()
+        unpressing.key_press_warnings(self.keyboard_controller)
+        unpressing.release_all()
         if not flush:
             self.event_thread.stop()
             self.event_thread.join()
@@ -305,7 +305,7 @@ class Simulator(InnerProcess):
 
 def exec_cmd_instruction(instruction: dict):
     if instruction["command"] == "release-all":
-        Unpress.release_all()
+        unpressing.release_all()
 
 
 def exec_mouse_instruction(instruction: dict, controller, simulator, _ignoreMatching=False):
@@ -323,12 +323,12 @@ def exec_keyboard_instruction(instruction: dict, controller):
 # ---------------------------------------------- Recording -----------------------------------------------------------
 
 
-class Recorder(InnerProcess):
+class Recorder(core_process):
     def __init__(self, ctrlW='False', takeScreenshots='true'):
         super().__init__()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
-        self.storage = InputHandling.InputProcessor(self, _takeScreenshots=takeScreenshots)
+        self.storage = input_handling.InputProcessor(self, _takeScreenshots=takeScreenshots)
         self.in_handler = InputHandler(self)
         self.round_to = 3
         self.ctrlW = ctrlW == 'true'
@@ -352,7 +352,7 @@ class Recorder(InnerProcess):
 
 
     def save_current_win_status(self) -> bool:
-        file = ConfigManager.get_recording()
+        file = config_manager.get_recording()
         if not file: raise Exception('No recording specified.')
         path = f"{PathConstants().get_savename()}{file}.json"
         return WindowSaver().save_current_win_status(path)
@@ -372,7 +372,7 @@ class Recorder(InnerProcess):
 
     def _get_scr_path(self):
         outer_dir = PathConstants().get_screenshot_name()
-        return outer_dir + ConfigManager.get_recording() + '/'
+        return outer_dir + config_manager.get_recording() + '/'
 
     def listen_to_input(self):
         ih = self.in_handler
@@ -384,13 +384,13 @@ class Recorder(InnerProcess):
         listener2.start()
 
     def save_data(self):
-        InputHandling.compress(self.storage)
-        InputHandling.release_all(self.storage)
-        InputHandling.write_storage_file(self.storage, ConfigManager.get_recording())
+        input_handling.compress(self.storage)
+        input_handling.release_all(self.storage)
+        input_handling.write_storage_file(self.storage, config_manager.get_recording())
 
 
     def _load_capture(self) -> list:
-        with open(f"{PathConstants().get_savename()}{ConfigManager.get_recording()}.json", "r") as file:
+        with open(f"{PathConstants().get_savename()}{config_manager.get_recording()}.json", "r") as file:
             return json.loads(file.read())
 
     # all inactive windows during the recording get deleted
@@ -398,7 +398,7 @@ class Recorder(InnerProcess):
         active_indecies = ClickInfo().get_clicked_windecies_list()
         data = self._load_capture()
         data = list(filter(lambda d: d["z_index"] in active_indecies, data))
-        with open(f"{PathConstants().get_savename()}{ConfigManager.get_recording()}.json", "w") as file:
+        with open(f"{PathConstants().get_savename()}{config_manager.get_recording()}.json", "w") as file:
             file.write(json.dumps(data))
 
 
@@ -456,7 +456,7 @@ class InputHandler:
         if self.is_paused(): return
         with self.input_lock:
             button_name = mouse_button.name
-            record_path = ConfigManager.get_recording()
+            record_path = config_manager.get_recording()
             self.storage.add_mouse_click(button_name, self.get_time(), pressed, (x, y), record_path)
 
 
@@ -494,7 +494,7 @@ class InputHandler:
         name = key.char if (not special_key) else str(key)[4:]
         if name == None:
             return
-        name = UnicodeReverse.convert_from_unicode(name)
+        name = unicode_reverse.convert_from_unicode(name)
         if not self.process.iterate_special_cases(name, pressed) and not self.is_paused():
             self.storage.add_key_stroke(name, self.get_time(), special_key, pressed)
 
