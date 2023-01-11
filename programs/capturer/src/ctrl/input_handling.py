@@ -4,7 +4,7 @@ from Lib.threading import Thread
 from Lib.sysconfig import sys
 
 from save_status import WindowSaver
-from utils.rt import ClickInfo, MetaData, stop_exec
+from utils.rt import ClickInfo, PathConstants, stop_exec
 import utils.win_utils as win_utils
 
 from pynput.mouse import Controller
@@ -189,7 +189,7 @@ def _get_pressed_buttons(data: list) -> set:
 def write_storage_file(storage: InputProcessor, filename: str):
     if not filename: raise Exception('No record file specified.')
 
-    path = f"{MetaData().record_path}{filename}.json"
+    path = f"{PathConstants().get_recordname()}{filename}.json"
     data_set = merge_containers(storage)
     json_string = json.dumps(data_set)
     write_file(json_string, path)

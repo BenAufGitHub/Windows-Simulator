@@ -4,10 +4,10 @@ from Lib.sysconfig import sys
 
 from pynput import mouse, keyboard
 
-from save_status import WindowSaver, PathConstants, WindowNotExistant, PauseDirector
+from save_status import WindowSaver, WindowNotExistant, PauseDirector
 from ctrl import input_handling, ui_tasks
 from utils import  unicode_reverse, unpressing, config_manager, timing
-from utils.rt import ClickInfo, KillableThread, MetaData, stop_exec
+from utils.rt import ClickInfo, KillableThread, PathConstants, stop_exec
 
 
 
@@ -28,7 +28,6 @@ class core_process:
         self.state = "idle"
         self.state_list = ["idle", "stop", "pause", "running"]
         self.ready = False
-        self.data = self.get_data()
         self.timer = None
         self._req_lock = threading.RLock()
         self.ctrlW = True
@@ -129,9 +128,6 @@ class core_process:
     def run():
         pass
 
-    def get_data(self):
-        return MetaData()
-
 
             
 
@@ -153,7 +149,7 @@ class Simulator(core_process):
 
     def _put_path(self):
         sim = config_manager.get_simulation()
-        if sim: return f"{self.data.record_path}{sim}.json"
+        if sim: return f"{PathConstants().get_recordname()}{sim}.json"
         return None
 
     def read_file(self):

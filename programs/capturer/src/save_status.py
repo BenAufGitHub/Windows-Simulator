@@ -5,25 +5,13 @@ from Lib import traceback, typing, threading
 from Lib.sysconfig import sys
 
 from utils import config_manager
-from utils.rt import MetaData
+from utils.rt import PathConstants
 from utils import win_utils
 from utils.app_errors import *
 
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
-
-
-class PathConstants:
-    def __init__(self):
-        self._save_file = "./resources/start_capture/"
-        self._screenshots = "./resources/screenshots/"
-    
-    def get_savename(self):
-        return self._save_file
-
-    def get_screenshot_name(self):
-        return self._screenshots
 
 
 class WindowSaver:
@@ -568,7 +556,7 @@ class ReproductionResolver(BaseReproductionResolver):
     def send_file(self, query, old_win, selection, process_name, winNo):
         info_map = self._prepare_file_info(query, old_win, selection, process_name, winNo)
         resID = config_manager.assign_resolve_id()
-        filename = MetaData().window_unassigned_path + str(resID) + ".json"
+        filename = PathConstants().get_resolvename() + str(resID) + ".json"
         with open(filename, 'w') as file:
             file.write(json.dumps(info_map))
         self.print_cmd("reproducer_resolve_window", args=resID)
@@ -592,7 +580,7 @@ class ReproductionResolver(BaseReproductionResolver):
 
 
     def process_response(self, id: int):
-        filename = MetaData().window_unassigned_path + "r" + str(id) +".json"
+        filename = PathConstants().get_resolvename() + "r" + str(id) +".json"
         with open(filename, 'r') as file:
             response = json.loads(file.read())
             answer = self.transform_answer(response["result"])
@@ -609,7 +597,7 @@ class ReproductionResolver(BaseReproductionResolver):
     def _delete_cache_files(self, id):
         def do(flag):
             starter = "r" if flag else ""
-            file = MetaData().window_unassigned_path + starter + str(id) + ".json"
+            file = PathConstants().get_resolvename() + starter + str(id) + ".json"
             if os.path.exists(file): os.remove(file)
         do(True); do(False)
             

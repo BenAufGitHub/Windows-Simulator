@@ -3,8 +3,28 @@ rt == RunTime
 This files purpose is to keep singleton classes that contain information about the runtime or other runtime specific classes.
 '''
 
-import ctypes, sys, time
+import ctypes, sys
 from Lib import threading, traceback
+
+
+class PathConstants:
+    def __init__(self):
+        self._save_file = "./resources/start_capture/"
+        self._screenshots = "./resources/screenshots/"
+        self.record_path = "./resources/recordings/"
+        self.window_unassigned_path = "./resources/resolves/"
+    
+    def get_resolvename(self):
+        return self.window_unassigned_path
+
+    def get_recordname(self):
+        return self.record_path
+
+    def get_savename(self):
+        return self._save_file
+
+    def get_screenshot_name(self):
+        return self._screenshots
 
 
 # this class counts which windows have been used during the recording
@@ -29,14 +49,6 @@ class ClickInfo():
 
     def clicked_contains(self, windex: int) -> bool:
         return windex in self._clicked_wins
-
-
-class MetaData:
-    def __init__(self):
-        self.record_path = "./resources/recordings/"
-        self.window_unassigned_path = "./resources/resolves/"
-        self.auto_time = 0.1
-        self.start_time = time.time()
 
 
 def stop_exec(bool, process, reason):
