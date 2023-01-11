@@ -1,7 +1,8 @@
 from pywinauto import controls, uia_element_info, handleprops, base_wrapper
 
-import json, sys, _ctypes, ctypes, os
+import json, _ctypes, ctypes, os
 from Lib import traceback, typing, threading
+from Lib.sysconfig import sys
 
 from utils import ConfigManager
 from utils.rt import MetaData

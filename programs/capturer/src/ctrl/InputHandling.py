@@ -1,18 +1,18 @@
-import json, time, sys
+import json
 import Lib.traceback as traceback
 from Lib.threading import Thread
-import win32api, win32con
+from Lib.sysconfig import sys
 
-from save_status import WindowSaver, SimHandleOperator
-from utils.rt import ClickInfo, MetaData
+from save_status import WindowSaver
+from utils.rt import ClickInfo, MetaData, stop_exec
 import utils.WinUtils as WinUtils
 
-from pynput.mouse import Controller, Button
+from pynput.mouse import Controller
 from pynput.keyboard import Key
 
 
 
-class JSONStorage:
+class InputProcessor:
 
     def __init__(self, process, _takeScreenshots='true'):
         mouse_clicks, mouse_scrolls, mouse_moves, key_presses, commands = [], [], [], [], []
@@ -83,16 +83,17 @@ class JSONStorage:
 
 
 # merges similar data together and reduces the size of stored data
-def compress(storage: JSONStorage):
-    trim_input(storage)
-    # TODO add compressing features
+def compress(container: InputProcessor):
+    trim_input(container)
 
-def trim_input(storage: JSONStorage):
-    trim_shift(storage)
+
+def trim_input(container: InputProcessor):
+    trim_shift(container)
+
 
 # since user is encouraged to press shift + f1 to end, simulating shift in the end may have unwanted effects
-def trim_shift(storage: JSONStorage):
-    data = storage.data[3]
+def trim_shift(container: InputProcessor):
+    data = container.data[3]
     for i in range(len(data) - 1, -1, -1):
         if data[i]["name"] == "shift":
             data.pop(i)
@@ -103,27 +104,31 @@ def trim_shift(storage: JSONStorage):
 
 
 # merges all lists in the correct order of actions and returns the list
-def merge_containers(storage: JSONStorage) -> list:
+def merge_containers(storage: InputProcessor) -> list:
     merged = []
     indices = [0,0,0,0,0]
     times = [None, None, None, None, None]
-    for i in range(5):
-        times[i] = storage._get_time(i, indices[i])
-    index = _compare_min(*times)
-    while not index is None:
+    
+    while (index := _refresh_times(times, indices, storage)) is not None:
         merged.append(storage.data[index][indices[index]])
         indices[index] = indices[index] + 1
-        for i in range(5):
-            times[i] = storage._get_time(i, indices[i])
-            index = _compare_min(*times)
+
     appendManualReleases(storage, merged)
     return merged
 
-def appendManualReleases(storage: JSONStorage, merged):
+
+def _refresh_times(times, indices, storage):
+    for i in range(5):
+        times[i] = storage._get_time(i, indices[i])
+    return _compare_min(*times)
+
+
+def appendManualReleases(storage: InputProcessor, merged):
     if not merged: return
     for entry in storage.manual_releases:
         entry["time"] = round(merged[-1]["time"] + 0.05, 3)
         merged.append(entry)
+
 
 def _compare_min(*args) -> int:
     lowest = None
@@ -140,20 +145,22 @@ def _compare_min(*args) -> int:
 
 '''  ----------------------- ensure release of buttons --------------------------------------------'''
 
+
 # Should ensure no keyboard mutations and not wished side effects. TODO: handle if program crashes
-def release_all(storage: JSONStorage):
+def release_all(storage: InputProcessor):
     for data_set in storage.containers:
         release_container(storage, data_set)
 
 
-def release_container(storage: JSONStorage, container: str):
-    index = storage.containers.index(container) if container in storage.containers else -1
+def release_container(storage: InputProcessor, container: str):
+    if container not in storage.containers: return
+    index = storage.containers.index(container)
     if index != 0 and index != 3: return
     pressed = _get_pressed_buttons(storage.data[index])
     _append_release_pressed(storage, pressed)
 
 
-def _append_release_pressed(storage: JSONStorage, pressed):
+def _append_release_pressed(storage: InputProcessor, pressed):
     for button in pressed:
         is_mouse, name = button
         if is_mouse:
@@ -178,93 +185,16 @@ def _get_pressed_buttons(data: list) -> set:
 
 ''' ------------------------------------ file writing -------------------------------------------- '''
 
-def write_storage_file(storage: JSONStorage, filename: str):
+
+def write_storage_file(storage: InputProcessor, filename: str):
     if not filename: raise Exception('No record file specified.')
+
     path = f"{MetaData().record_path}{filename}.json"
     data_set = merge_containers(storage)
     json_string = json.dumps(data_set)
     write_file(json_string, path)
 
+
 def write_file(json_str: str, filename: str):
     with open(filename, "w") as file:
         file.write(json_str)
-
-
-''' --------------------------------------- get functions ----------------------------------------'''
-
-def mouse_press(controller, x, y, name):
-    controller.position = (x, y)
-    controller.press(Button[name])
-
-def mouse_release(controller, x, y, name):
-    controller.position = (x, y)
-    controller.release(Button[name])
-
-def mouse_scroll(controller, dx, dy):
-    controller.scroll(dx, dy)
-
-
-# code from https://github.com/akmalmzamri/mousemover/blob/master/mousemover/mouse_handler.py
-def mouse_move(controller, x, y):
-    x1, y1 = controller.position
-    screen_width = win32api.GetSystemMetrics(0)
-    screen_height = win32api.GetSystemMetrics(1)
-    win32api.mouse_event(
-            win32con.MOUSEEVENTF_MOVE | win32con.MOUSEEVENTF_ABSOLUTE,
-            int((x / screen_width * 65535.0) + (x-x1)),
-            int((y / screen_height * 65535.0) + (y-y1))
-        )
-    if controller.position != (x, y):
-        controller.position = (x, y)
-
-
-# Return: functions and args that match the json instruction.
-def get_function_from_mouse_object(obj: dict, controller, simulator, _ignoreMatching=False):
-    action = obj["action"]
-    if action == "click":
-        return get_mouse_click_func(obj, controller, simulator, _ignoreMatching=_ignoreMatching)
-    elif action == "move":
-        return mouse_move, [controller, obj["args"][0], obj["args"][1]]
-    elif action == "scroll":
-        return mouse_scroll, [controller, obj["args"][0], obj["args"][1]]
-
-
-def get_mouse_click_func(obj, controller, simulator, _ignoreMatching=False):
-    # if window was ignored or not found while resolving, no click will be done
-    args = [controller, obj["args"][1], obj["args"][2], obj["name"]]
-    if _ignoreMatching: return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
-
-    if obj["windex"]>= 0 and not SimHandleOperator.has(obj["windex"]):
-        return lambda: None, []
-    func = lambda: stop_exec(not is_click_matching_window(obj["windex"], obj["args"][1], obj["args"][2]), simulator, "4")
-    Thread(target=func).start()
-    return (mouse_press, args) if obj["args"][0] else (mouse_release, args)
-
-
-def stop_exec(bool, process, reason):
-    if not bool: return
-    # eliminate python-side
-    process.request("stop", flush=False)
-    # inform front-end
-    process.print_cmd(f"special-end {reason}")
-
-
-
-
-def is_click_matching_window(original_windex, x, y):
-    found_handle = WinUtils.get_top_from_point(x, y).handle
-    return SimHandleOperator().is_handle_match(original_windex, found_handle)
-
-def key_press(controller, key):
-    controller.press(key)
-
-def key_release(controller, key):
-    controller.release(key)
-
-
-# Return: functions and args that match the json instruction.
-def get_function_from_key_object(obj: dict, controller):
-    key = obj["name"] if not obj["args"][1] else Key[obj["name"]]
-    if obj["args"][0]:
-        return key_press, [controller, key]
-    return key_release, [controller, key]

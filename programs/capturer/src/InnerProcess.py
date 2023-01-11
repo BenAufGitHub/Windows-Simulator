@@ -1,12 +1,13 @@
-import ctypes, json, os, sys, _ctypes
+import ctypes, json, os, _ctypes
 from Lib import typing, traceback, threading
+from Lib.sysconfig import sys
 
 from pynput import mouse, keyboard
 
 from save_status import WindowSaver, PathConstants, WindowNotExistant, PauseDirector
-import JSONHandler
+from ctrl import InputHandling, ui_tasks
 from utils import  UnicodeReverse, Unpress, ConfigManager, timing
-from utils.rt import ClickInfo, KillableThread, MetaData
+from utils.rt import ClickInfo, KillableThread, MetaData, stop_exec
 
 
 
@@ -309,12 +310,12 @@ def exec_cmd_instruction(instruction: dict):
 
 def exec_mouse_instruction(instruction: dict, controller, simulator, _ignoreMatching=False):
     simulator.keep_mouse_pos(instruction)
-    func, args = JSONHandler.get_function_from_mouse_object(instruction, controller, simulator, _ignoreMatching)
+    func, args = ui_tasks.get_function_from_mouse_object(instruction, controller, simulator, _ignoreMatching)
     func(*args)
 
 
 def exec_keyboard_instruction(instruction: dict, controller):
-	func, args = JSONHandler.get_function_from_key_object(instruction, controller)
+	func, args = ui_tasks.get_function_from_key_object(instruction, controller)
 	func(*args)
 
 
@@ -327,7 +328,7 @@ class Recorder(InnerProcess):
         super().__init__()
         self.timer = timing.SimpleTimeKeeper()
         self.in_realtime = True
-        self.storage = JSONHandler.JSONStorage(self, _takeScreenshots=takeScreenshots)
+        self.storage = InputHandling.InputProcessor(self, _takeScreenshots=takeScreenshots)
         self.in_handler = InputHandler(self)
         self.round_to = 3
         self.ctrlW = ctrlW == 'true'
@@ -335,7 +336,6 @@ class Recorder(InnerProcess):
     
     '''
     return: Preparation succesful True/False
-    no errors
     '''
     def prepare_start(self) -> bool:
         try:
@@ -384,9 +384,9 @@ class Recorder(InnerProcess):
         listener2.start()
 
     def save_data(self):
-        JSONHandler.compress(self.storage)
-        JSONHandler.release_all(self.storage)
-        JSONHandler.write_storage_file(self.storage, ConfigManager.get_recording())
+        InputHandling.compress(self.storage)
+        InputHandling.release_all(self.storage)
+        InputHandling.write_storage_file(self.storage, ConfigManager.get_recording())
 
 
     def _load_capture(self) -> list:
@@ -505,5 +505,5 @@ class InputHandler:
         except SystemExit: pass
         except Exception:
             sys.stderr.write(f"ONLY-DISPLAY{traceback.format_exc()}")
-            end_on_warning = lambda: JSONHandler.stop_exec(True, self.process, "3")
+            end_on_warning = lambda: stop_exec(True, self.process, "3")
             threading.Thread(target=end_on_warning, daemon=True).start()
