@@ -11,6 +11,7 @@
 !/resources/resolves/.gitkeep
 !/resources/protocolConversion.js
 !/resources/language/**
+!license_notice.md
 
 programs/capturer/install/**
 programs/capturer/logs/**
