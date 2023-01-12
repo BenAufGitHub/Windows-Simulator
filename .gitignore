@@ -12,6 +12,7 @@
 !/resources/protocolConversion.js
 !/resources/language/**
 !license_notice.md
+!/README.md
 
 programs/capturer/install/**
 programs/capturer/logs/**
