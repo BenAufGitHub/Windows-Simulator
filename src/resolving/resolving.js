@@ -10,11 +10,11 @@ const WINDOW_API = {
     get_selected_simulation: async () => ipcRenderer.invoke("get-simulation", null),
 }
 
-const input = document.getElementById('num-input');
+
 const info = document.getElementById('info');
 const submit = document.getElementById('submit');
-const selectionDiv = document.getElementById('radio-selection');
 let langPack = null;
+
 
 function processData(actionID) {
     submit.onclick = () => {}

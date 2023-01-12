@@ -6,6 +6,7 @@ const WINDOW_API = {
     getSettings: async (args) => await ipcRenderer.invoke("get-settings", args),
 }
 
+
 let continueButton = document.getElementById("ok")
 let p = document.getElementById("reason")
 

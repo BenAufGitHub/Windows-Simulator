@@ -1,4 +1,4 @@
-const {ipcRenderer, contextBridge} = require("electron")
+const {ipcRenderer} = require("electron")
 
 
 const simulate = document.getElementById("simulate")
@@ -29,7 +29,10 @@ const WINDOW_API = {
     get_sim_info: async () => ipcRenderer.invoke('get-sim-info', null),
     setSimulation: async (filename) => ipcRenderer.invoke('set-simulation', filename),
 
-    getLangPack: async () => ipcRenderer.invoke('get-lang-pack', null)
+    getLangPack: async () => ipcRenderer.invoke('get-lang-pack', null),
+
+    showSettings: () => ipcRenderer.send("show-settings", null),
+    changeWin: (win) => ipcRenderer.send("change-win", win)
 }
 
 
@@ -69,22 +72,24 @@ const startSimulate = async () => {
     simulate.removeAttribute("disabled");
 }
 
+
 const addClickEvents = () => {
+    const get = (id) => document.getElementById(id)
     record.onclick = startRecording;
     simulate.onclick = startSimulate;
     expand.onclick = expandRecordFiles;
 
-    document.getElementById('expand-sims').onclick = expandSimFiles;
-    document.getElementById('approve-new').onclick = evaluateNewRecording;
-    document.getElementById('settings-rec').onclick = toggleDeleteOption;
+    get('expand-sims').onclick = expandSimFiles;
+    get('approve-new').onclick = evaluateNewRecording;
+    get('settings-rec').onclick = toggleDeleteOption;
     record_input.onfocus = hideDeleteOption;
     addRecordInputEnterEvent();
-    document.getElementById('delete-recording').onclick = deleteRecording;
+    get('delete-recording').onclick = deleteRecording;
     
-    document.getElementById('settings-sim').onclick = toggleDetailsOption;
-    document.getElementById('show-details').onclick = expandDetails;
-    document.getElementById('button-to-settings').onclick = () => ipcRenderer.send("show-settings", null);
-    document.getElementById('button-to-info').onclick = () => ipcRenderer.send("change-win", "info");
+    get('settings-sim').onclick = toggleDetailsOption;
+    get('show-details').onclick = expandDetails;
+    get('button-to-settings').onclick = () => WINDOW_API.showSettings();
+    get('button-to-info').onclick = () => WINDOW_API.changeWin("info");
 }
 
 
@@ -98,8 +103,8 @@ function addRecordInputEnterEvent () {
 }
 
 
-
 // ==== resolve ===>
+
 
 function resolveChooseRecordFile (result, filenames) {
     removeSelectOptions();

@@ -5,6 +5,7 @@ const path = require("path");
 const pyCall = "./programs/python3.10/python"
 const pyMain = './programs/capturer/src/py_communicator.py'
 
+
 // subprogramm coordination in terms of command and state management
 let child = null;
 let state = "idle";
@@ -18,6 +19,7 @@ const mainShallowRequests = ["wait_until_py_initiation"]
 // deep requests go into python subprograms
 const mainDeepRequests = ["exit", "showWindow", "spit", "set-recording", "get-recording", "get-record-list", "get-simulation", "get-simulation-list",
 "set-simulation", 'delete-recording', 'clear-settings']
+
 
 // promise-resolving, can be triggered when certain things happen in this process, main can check for these events to complete with awaiting those
 const awaitingEvents = new Map()
@@ -57,7 +59,9 @@ async function processMainMsg(msg) {
     processMainRequest(id, arg1, arg2)
 }
 
+
             // ------------------ Command handling ---------------------------
+
 
 async function processMainCommand(command, args) {
     if (isEventEcho(command)) return
@@ -268,7 +272,6 @@ function processSuccessfulRequest(command, answer) {
     if(process_cmds.includes(command))
         return sendCommandUpwards(command, "main")
 }
-
 
 
 main:

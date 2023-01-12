@@ -27,7 +27,6 @@ function setInfo (lang) {
     p.innerHTML = `Hinweis: Klicke \u{1F6C8} im Men&uuml; zum einsehen aller wichtigen Informationen.`
 }
 
-
 function setInfo2 (lang) {
     let p = document.getElementById('info-text');
     p.removeAttribute('hidden');
@@ -35,7 +34,6 @@ function setInfo2 (lang) {
         return p.innerHTML = `'F2' is an important key: Use it to stop your recordings.`
     p.innerHTML = `'F2' ist eine m&auml;chtige Taste: Nutze es, um Aufnahmen zu beenden.`
 }
-
 
 function processResults (lang, source) {
     disableElems();

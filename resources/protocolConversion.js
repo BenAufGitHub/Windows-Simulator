@@ -5,6 +5,7 @@ class FormatError extends Error {
     }
 }
 
+
 // -1 for can't fetch ID of faulty request format
 function tryGetID(msg) {
     msg = msg.trim()
@@ -14,7 +15,9 @@ function tryGetID(msg) {
     return (!isNaN(id)) ? id : -1
 }
 
+
 // --------------------------------- to protocol format ---------------------------------
+
 
 // args: floors integers
 function getFormattedBody(args) {
@@ -38,7 +41,9 @@ function formatListToString(list) {
     return `at ${modified_list.join('')}`
 }
 
+
 // -------------------------------- extract answer protocol ----------------------------------
+
 
 // returns [id, errorcode, answer]
 function splitAnswerMessage(msg) {
@@ -124,7 +129,9 @@ const getTxtArr = (remainder) => {
     return arr
 }
 
+
 // ---------------------------- extract request protocol ----------------------------------------
+
 
 function splitRequestMessage(msg) {
     if(!msg || !ltrim(msg)) throwFormatError(msg, "request")
@@ -143,6 +150,7 @@ function _seperateRequest(txt) {
 
 
 // ------------------------------ Assistence Methods ---------------------------------------------
+
 
 function ltrim(x) {
     // This implementation removes whitespace from the left side
@@ -165,7 +173,9 @@ function getNumLength(num) {
     return Math.floor(get10Log(num)) + 1 
 }
 
+
 // ---------------------- exports ------------------------
+
 
 exports.FormatError = FormatError;
 exports.getFormattedBody = getFormattedBody;

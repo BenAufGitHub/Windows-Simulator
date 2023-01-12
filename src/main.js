@@ -6,6 +6,7 @@ let {FormatError, splitAnswerMessage, splitRequestMessage, getFormattedBody, try
 const confManager = require('../src/manageConfigs.js')
 
 const path = require('path');
+
 let window = null;
 let settingsWin = null;
 
@@ -25,12 +26,6 @@ function configureSetup() {
   app.disableHardwareAcceleration()
 }
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
-  // eslint-disable-line global-require
-  app.quit();
-}
-
 
 function createWindow () {
   const mainWindow = new BrowserWindow({
@@ -43,7 +38,6 @@ function createWindow () {
       enableRemoteModule: true,
     }
   });
-  mainWindow.webContents.openDevTools();
   mainWindow.once('ready-to-show', (event) => mainWindow.show())
   prepareEventListeners(mainWindow)
   return mainWindow
