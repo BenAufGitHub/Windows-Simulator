@@ -1,11 +1,13 @@
-const { app, BrowserWindow, ipcMain, remote} = require('electron');
+const { app, BrowserWindow, ipcMain} = require('electron');
+
 const { fork } = require("child_process")
+const path = require('path');
 const fs = require("fs")
 const fsPromises = require("fs/promises")
-let {FormatError, splitAnswerMessage, splitRequestMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
+
+let {splitAnswerMessage, getFormattedBody} = require("../resources/protocolConversion.js")
 const confManager = require('../src/manageConfigs.js')
 
-const path = require('path');
 
 let window = null;
 let settingsWin = null;
@@ -22,9 +24,8 @@ const settings = {
 }
 
 
-function configureSetup() {
-  app.disableHardwareAcceleration()
-}
+
+// ---------------------------------------- Browser Window --------------------------------------------
 
 
 function createWindow () {
@@ -58,17 +59,15 @@ const open = (filename) => {
 };
 
 
-const openURL = (url) => {
-  window.loadURL(url)
-}
-
-
 const createFirstWindow = () => {
   if(!fs.existsSync('./resources/appConfigs.ini'))
     return open(".\\welcome\\welcome.html")
   settings.appConfigs = confManager.loadConfigs()
   open(".\\index\\index.html")
 }
+
+
+// ----------------------------------------------------- ON READY ---------------------------------------------------------
 
 
 // This method will be called when Electron has finished
@@ -81,6 +80,10 @@ async function atStart() {
   if(!data.isSuccessful) console.log("waiting for python unsuccessful, reason:", data.answer)
   createFirstWindow()
 }
+
+
+// ----------------------------------------------- integrated listeners -------------------------------------------------------
+
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -101,9 +104,47 @@ app.on('activate', () => {
 });
 
 
+process.on("exit", (code) => {
+  func = async function () {
+    await request("exit")
+    settings.process?.disconnect()
+  }
+  func()
+})
+
+
+// -------------------- ipcMain listeners (from renderer) ---------------------------
+
+
+ipcMain.on("start", _initProcess)
+ipcMain.on("tell-process", (event, args) => sendCommandToBridge(args, null));
+ipcMain.on("open-err-win", (event, args) => processSpecialEnd("An error occured, head back to the menu."));
+ipcMain.on("change-win", (event, args) => open(`.\\${args}\\${args}.html`))
+
+ipcMain.on("show-settings", (event, args) => showSettings())
+ipcMain.on("kill-settings", (event, args) => killSettings())
+ipcMain.on("save-settings", (event, ...args) => saveSettings(...args))
+ipcMain.on("load-menu", (event, args) => loadMenu())
+ipcMain.on("init-with-configs", (event, lang) => initWithConfigs(lang))
+
+
+// -------------------- listener utility functions -------------------------------------
+
+
+// ------------ menu ------------>
+
+const loadMenu = () => {
+  settings.selectedWindow = 'index'
+  settings.state = 'menu'
+  open(".\\index\\index.html", 600, 450)
+}
+
+
+// -------- settings ------------>
+
 function showSettings() {
   settingsWin = new BrowserWindow({ width:350, height: 550, parent: window, modal: true, show: false, webPreferences: {
-    openDevTools: true,
+    openDevTools: false,
     nodeIntegration: true,
     contextIsolation: false,
     enableRemoteModule: true,
@@ -113,7 +154,6 @@ function showSettings() {
     settingsWin.show()
   })
 }
-
 
 function killSettings () {
   settingsWin?.destroy();
@@ -125,28 +165,20 @@ function saveSettings(language, screenshots, checkWins) {
 }
 
 
-// ------------------------ Configs ------------------------------
+// ---------- Configs ------------>
 
-ipcMain.on("init-with-configs", (event, lang) => {
+function initWithConfigs (lang) {
   if(!(["en", "de"]).includes(lang))
     lang = "en";
   confManager.createConfigs(lang);
   createFirstWindow();
-})
+}
 
 
-// ------------------------- ipcMain listeners -----------------------------------------
+// --------------------------- to pyBridge interaction -------------------------------------------
 
-ipcMain.on("start", _initProcess)
-ipcMain.on("tell-process", (event, args) => sendCommandToBridge(args, null));
-ipcMain.on("open-err-win", (event, args) => processSpecialEnd("An error occured, head back to the menu."));
-ipcMain.on("change-win", (event, args) => open(`.\\${args}\\${args}.html`))
-ipcMain.on("show-settings", (event, args) => showSettings())
-ipcMain.on("kill-settings", (event, args) => killSettings())
-ipcMain.on("save-settings", (event, ...args) => saveSettings(...args))
 
-// ------------------------ reaction to pyBridge -------------------------------------------
-
+// ------ send bridge ------->
 
 function _initProcess (event, args) {
   if(!["record", "simulate"].includes(args)) throw `Illegal Argument ${args}`;
@@ -157,6 +189,8 @@ function _initProcess (event, args) {
   sendCommandToBridge("record", [arg1, arg2]);
 }
 
+
+// ----------------- triggered by bridge ------------------>
 
 function startProcess () {
   window.minimize();
@@ -176,7 +210,6 @@ function resumeProcess () {
   window.setSize(400, 250)
 }
 
-
 function stopProcess() {
   if(settings.selectedWindow === 'index') return;
   settings.selectedWindow = 'index'
@@ -187,7 +220,6 @@ function stopProcess() {
   window.setSize(600, 450)
 }
 
-
 function pauseProcess() {
   if(settings.selectedWindow === 'pause') return;
   settings.selectedWindow = 'pause'
@@ -196,7 +228,6 @@ function pauseProcess() {
   window.restore()
   window.setSize(400, 250)
 }
-
 
 function processSpecialEnd(reason) {
   if(settings.selectedWindow === 'hint') return;
@@ -209,11 +240,6 @@ function processSpecialEnd(reason) {
 }
 
 
-
-ipcMain.handle("get-settings", (event, args) => {
-  return settings[args]
-})
-
 ipcMain.handle("getWindowResolveInfo", async (event, actionID) => {
   let data = await fsPromises.readFile(`./resources/resolves/${actionID}.json`, { encoding: 'utf8' });
   // TODO might need a safe solution later (try-catch)
@@ -223,8 +249,17 @@ ipcMain.handle("getWindowResolveInfo", async (event, actionID) => {
 
 
 
-// ========================= Index JS Options-Requests =============================
+// ========================= renderer JS requests =============================
 
+
+async function getRequestNoError (req) {
+  try {
+    return await req;
+  }
+  catch (e) {
+    return {isSuccessful: false, answer: e.toString()};
+  }
+}
 
 ipcMain.handle("set-recording", async (event, filename) => {
   return getRequestNoError(request("set-recording", filename));
@@ -256,6 +291,10 @@ ipcMain.handle('set-simulation', async (event, filename) => {
 
 ipcMain.handle('get-sim-info', async (e,a) => {
   return getRequestNoError(getDetailsList());
+})
+
+ipcMain.handle("get-settings", (event, args) => {
+  return settings[args]
 })
 
 ipcMain.handle('delete-cache', (e, a) => {
@@ -291,27 +330,11 @@ async function getDetailsList () {
   return {isSuccessful: true, answer: mapped};
 }
 
-async function getRequestNoError (req) {
-  try {
-    return await req;
-  }
-  catch (e) {
-    return {isSuccessful: false, answer: e.toString()};
-  }
-}
+
+// -------------------------------- resolving ------------------------------------
 
 
-//===========================================================
-
-
-ipcMain.on("windowResolveResults", (event, answer, actionID) => {
-  saveObj = {"result": answer}
-  fs.writeFileSync(`./resources/resolves/r${actionID}.json`, JSON.stringify(saveObj))
-  sendCommandToBridge("resolveFinished", actionID)
-  window.setSize(400, 250)
-  window.center()
-})
-
+// resolve to be initialized
 async function resolveIdentifyingWindow(actionID) {
   window.restore()
   window.setSize(830, 950, true)
@@ -319,13 +342,14 @@ async function resolveIdentifyingWindow(actionID) {
   window.loadFile("./src/resolving/resolving.html", {"query":{"data": actionID}})
 }
 
-ipcMain.on("load-menu", (event, args) => loadMenu())
-
-const loadMenu = () => {
-  settings.selectedWindow = 'index'
-  settings.state = 'menu'
-  open(".\\index\\index.html", 600, 450)
-}
+// resolve to be finished
+ipcMain.on("windowResolveResults", (event, answer, actionID) => {
+  saveObj = {"result": answer}
+  fs.writeFileSync(`./resources/resolves/r${actionID}.json`, JSON.stringify(saveObj))
+  sendCommandToBridge("resolveFinished", actionID)
+  window.setSize(400, 250)
+  window.center()
+})
 
 
 /** --------------------- python bridge ---------------------------------------- */
@@ -338,7 +362,6 @@ function startPythonBridge () {
   settings.process.stdout.pipe(process.stdout)
   settings.process.stderr.pipe(process.stderr)
 }
-
 
 function configurePythonBridge () {
   settings.process?.on("message", (m) => {
@@ -395,7 +418,9 @@ function processSecondaryCommandFromBridge(command) {
   }
 }
 
+
 // -------------------------------------- mapping IDs -------------------------------------------------
+
 
 function saveRequest(id, resolveFunc, rejectFunc) {
   promiseMap.set(id, {res: resolveFunc, rej: rejectFunc})
@@ -415,7 +440,6 @@ function denyEarliestUnresolved(){
   retrive_request(id).res([id, '1', 'error'])
 }
 
-
 function get_rand_id() {
   for(let i=2; i<32; i++){
       if(!idStack.includes(i))
@@ -425,6 +449,7 @@ function get_rand_id() {
 }
 
 // ------------------------------------------------------ requesting -------------------------------------------------
+
 
 ipcMain.handle("request", async (event, arg1, arg2) => {
   try {
@@ -451,15 +476,6 @@ async function sendRequestToBridge(id, req, body) {
 function sendCommandToBridge(command, args) {
   return settings.process?.send(`1  ${command} | ${getFormattedBody(args)}`)
 }
-
-
-process.on("exit", (code) => {
-  func = async function () {
-    await request("exit")
-    settings.process?.disconnect()
-  }
-  func()
-})
 
 
 // -------------------------------------- file deletion ---------------------------------------------
@@ -497,10 +513,17 @@ function deleteAllFolders(dirPath) {
 }
 
 
+// ------------------------------- main ---------------------------------
+
+
+function configureSetup() {
+  app.disableHardwareAcceleration()
+}
+
+//start
 main:
 {
   configureSetup();
   startPythonBridge();
   configurePythonBridge();
-
 }
