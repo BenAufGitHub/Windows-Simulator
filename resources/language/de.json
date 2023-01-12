@@ -97,6 +97,7 @@
         "general-info": ["geschrieben von Ben Mette.", "Probleme können unter bmette.api@gmail.com behandelt werden.",
         "Was soll das Programm erreichen: Die Simulation versucht, die Umgebung von der Aufnahme wiederherzustellen, der Benutzer muss sich darum nicht mehr sorgen.",
         "Wie funktioniert es: Das Programm merkt sich Fenster koordinaten vor dem Start, dann werden sie beim Simulieren dort platziert. Dieses Feature kann deaktiviert werden.",
-        "Es kann vorkommen, dass die Simulation manche Fenster aus der Aufnahme nicht identifizieren kann, daher wird manchmal um eine manuelle Eingabe gebeten."]
+        "Es kann vorkommen, dass die Simulation manche Fenster aus der Aufnahme nicht identifizieren kann, daher wird manchmal um eine manuelle Eingabe gebeten.",
+        "Informationen zur Lizenzbestimmung von mitunder verwendeten Modulen sind im Programmverzeichnis im 'license_notice.md' nachlesbar."]
     }
 }

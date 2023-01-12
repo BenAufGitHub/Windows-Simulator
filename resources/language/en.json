@@ -97,6 +97,7 @@
         "general-info": ["Authored by Ben Mette.", "Problems can be submitted under bmette.api@gmail.com.",
         "What does the programm try to achieve: The simulation will try to replicate the conditions from the recording, while you don't have to worry about all this stuff.",
         "How does it work: The programm saves the positioning of windows before the start, then replicates them in the simulation. This feature can also be deactivated.",
-        "Sometimes the simulation can't find the windows from the recording, so there has to be a manual resolvement."]
+        "Sometimes the simulation can't find the windows from the recording, so there has to be a manual resolvement.",
+        "License notices of used software in this program can be found in the 'license_notice.md' file in the program's directory."]
     }
 }   
