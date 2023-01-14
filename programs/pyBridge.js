@@ -195,6 +195,7 @@ function initIpcPython () {
     })
 
     child.stderr.on("data", (data) => {
+        process.stderr.write(data.toString())
         console.log("An error occured in Python Child:")
         msg = data.toString();
         if(msg.indexOf('ONLY-DISPLAY') == 0) {
