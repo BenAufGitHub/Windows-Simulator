@@ -11,7 +11,7 @@
 !/resources/resolves/.gitkeep
 !/resources/protocolConversion.js
 !/resources/language/**
-!3rd_party_license_notice.md
+!/3rd_party_license_notice.md
 !/README.md
 
 programs/capturer/install/**
