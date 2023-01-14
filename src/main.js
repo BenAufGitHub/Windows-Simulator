@@ -11,6 +11,8 @@ const confManager = require('../src/manageConfigs.js')
 
 let window = null;
 let settingsWin = null;
+let logger = null;
+const logFile = "lastSession.log"
 
 const promiseMap = new Map()
 let idStack = []
@@ -461,6 +463,8 @@ ipcMain.handle("request", async (event, arg1, arg2) => {
 })
 
 async function request(req, args) {
+  if(logger) console.log(`Request: ${req}`)
+  
   let id = get_rand_id()
   return new Promise((resolve, reject) => {
       saveRequest(id, resolve, reject)
@@ -517,8 +521,17 @@ function deleteAllFolders(dirPath) {
 
 
 function configureSetup() {
-  app.disableHardwareAcceleration()
+  // configureLogging();
+  app.disableHardwareAcceleration();
 }
+
+
+// only called when comliling
+function configureLogging() {
+  logger = fs.createWriteStream(logFile);
+  process.stdout.write = process.stderr.write = logger.write.bind(logger);
+}
+
 
 //start
 main:
