@@ -215,7 +215,7 @@ class Simulator(core_process):
         unpressing.release_all()
         if not flush:
             self.event_thread.stop()
-            self.event_thread.join()
+
 
 
     # function is called as described in event callback chain
