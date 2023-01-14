@@ -1,12 +1,14 @@
-const { app, BrowserWindow, ipcMain} = require('electron');
-
 const { fork } = require("child_process")
-const path = require('path');
 const fs = require("fs")
 const fsPromises = require("fs/promises")
 
-let {splitAnswerMessage, getFormattedBody} = require("../resources/protocolConversion.js")
-const confManager = require('../src/manageConfigs.js')
+const path = require('path');
+const getPath = (relPath) => path.join(process.cwd(), relPath)
+
+const { app, BrowserWindow, ipcMain} = require('electron');
+
+const confManager = require('../src/manageConfigs.js');
+let {splitAnswerMessage, getFormattedBody} = require(getPath("/resources/protocolConversion.js"))
 
 
 let window = null;
@@ -62,8 +64,10 @@ const open = (filename) => {
 
 
 const createFirstWindow = () => {
-  if(!fs.existsSync('./resources/appConfigs.ini'))
+  let myPath = getPath('\\resources\\appConfigs.ini')
+  if(!fs.existsSync(myPath))
     return open(".\\welcome\\welcome.html")
+    
   settings.appConfigs = confManager.loadConfigs()
   open(".\\index\\index.html")
 }
@@ -243,8 +247,8 @@ function processSpecialEnd(reason) {
 
 
 ipcMain.handle("getWindowResolveInfo", async (event, actionID) => {
-  let data = await fsPromises.readFile(`./resources/resolves/${actionID}.json`, { encoding: 'utf8' });
-  // TODO might need a safe solution later (try-catch)
+  const resPath = getPath(`resources\\resolves\\${actionID}.json`)
+  let data = await fsPromises.readFile(resPath, { encoding: 'utf8' });
   info = JSON.parse(data);
   return info;
 })
@@ -318,7 +322,7 @@ ipcMain.handle('get-app-settings', async (e,a) => {
 ipcMain.handle('get-lang-pack', async (e, lang) => {
   if(!lang)
     lang = settings.appConfigs['customizable']['language']
-    let raw_data = fs.readFileSync(`./resources/language/${lang}.json`)
+    let raw_data = fs.readFileSync(getPath(`./resources/language/${lang}.json`))
     return JSON.parse(raw_data)
 })
 
@@ -326,7 +330,10 @@ ipcMain.handle('get-lang-pack', async (e, lang) => {
 async function getDetailsList () {
   let simulation = await request('get-simulation', null);
   if(!simulation?.isSuccessful) throw "No simulation-details to display. " + simulation?.answer?.toString();
-  let raw_data = await fsPromises.readFile(`./resources/start_capture/${simulation.answer}.json`, { encoding: 'utf8' });
+
+  let toData = getPath(`\\resources\\start_capture\\${simulation.answer}.json`);
+  let raw_data = await fsPromises.readFile(toData, { encoding: 'utf8' });
+  
   capture = JSON.parse(raw_data);
   let mapped = capture.map(e => ({"title":e['name'],"process": e["process"]}));
   return {isSuccessful: true, answer: mapped};
@@ -347,7 +354,7 @@ async function resolveIdentifyingWindow(actionID) {
 // resolve to be finished
 ipcMain.on("windowResolveResults", (event, answer, actionID) => {
   saveObj = {"result": answer}
-  fs.writeFileSync(`./resources/resolves/r${actionID}.json`, JSON.stringify(saveObj))
+  fs.writeFileSync(getPath(`./resources/resolves/r${actionID}.json`), JSON.stringify(saveObj))
   sendCommandToBridge("resolveFinished", actionID)
   window.setSize(400, 250)
   window.center()
@@ -358,7 +365,7 @@ ipcMain.on("windowResolveResults", (event, answer, actionID) => {
 
 
 function startPythonBridge () {
-  settings.process = fork('./programs/pyBridge.js', ['args'], {
+  settings.process = fork(getPath('\\programs\\pyBridge.js'), ['args'], {
     stdio: ['pipe', 'pipe', 'pipe', 'ipc']
   });
   settings.process.stdout.pipe(process.stdout)
@@ -486,8 +493,7 @@ function sendCommandToBridge(command, args) {
 
 
 function deleteCache() {
-  const dirPath = './resources/resolves/';
-  deleteAllJSON(dirPath);
+  deleteAllJSON(getPath('resources\\resolves/'));
 }
 
 function deleteAllJSON(dirPath) {
@@ -500,9 +506,9 @@ function deleteAllJSON(dirPath) {
 
 
 async function deleteAllSaves() {
-  deleteAllJSON('./resources/recordings/');
-  deleteAllJSON('./resources/start_capture/');
-  deleteAllFolders('./resources/screenshots/');
+  deleteAllJSON(getPath('./resources/recordings/'));
+  deleteAllJSON(getPath('./resources/start_capture/'));
+  deleteAllFolders(getPath('./resources/screenshots/'));
   await request('clear-settings', null);
 }
 

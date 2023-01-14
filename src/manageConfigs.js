@@ -2,7 +2,7 @@ const fs = require('fs')
     , ini = require('ini')
 
 
-config_path = './resources/appConfigs.ini'
+config_path = process.cwd() + '\\resources\\appConfigs.ini'
 
 
 exports.createConfigs = (lang) => {

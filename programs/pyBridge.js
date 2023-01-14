@@ -1,9 +1,13 @@
 const {spawn} = require("child_process");
-let {FormatError, splitRequestMessage, splitAnswerMessage, getFormattedBody, tryGetID} = require("../resources/protocolConversion.js")
 const path = require("path");
 
-const pyCall = "./programs/python3.10/python"
-const pyMain = './programs/capturer/src/py_communicator.py'
+const getPath = (relPath) => path.join(process.cwd(), relPath)
+
+let {FormatError, splitRequestMessage, splitAnswerMessage, getFormattedBody, tryGetID} = require(getPath("resources/protocolConversion.js"))
+
+const pyMain = process.cwd() + '\\programs\\capturer\\src\\py_communicator.py'
+const pyCall = process.cwd() + '\\programs\\python3.10\\python.exe'
+
 
 
 // subprogramm coordination in terms of command and state management
