@@ -110,6 +110,12 @@ app.on('activate', () => {
 });
 
 
+process.on('uncaughtException', function(err) {
+  console.log("\nUncaught Error fetched:")
+  console.error((err && err.stack) ? err.stack : err);
+});
+
+
 process.on("exit", (code) => {
   func = async function () {
     await request("exit")
@@ -471,7 +477,7 @@ ipcMain.handle("request", async (event, arg1, arg2) => {
 
 async function request(req, args) {
   if(logger) console.log(`Request: ${req}`)
-  
+
   let id = get_rand_id()
   return new Promise((resolve, reject) => {
       saveRequest(id, resolve, reject)
