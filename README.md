@@ -11,11 +11,11 @@
 
 
 ## Download
+Download OneDrive zip file:
 
-    Download OneDrive zip file:
-    https://1drv.ms/u/s!ArpI7RvFD7SRamrKNFliykKZYNI
+https://1drv.ms/u/s!ArpI7RvFD7SRamrKNFliykKZYNI
 
-    Then run 'WinSimulator Setup 1.0.0.exe'
+Then run 'WinSimulator Setup 1.0.0.exe'
 
 
 ## HOW TO: A guide to the UI
