@@ -49,6 +49,9 @@
           "3rd_party_license_notice.md",
           "LICENSE",
           "README.md"
-        ]
+        ],
+        "directories": {
+          "buildResources": "app_build"
+        }
       }
 }

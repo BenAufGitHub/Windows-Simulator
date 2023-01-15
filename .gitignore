@@ -17,7 +17,8 @@
 !/programs/py_communicator.exe
 !/package.help.json
 
-!compile.keep
+!/resources/**/compile.keep
+!/app_build/**
 
 programs/capturer/install/**
 programs/capturer/logs/**
