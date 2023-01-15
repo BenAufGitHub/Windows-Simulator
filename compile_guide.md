@@ -7,11 +7,11 @@ If no modifications to the given python library is made, skip this step.
 
 1. Install pyinstaller
 
-    pip installer pyinstaller
+        pip installer pyinstaller
 
 2. Compile the app
 
-    pyinstaller --onefile '.\programs\capturer\src\py_communicator.py'
+        pyinstaller --onefile '.\programs\capturer\src\py_communicator.py'
 
 3. A build folder with the file 'py_communicator.exe' should appear.
 Head to the build branch of this application and swap the file '.\programs\py_communicator.exe' with your own.
@@ -30,11 +30,11 @@ Head to the build branch of this application and swap the file '.\programs\py_co
 
 1. Install electron-builder
 
-    npm install electron-builder
+        npm install electron-builder
 
 2. Compile
 
-    npm run dist
+        npm run dist
 
 A dist folder should appear, which is the installer folder.
 
