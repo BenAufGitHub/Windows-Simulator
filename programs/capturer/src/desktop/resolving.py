@@ -2,7 +2,7 @@ import json, os
 from Lib import traceback, typing, threading
 from Lib.sysconfig import sys
 
-from utils import config_manager
+import utils.config_manager as config_manager
 from utils.rt import PathConstants
 from utils.app_errors import *
 
