@@ -13,6 +13,7 @@
 !/resources/language/**
 !/3rd_party_license_notice.md
 !/README.md
+!/compile_guide.md
 
 !/programs/py_communicator.exe
 !/package.help.json
