@@ -533,7 +533,7 @@ function deleteAllFolders(dirPath) {
 
 
 function configureSetup() {
-  // configureLogging();
+  configureLogging();
   app.disableHardwareAcceleration();
 }
 

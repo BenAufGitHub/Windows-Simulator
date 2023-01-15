@@ -1,0 +1,54 @@
+{
+    "name": "win-recreator",
+    "productName": "win-recreator",
+    "appId": "dev.benmette.winRecreator",
+    "version": "1.0.0",
+    "description": "Play Back your tasks automatically on Microsoft Windows",
+    "main": ".\\src\\main.js",
+
+    "scripts": {
+        "dist": "electron-builder"
+    },
+
+    "author": {
+    "name": "Ben Mette",
+    "email": "bmette.api@gmail.com"
+    },
+
+    "license": "Apache License 2.0",
+
+
+    "build": {
+        "productName": "WinRecreator",
+        "appId": "dev.benmette.winRecreator",
+        "files": [
+          "**/*",
+          "node_modules/**/*",
+          "package.json"
+        ],
+        "target": "NSIS",
+        "win": {
+          "target": "nsis",
+          "requestedExecutionLevel": "requireAdministrator"
+        },
+        "nsis": {
+          "guid": "8e5293c4-cc4c-4d09-ac20-6be0f73d6556",
+          "oneClick": false,
+          "allowElevation": true
+        },
+        "extraFiles": [
+          "programs/pyBridge.js",
+          "programs/py_communicator.exe",
+          "resources/language/de.json",
+          "resources/language/en.json",
+          "resources/recordings/",
+          "resources/resolves",
+          "resources/screenshots",
+          "resources/start_capture",
+          "resources/protocolConversion.js",
+          "3rd_party_license_notice.md",
+          "LICENSE",
+          "README.md"
+        ]
+      }
+}

@@ -5,9 +5,7 @@ const getPath = (relPath) => path.join(process.cwd(), relPath)
 
 let {FormatError, splitRequestMessage, splitAnswerMessage, getFormattedBody, tryGetID} = require(getPath("resources/protocolConversion.js"))
 
-const pyMain = process.cwd() + '\\programs\\capturer\\src\\py_communicator.py'
-const pyCall = process.cwd() + '\\programs\\python3.10\\python.exe'
-
+const pyCall = process.cwd() + '\\programs\\py_communicator.exe'
 
 
 // subprogramm coordination in terms of command and state management
@@ -181,7 +179,7 @@ async function requestToPy(req, args) {
 
 function startPyApplication() {
     if(child != null && child.connected) throw "Cannot spawn multiple processes simultaneously"
-    child = spawn(pyCall, [pyMain])
+    child = spawn(pyCall, [])
     initIpcPython();
     awaitingEvents.get("wait_until_py_initiation")?.()
 }

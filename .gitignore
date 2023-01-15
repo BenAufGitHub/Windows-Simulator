@@ -14,5 +14,10 @@
 !/3rd_party_license_notice.md
 !/README.md
 
+!/programs/py_communicator.exe
+!/package.help.json
+
+!compile.keep
+
 programs/capturer/install/**
 programs/capturer/logs/**
