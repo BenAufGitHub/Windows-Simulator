@@ -24,7 +24,7 @@ function setInfo (lang) {
     p.removeAttribute('hidden');
     if(lang=='en')
         return p.innerHTML = `Hint: Click \u{1F6C8} in the menu to see all necessary information.`
-    p.innerHTML = `Hinweis: Klicke \u{1F6C8} im Men&uuml; zum einsehen aller wichtigen Informationen.`
+    p.innerHTML = `Hinweis: Klicke \u{1F6C8} im Men&uuml; zum Einsehen aller wichtigen Informationen.`
 }
 
 function setInfo2 (lang) {
