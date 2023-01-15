@@ -1,4 +1,4 @@
-# The WinRecreator (for Microsoft Windows)
+# The WinSimulator (for Microsoft Windows)
 
     Original German Name: WinSimulationen (für Microsoft Windows)
     Author: Ben Mette
