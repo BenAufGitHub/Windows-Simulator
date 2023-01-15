@@ -76,7 +76,7 @@ Starting from 0.6.0 pywinauto is distributed under the BSD 3-clause license. Pyw
 
       1. Exception to Section 3 of the GNU GPL.
 
-      You may convey a covered work under sections 3 and 4 of this License
+    You may convey a covered work under sections 3 and 4 of this License
     without being bound by section 3 of the GNU GPL.
 
       2. Conveying Modified Versions.
@@ -97,7 +97,7 @@ Starting from 0.6.0 pywinauto is distributed under the BSD 3-clause license. Pyw
 
       3. Object Code Incorporating Material from Library Header Files.
 
-      The object code form of an Application may incorporate material from
+    The object code form of an Application may incorporate material from
     a header file that is part of the Library.  You may convey such object
     code under terms of your choice, provided that, if the incorporated
     material is not limited to numerical parameters, data structure
