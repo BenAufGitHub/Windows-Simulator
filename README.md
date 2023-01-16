@@ -16,7 +16,7 @@ Download from releases (main-branch)
 or 
 
 Download OneDrive zip file:
-https://1drv.ms/u/s!ArpI7RvFD7SRb1_U8Y234t0ydJI?e=smyzHg
+https://1drv.ms/u/s!ArpI7RvFD7SRcHoX9dJm-NeXs4s?e=1pxfwN
 
 Then run 'WinSimulator Setup 1.0.0.exe'
 
