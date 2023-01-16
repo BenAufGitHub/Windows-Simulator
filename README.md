@@ -16,7 +16,7 @@ Download from releases (main-branch)
 or 
 
 Download OneDrive zip file:
-https://1drv.ms/u/s!ArpI7RvFD7SRamrKNFliykKZYNI
+https://1drv.ms/u/s!ArpI7RvFD7SRb1_U8Y234t0ydJI?e=smyzHg
 
 Then run 'WinSimulator Setup 1.0.0.exe'
 
@@ -67,6 +67,7 @@ To see which windows are pressed and needed for the simulation, click details on
     pip install pywinatuto
     pip install pynput
     pip install pyWin32
+    pip install pillow
 
 
 ## Additional information
