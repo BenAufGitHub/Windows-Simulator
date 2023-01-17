@@ -5,7 +5,7 @@ const getPath = (relPath) => path.join(process.cwd(), relPath)
 
 let {FormatError, splitRequestMessage, splitAnswerMessage, getFormattedBody, tryGetID} = require(getPath("resources/protocolConversion.js"))
 
-const pyMain = process.cwd() + '\\programs\\capturer\\src\\py_communicator.py'
+const pyMain = process.cwd() + '\\programs\\capturer\\__main__.py'
 const pyCall = 'python.exe'
 
 
