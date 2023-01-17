@@ -2,12 +2,12 @@ import json, os
 from Lib import traceback, typing, threading
 from Lib.sysconfig import sys
 
-import utils.config_manager as config_manager
-from utils.rt import PathConstants
-from utils.app_errors import *
+from ..utils import config_manager
+from ..utils.rt import PathConstants
+from ..utils.app_errors import *
 
-from desktop.utils import SimHandleOperator, WindowCollections
-from desktop.base import Reproducer
+from ..desktop.utils import SimHandleOperator, WindowCollections
+from ..desktop.base import Reproducer
 
 
 # Ensures that the window is in the same state as it was when the window was recorded, thus Reproducer-Quality-Ensurance.

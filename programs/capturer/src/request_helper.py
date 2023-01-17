@@ -1,5 +1,5 @@
 import math
-from utils.app_errors import *
+from .utils.app_errors import *
 
 
 def split_request(request: str):

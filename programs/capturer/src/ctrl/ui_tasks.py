@@ -1,9 +1,9 @@
 from Lib.threading import Thread
 import win32api, win32con
 
-from desktop.utils import SimHandleOperator
-import utils.win_utils as win_utils
-from utils.rt import stop_exec
+from ..desktop.utils import SimHandleOperator
+from ..utils import win_utils
+from ..utils.rt import stop_exec
 
 from pynput.mouse import Button
 from pynput.keyboard import Key

@@ -4,15 +4,15 @@ from Lib.sysconfig import sys
 
 from pynput import mouse, keyboard
 
-from desktop.utils import PauseDirector
-from desktop.base import WindowSaver
+from .desktop.utils import PauseDirector
+from .desktop.base import WindowSaver
 
-from ctrl import input_handling, ui_tasks
+from .ctrl import input_handling, ui_tasks
 
-from utils import  unicode_reverse, unpressing, config_manager, timing
-from utils.rt import ClickInfo, KillableThread, PathConstants, stop_exec
+from .utils import  unicode_reverse, unpressing, config_manager, timing
+from .utils.rt import ClickInfo, KillableThread, PathConstants, stop_exec
 
-from utils.app_errors import *
+from .utils.app_errors import *
 
 
 

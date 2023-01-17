@@ -3,10 +3,9 @@ import Lib.traceback as traceback
 from Lib.threading import Thread
 from Lib.sysconfig import sys
 
-from desktop.base import WindowSaver
-from utils.rt import ClickInfo, PathConstants, stop_exec
-import utils.win_utils as win_utils
-
+from ..desktop.base import WindowSaver
+from ..utils.rt import ClickInfo, PathConstants, stop_exec
+from ..utils import win_utils
 from pynput.mouse import Controller
 from pynput.keyboard import Key
 

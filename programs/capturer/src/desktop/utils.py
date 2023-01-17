@@ -2,8 +2,8 @@ from pywinauto import handleprops, base_wrapper
 
 import json, _ctypes
 
-import utils.win_utils as win_utils
-from utils.app_errors import *
+from ..utils import win_utils
+from ..utils.app_errors import *
 
 
 

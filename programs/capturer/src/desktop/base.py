@@ -2,11 +2,11 @@ from pywinauto import controls, uia_element_info
 
 import json, _ctypes
 
-from utils.rt import PathConstants
-import utils.win_utils as win_utils
-from utils.app_errors import *
+from ..utils.rt import PathConstants
+from ..utils import win_utils
+from ..utils.app_errors import *
 
-from desktop.utils import SimHandleOperator, ReproducerGuide
+from ..desktop.utils import SimHandleOperator, ReproducerGuide
 
 
 ''' ---------------------- Saving ------------------------ '''

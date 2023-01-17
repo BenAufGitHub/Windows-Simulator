@@ -1,10 +1,10 @@
 from Lib import functools, traceback, threading
 from Lib.sysconfig import sys
 
-import core_process, request_helper
-from desktop.resolving import ReproductionResolver
-from utils import config_manager, win_utils
-from utils.app_errors import *
+from . import core_process, request_helper
+from .desktop.resolving import ReproductionResolver
+from .utils import config_manager, win_utils
+from .utils.app_errors import *
 
 
 print = functools.partial(print, flush=True)
