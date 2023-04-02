@@ -136,7 +136,7 @@ class BaseReproductionResolver():
         def continue_selection(result):
             num = cached.index(selection[result]) if result >=0 else -1
             solution[process].append(num)
-            if result:
+            if result != None:
                 queue.remove(selection[result])
             self._process_iteration(problem_pools, queue, process, iterator, solution, then, failed, async_behavior=True, loop_index=pos+1)
 
